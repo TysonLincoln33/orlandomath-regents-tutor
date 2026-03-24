@@ -1,0 +1,14 @@
+
+{
+  "sectionId": "ch1_s1",
+  "title": "Sample Section",
+  "questions": [
+    {
+      "id": "ch1_s1_q1",
+      "type": "mc",
+      "prompt": "What is 2 + 2?",
+      "choices": ["3", "4", "5", "6"],
+      "answerIndex": 1
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "sectionId": "ch7_s4",
+  "title": "Factoring the Difference of Perfect Squares",
+  "lesson": {
+    "title": "Difference of Perfect Squares",
+    "intro": [
+      "A difference of perfect squares has the form \\(a^2 - b^2\\).",
+      "It factors as \\((a-b)(a+b)\\).",
+      "Look for terms that are both perfect squares and separated by subtraction.",
+      "This pattern is useful for factoring expressions quickly."
+    ]
+  },
+  "workedExample": {
+    "enabled": false,
+    "problem": "Factor \\(x^2 - 25\\).",
+    "steps": [
+      "Recognize \\(x^2\\) and 25 as perfect squares.",
+      "Write \\(25\\) as \\(5^2\\).",
+      "Use the pattern \\(a^2 - b^2 = (a-b)(a+b)\\).",
+      "The factorization is \\((x-5)(x+5)\\)."
+    ],
+    "answer": "\\((x-5)(x+5)\\)",
+    "aiHint": "Check whether both terms are perfect squares and the operation is subtraction."
+  },
+  "questions": [
+    {
+      "id": "ch7_s4_q1",
+      "type": "mc",
+      "prompt": "Which expression is equivalent to \\(100x^2 - 16\\)?",
+      "choices": [
+        "\\((50x - 8)(50x + 8)\\)",
+        "\\((50x - 8)(50x - 8)\\)",
+        "\\((10x - 4)(10x + 4)\\)",
+        "\\((10x - 4)(10x - 4)\\)"
+      ],
+      "answerIndex": 2,
+      "explanation": "Since \\(100x^2 - 16 = (10x)^2 - 4^2\\), it factors as \\((10x-4)(10x+4)\\)."
+    },
+    {
+      "id": "ch7_s4_q2",
+      "type": "mc",
+      "prompt": "When factored, the expression \\(x^3 - 36x\\) is equivalent to",
+      "choices": [
+        "\\((x + 6)(x - 6)\\)",
+        "\\((x + 18)(x - 18)\\)",
+        "\\(x(x + 6)(x - 6)\\)",
+        "\\(x(x + 18)(x - 18)\\)"
+      ],
+      "answerIndex": 2,
+      "explanation": "First factor out \\(x\\): \\(x(x^2 - 36)\\). Then factor the difference of squares: \\(x(x+6)(x-6)\\)."
+    },
+    {
+      "id": "ch7_s4_q3",
+      "type": "mc",
+      "prompt": "Which expression is equivalent to \\(a^8 - b^6\\)?",
+      "choices": [
+        "\\((a^4 - b^3)^2\\)",
+        "\\((a^6 - b^4)^2\\)",
+        "\\((a^4)^2 - (b^3)^2\\)",
+        "\\((a^6)^2 - (b^4)^2\\)"
+      ],
+      "answerIndex": 2,
+      "explanation": "Rewrite each term as a perfect square: \\(a^8 = (a^4)^2\\) and \\(b^6 = (b^3)^2\\)."
+    }
+  ]
+}

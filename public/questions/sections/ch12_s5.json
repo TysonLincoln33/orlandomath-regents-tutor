@@ -1,0 +1,76 @@
+{
+  "sectionId": "ch12_s5",
+  "title": "Regression",
+  "lesson": {
+    "title": "Regression",
+    "intro": [
+      "Regression is used to model the relationship between two variables.",
+      "A regression equation predicts a value of y based on a given value of x.",
+      "The slope of the regression line describes how y changes as x increases.",
+      "Regression models are commonly used for prediction and identifying trends in data."
+    ],
+    "example": {
+      "problem": "A regression equation is \\(y = 3x + 2\\). What is the predicted value of \\(y\\) when \\(x = 5\\)?",
+      "steps": [
+        "Substitute the value of x into the regression equation.",
+        "Compute \\(y = 3(5) + 2\\).",
+        "Simplify to find the predicted value."
+      ],
+      "answer": "\\(y = 17\\)"
+    }
+  },
+  "questions": [
+    {
+      "id": "ch12_s5_q1",
+      "type": "mc",
+      "prompt": "A student finds the regression equation \\(y = 2.4x + 5.1\\), where \\(x\\) represents hours studied and \\(y\\) represents the predicted test score. What is the predicted test score when a student studies \\(6\\) hours?",
+      "choices": [
+        "14.5",
+        "19.5",
+        "19.9",
+        "20.5"
+      ],
+      "answerIndex": 1,
+      "explanation": "Substitute \\(x=6\\) into the equation: \\(y = 2.4(6) + 5.1 = 14.4 + 5.1 = 19.5\\)."
+    },
+    {
+      "id": "ch12_s5_q2",
+      "type": "mc",
+      "prompt": "The regression equation for a set of data is \\(y = -3.2x + 48\\). Which statement best describes the relationship between \\(x\\) and \\(y\\)?",
+      "choices": [
+        "There is a positive correlation.",
+        "There is a negative correlation.",
+        "There is no correlation.",
+        "The variables are unrelated."
+      ],
+      "answerIndex": 1,
+      "explanation": "The slope of the regression equation is negative (−3.2), which indicates a negative correlation between the variables."
+    },
+    {
+      "id": "ch12_s5_q3",
+      "type": "mc",
+      "prompt": "The regression equation relating temperature \\(x\\) and ice cream sales \\(y\\) is \\(y = 15x - 120\\). What is the predicted number of sales when the temperature is \\(10^\\circ C\\)?",
+      "choices": [
+        "15",
+        "30",
+        "150",
+        "180"
+      ],
+      "answerIndex": 1,
+      "explanation": "Substitute \\(x=10\\): \\(y = 15(10) - 120 = 150 - 120 = 30\\)."
+    },
+    {
+      "id": "ch12_s5_q180",
+      "type": "mc",
+      "prompt": "The regression equation for a set of data is \\(y = 1.5x + 2\\). What is the predicted value of \\(y\\) when \\(x = 6\\)?",
+      "choices": [
+        "8",
+        "9",
+        "11",
+        "12"
+      ],
+      "answerIndex": 2,
+      "explanation": "Substitute \\(x=6\\): \\(y = 1.5(6) + 2 = 9 + 2 = 11\\)."
+    }
+  ]
+}

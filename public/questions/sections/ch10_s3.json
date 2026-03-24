@@ -1,0 +1,79 @@
+{
+  "sectionId": "ch10_s3",
+  "title": "Domain and Range",
+  "lesson": {
+    "title": "Domain and Range",
+    "intro": [
+      "The domain of a function is the set of all possible input values, or x-values.",
+      "The range of a function is the set of all possible output values, or y-values.",
+      "When reading a graph, the domain describes how far the graph extends left and right, and the range describes how far it extends up and down."
+    ],
+    "example": {
+      "problem": "Find the domain and range of the function f(x) = x² + 3.",
+      "steps": [
+        "Identify the type of function. This is a quadratic function.",
+        "The domain of a quadratic function is all real numbers.",
+        "Since x² is always nonnegative, the minimum value occurs when x = 0.",
+        "Evaluate f(0) = 0² + 3 = 3.",
+        "So the smallest output is 3, and all larger outputs are possible."
+      ],
+      "answer": "Domain: all real numbers. Range: y ≥ 3."
+    }
+  },
+  "questions": [
+    {
+      "id": "ch10_s3_q1",
+      "type": "mc",
+      "prompt": "The range of f(x) = |−x + 2| − 5 is",
+      "choices": [
+        "y ≥ −5",
+        "y ≥ 2",
+        "x ≥ −5",
+        "x ≥ 2"
+      ],
+      "answerIndex": 0,
+      "explanation": "The absolute value expression has a minimum of 0, so the smallest value of the function is −5."
+    },
+    {
+      "id": "ch10_s3_q2",
+      "type": "mc",
+      "prompt": "Which function has a domain of all real numbers and a range greater than or equal to three?",
+      "choices": [
+        "f(x) = −x + 3",
+        "g(x) = x² + 3",
+        "h(x) = 3x",
+        "m(x) = |x + 3|"
+      ],
+      "answerIndex": 1,
+      "explanation": "Since x² ≥ 0 for all real x, x² + 3 ≥ 3. Its domain is all real numbers and its range is y ≥ 3."
+    },
+    {
+      "id": "ch10_s3_q3",
+      "type": "mc",
+      "prompt": "A function is graphed on the set of axes below. The domain of this function is",
+      "image": "/questions/regents-images/137_graph.png",
+      "choices": [
+        "{x | x > −2}",
+        "{x | x ≥ −2}",
+        "{x | x > −4}",
+        "{x | x ≥ −4}"
+      ],
+      "answerIndex": 1,
+      "explanation": "The graph begins at x = −2 with a closed point, so −2 is included in the domain."
+    },
+    {
+      "id": "ch10_s3_q4",
+      "type": "mc",
+      "prompt": "The graph of f(x) is shown below. The domain of this function is",
+      "image": "/questions/regents-images/138_graph.png",
+      "choices": [
+        "[0,12]",
+        "[15,45]",
+        "0 < x ≤ 12",
+        "15 < x ≤ 45"
+      ],
+      "answerIndex": 2,
+      "explanation": "The graph starts at an open point at x = 0 and ends at a closed point at x = 12, so the domain is 0 < x ≤ 12."
+    }
+  ]
+}

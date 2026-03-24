@@ -1,0 +1,39 @@
+{
+  "sectionId": "ch3_s2",
+  "title": "Graphing Linear Functions",
+  "lesson": {
+    "title": "Graphing Linear Functions",
+    "intro": [
+      "A line can be graphed using two points or by using slope and intercept.",
+      "The \\(y\\)-intercept is the point where the line crosses the \\(y\\)-axis.",
+      "If two points are known, the slope can be found using \\(\\frac{y_2-y_1}{x_2-x_1}\\).",
+      "Once the slope is known, substitute a point to find the equation or intercept."
+    ]
+  },
+  "workedExample": {
+    "enabled": false,
+    "problem": "Find the slope of the line through \\((-1,5)\\) and \\((2,-1)\\).",
+    "steps": [
+      "Use the slope formula \\(\\frac{y_2-y_1}{x_2-x_1}\\).",
+      "Substitute the points: \\(\\frac{-1-5}{2-(-1)}\\).",
+      "Simplify: \\(\\frac{-6}{3}=-2\\)."
+    ],
+    "answer": "-2",
+    "aiHint": "Subtract the y-values and x-values in the same order."
+  },
+  "questions": [
+    {
+      "id": "ch3_s2_q1",
+      "type": "mc",
+      "prompt": "What is the \\(y\\)-intercept of the line that passes through the points \\((-1,5)\\) and \\((2,-1)\\)?",
+      "choices": [
+        "-1",
+        "-2",
+        "3",
+        "5"
+      ],
+      "answerIndex": 2,
+      "explanation": "First find the slope: \\(\\frac{-1-5}{2-(-1)}=\\frac{-6}{3}=-2\\). Use \\(y=mx+b\\) with point \\((2,-1)\\): \\(-1=-2(2)+b\\), so \\(b=3\\)."
+    }
+  ]
+}

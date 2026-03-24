@@ -1,0 +1,65 @@
+{
+  "sectionId": "ch3_s1",
+  "title": "Modeling Linear Functions",
+  "lesson": {
+    "title": "Modeling Linear Functions",
+    "intro": [
+      "A linear function can model situations with a constant rate of change and an initial value.",
+      "In an equation like \\(C(h)=6h+5\\), the coefficient of the variable represents the rate of change.",
+      "The constant term represents the starting amount or fixed fee.",
+      "To interpret a function in context, match each part of the equation to the situation."
+    ]
+  },
+  "workedExample": {
+    "enabled": false,
+    "problem": "The function \\(C(h)=8h+12\\) models the total cost of renting a bike, where \\(h\\) is the number of hours. What do the 8 and 12 represent?",
+    "steps": [
+      "The coefficient of \\(h\\), which is \\(8\\), tells how much the cost changes for each additional hour.",
+      "The constant term, which is \\(12\\), is the amount charged before any hours are added.",
+      "So \\(8\\) is the hourly rate and \\(12\\) is the fixed starting fee."
+    ],
+    "answer": "8 is the hourly rate and 12 is the fixed fee.",
+    "aiHint": "In a linear model, the coefficient is the rate and the constant is the starting amount."
+  },
+  "questions": [
+    {
+      "id": "ch3_s1_q1",
+      "type": "mc",
+      "prompt": "When babysitting, Nicole charges an hourly rate and an additional charge for gas. She uses the function \\(C(h)=6h+5\\) to determine how much to charge for babysitting. The constant term of this function represents",
+      "choices": [
+        "the additional charge for gas",
+        "the hourly rate Nicole charges",
+        "the number of hours Nicole babysits",
+        "the total Nicole earns from babysitting"
+      ],
+      "answerIndex": 0,
+      "explanation": "In \\(C(h)=6h+5\\), the constant term is 5, which represents the fixed amount added regardless of the number of hours. That is the additional charge for gas."
+    },
+    {
+      "id": "ch3_s1_q2",
+      "type": "mc",
+      "prompt": "The amount of money a plumber charges is represented by the function \\(p(h)=45+90h\\). The best interpretation of the \\(y\\)-intercept of this function is that the plumber charges",
+      "choices": [
+        "$45 to come to the house",
+        "$45 per hour that he works",
+        "$90 to come to the house",
+        "$90 per hour that he works"
+      ],
+      "answerIndex": 0,
+      "explanation": "The \\(y\\)-intercept is the starting value when \\(h=0\\). That means the plumber charges $45 before any hourly work begins."
+    },
+    {
+      "id": "ch3_s1_q3",
+      "type": "mc",
+      "prompt": "A landscaping company charges a set fee for a spring cleanup, plus an hourly labor rate. The total cost is modeled by the function \\(C(x)=55x+80\\). In this function, what does the 55 represent?",
+      "choices": [
+        "the set fee for the cleanup",
+        "the hourly labor rate for a cleanup",
+        "the profit earned by the company for one cleanup",
+        "the number of hours of labor required for one cleanup"
+      ],
+      "answerIndex": 1,
+      "explanation": "In \\(C(x)=55x+80\\), the coefficient of \\(x\\) is the rate of change, so 55 represents the hourly labor rate."
+    }
+  ]
+}

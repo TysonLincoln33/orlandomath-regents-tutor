@@ -1,0 +1,91 @@
+{
+  "sectionId": "ch7_s2",
+  "title": "Operations with Polynomials",
+  "lesson": {
+    "title": "Operations with Polynomials",
+    "intro": [
+      "To add or subtract polynomials, combine like terms.",
+      "Like terms have the same variables raised to the same powers.",
+      "To multiply expressions, use the distributive property.",
+      "Always write the final answer in standard form when possible."
+    ]
+  },
+  "workedExample": {
+    "enabled": false,
+    "problem": "Simplify \\((2x^2 + 3x - 1) - (x^2 - 4x + 5)\\).",
+    "steps": [
+      "Distribute the subtraction sign: \\(2x^2 + 3x - 1 - x^2 + 4x - 5\\).",
+      "Combine like terms: \\((2x^2 - x^2) + (3x + 4x) + (-1 - 5)\\).",
+      "Simplify to get \\(x^2 + 7x - 6\\)."
+    ],
+    "answer": "\\(x^2 + 7x - 6\\)",
+    "aiHint": "Be careful to distribute the negative sign before combining like terms."
+  },
+  "questions": [
+    {
+      "id": "ch7_s2_q1",
+      "type": "mc",
+      "prompt": "The expression \\(-2(x^2 - 2x + 1) + (3x^2 + 3x - 5)\\) is equivalent to",
+      "choices": [
+        "\\(x^2 + x - 4\\)",
+        "\\(x^2 - x - 7\\)",
+        "\\(x^2 + 7x - 4\\)",
+        "\\(x^2 + 7x - 7\\)"
+      ],
+      "answerIndex": 2,
+      "explanation": "Distribute and combine like terms: \\(-2x^2 + 4x - 2 + 3x^2 + 3x - 5 = x^2 + 7x - 7\\)."
+    },
+    {
+      "id": "ch7_s2_q2",
+      "type": "mc",
+      "prompt": "Which expression is equivalent to \\((5x^2 - 2x + 4) - (3x^2 + 3x - 1)\\)?",
+      "choices": [
+        "\\(2x^2 + x + 3\\)",
+        "\\(2x^2 - 5x + 5\\)",
+        "\\(2x^4 + x^2 + 3\\)",
+        "\\(2x^4 - 5x^2 + 5\\)"
+      ],
+      "answerIndex": 1,
+      "explanation": "Distribute the subtraction and combine like terms: \\(5x^2 - 2x + 4 - 3x^2 - 3x + 1 = 2x^2 - 5x + 5\\)."
+    },
+    {
+      "id": "ch7_s2_q3",
+      "type": "mc",
+      "prompt": "The expression \\((-3x^2 + 9) - (7x^2 - 5x + 4)\\) is equivalent to",
+      "choices": [
+        "\\(-10x^2 + 5x + 5\\)",
+        "\\(-10x^2 + 5x + 13\\)",
+        "\\(-10x^2 - 5x + 5\\)",
+        "\\(-10x^2 - 5x + 13\\)"
+      ],
+      "answerIndex": 0,
+      "explanation": "Distribute the subtraction and combine like terms: \\(-3x^2 + 9 - 7x^2 + 5x - 4 = -10x^2 + 5x + 5\\)."
+    },
+    {
+      "id": "ch7_s2_q4",
+      "type": "mc",
+      "prompt": "Which expression is equivalent to \\(3(x^2 - 2x + 3) - (4x^2 + 3x - 1)\\)?",
+      "choices": [
+        "\\(-x^2 + x + 2\\)",
+        "\\(-x^2 - 8x + 7\\)",
+        "\\(-x^2 - 3x + 8\\)",
+        "\\(-x^2 - 9x + 10\\)"
+      ],
+      "answerIndex": 1,
+      "explanation": "Distribute and combine like terms: \\(3x^2 - 6x + 9 - 4x^2 - 3x + 1 = -x^2 - 9x + 10\\)."
+    },
+    {
+      "id": "ch7_s2_q5",
+      "type": "mc",
+      "prompt": "When \\(6x^3 - 2x + 8\\) is subtracted from \\(5x^3 + 3x - 4\\), the result is",
+      "choices": [
+        "\\(x^3 - 5x + 12\\)",
+        "\\(x^3 + x + 4\\)",
+        "\\(-x^3 + 5x - 12\\)",
+        "\\(-x^3 + x + 4\\)"
+      ],
+      "answerIndex": 2,
+      "explanation": "Compute \\((5x^3 + 3x - 4) - (6x^3 - 2x + 8) = -x^3 + 5x - 12\\)."
+    }
+  ]
+}

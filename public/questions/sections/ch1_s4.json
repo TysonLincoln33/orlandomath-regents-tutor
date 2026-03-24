@@ -1,0 +1,67 @@
+{
+  "sectionId": "ch1_s4",
+  "title": "Modeling Linear Equations",
+  "lesson": {
+    "title": "Modeling Linear Equations",
+    "intro": [
+      "A linear equation can model relationships described in words.",
+      "Start by defining the variable and then translate each phrase carefully.",
+      "Phrases like 'sum,' 'more than,' 'less than,' and 'times' help determine the operations.",
+      "A correct equation matches the quantities and the story context."
+    ]
+  },
+  "workedExample": {
+    "enabled": false,
+    "problem": "Josie has \\(\\$2.30\\) in dimes and quarters. She has two more dimes than quarters. Write an equation to model the situation.",
+    "steps": [
+      "Let \\(x\\) be the number of quarters.",
+      "Then the number of dimes is \\(x+2\\).",
+      "The value of the quarters is \\(0.25x\\).",
+      "The value of the dimes is \\(0.10(x+2)\\).",
+      "Set the total equal to \\(2.30\\): \\(0.25x+0.10(x+2)=2.30\\)."
+    ],
+    "answer": "\\(0.25x+0.10(x+2)=2.30\\)",
+    "aiHint": "Translate each coin type into value times number of coins."
+  },
+  "questions": [
+    {
+      "id": "ch1_s4_q1",
+      "type": "mc",
+      "prompt": "The sum of Tim's age and Jack's age is 44. Tim's age is 4 less than 7 times Jack's age, \\(x\\). An equation that could be used to model this scenario is",
+      "choices": [
+        "\\((7x-4)+x=44\\)",
+        "\\((4-7x)+x=44\\)",
+        "\\(7x-4=44\\)",
+        "\\(4-7x=44\\)"
+      ],
+      "answerIndex": 0,
+      "explanation": "If Jack's age is \\(x\\), then Tim's age is \\(7x-4\\). Their sum is \\(44\\), so \\((7x-4)+x=44\\)."
+    },
+    {
+      "id": "ch1_s4_q2",
+      "type": "mc",
+      "prompt": "Josie has \\(\\$2.30\\) in dimes and quarters. She has two more dimes than quarters. Which equation below can be used to determine \\(x\\), the number of quarters she has?",
+      "choices": [
+        "\\(0.35(2x+2)=2.30\\)",
+        "\\(0.25(x+2)+0.10x=2.30\\)",
+        "\\(0.25x+0.10(x+2)=2.30\\)",
+        "\\(0.25x+0.10(x-2)=2.30\\)"
+      ],
+      "answerIndex": 2,
+      "explanation": "Let \\(x\\) be the number of quarters, so the number of dimes is \\(x+2\\). The total value equation is \\(0.25x+0.10(x+2)=2.30\\)."
+    },
+    {
+      "id": "ch1_s4_q3",
+      "type": "mc",
+      "prompt": "At Adelynn's first birthday party, each guest brought \\(\\$1\\) in coins for her piggy bank. Guests brought nickels, dimes, and quarters for a total of \\(\\$28\\). There were twice as many dimes as nickels and 12 more quarters than nickels. Which equation could be used to determine the number of nickels, \\(x\\), that her guests brought to her party?",
+      "choices": [
+        "\\(.05x+.10x+.25x=28\\)",
+        "\\(.05x+.10(2x)+.25(x+12)=28\\)",
+        "\\(.05(2x)+.10x+.25(x+12)=28\\)",
+        "\\(.05(x+12)+.10(2x)+.25x=28\\)"
+      ],
+      "answerIndex": 1,
+      "explanation": "If nickels are \\(x\\), then dimes are \\(2x\\) and quarters are \\(x+12\\). Their total value is \\(.05x+.10(2x)+.25(x+12)=28\\)."
+    }
+  ]
+}

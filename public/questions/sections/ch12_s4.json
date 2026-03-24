@@ -1,0 +1,54 @@
+{
+  "sectionId": "ch12_s4",
+  "title": "Dot Plots",
+  "lesson": {
+    "title": "Dot Plots",
+    "intro": [
+      "A dot plot represents numerical data using dots placed above values on a number line.",
+      "Each dot represents one data value.",
+      "Dot plots make it easy to see clusters, gaps, and outliers.",
+      "They are useful for comparing distributions and identifying the center and spread of data."
+    ]
+  },
+  "questions": [
+    {
+      "id": "ch12_s4_q173",
+      "type": "mc",
+      "prompt": "The dot plot below represents the number of goals scored per game by a soccer team. What is the median number of goals scored?",
+      "image": "/questions/regents-images/173_dot_plot.png",
+      "choices": [
+        "2",
+        "3",
+        "4",
+        "5"
+      ],
+      "answerIndex": 1
+    },
+    {
+      "id": "ch12_s4_q174",
+      "type": "mc",
+      "prompt": "The dot plot below represents the number of pets owned by students in a class. Which statement best describes the distribution of the data?",
+      "image": "/questions/regents-images/174_dot_plot.png",
+      "choices": [
+        "The distribution is symmetric.",
+        "The distribution is skewed left.",
+        "The distribution is skewed right.",
+        "The distribution has no clear pattern."
+      ],
+      "answerIndex": 2
+    },
+    {
+      "id": "ch12_s4_q175",
+      "type": "mc",
+      "prompt": "Which representation correctly shows the data displayed in the dot plot?",
+      "image": "/questions/regents-images/175_4_representations.png",
+      "choices": [
+        "Representation I",
+        "Representation II",
+        "Representation III",
+        "Representation IV"
+      ],
+      "answerIndex": 3
+    }
+  ]
+}

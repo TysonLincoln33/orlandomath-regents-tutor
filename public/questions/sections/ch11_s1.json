@@ -1,0 +1,77 @@
+{
+    "sectionId": "ch11_s1",
+    "title": "Sequences",
+    "lesson": {
+      "title": "Sequences",
+      "intro": [
+        "A sequence is an ordered list of numbers that follows a pattern.",
+        "In an arithmetic sequence, the difference between consecutive terms is constant.",
+        "In a geometric sequence, the ratio between consecutive terms is constant.",
+        "You can identify a sequence type by checking whether it changes by repeated addition/subtraction or repeated multiplication/division."
+      ],
+      "example": {
+        "problem": "Determine whether the sequence \\(3, 7, 11, 15, \\ldots\\) is arithmetic or geometric, and find the pattern.",
+        "steps": [
+          "Subtract consecutive terms: \\(7-3=4\\), \\(11-7=4\\), \\(15-11=4\\).",
+          "Since the difference is constant, the sequence is arithmetic.",
+          "The common difference is \\(4\\)."
+        ],
+        "answer": "The sequence is arithmetic with common difference \\(4\\)."
+      }
+    },
+    "questions": [
+      {
+        "id": "ch11_s1_q154",
+        "type": "mc",
+        "prompt": "In an arithmetic sequence, the first term is \\(4\\) and the third term is \\(-2\\). What is the common difference?",
+        "choices": [
+          "\\(-1\\)",
+          "\\(-2\\)",
+          "\\(-3\\)",
+          "\\(-6\\)"
+        ],
+        "answerIndex": 2,
+        "explanation": "For an arithmetic sequence, \\(a_3=a_1+2d\\). So \\(-2=4+2d\\), which gives \\(2d=-6\\) and \\(d=-3\\)."
+      },
+      {
+        "id": "ch11_s1_q155",
+        "type": "mc",
+        "prompt": "A geometric sequence is shown below. \\(\\frac{1}{2}, 2, 8, 32, \\ldots\\) What is the common ratio?",
+        "choices": [
+          "\\(\\frac{1}{4}\\)",
+          "\\(2\\)",
+          "\\(\\frac{1}{2}\\)",
+          "\\(4\\)"
+        ],
+        "answerIndex": 3,
+        "explanation": "Divide each term by the previous term: \\(2 \\div \\frac{1}{2}=4\\), \\(8 \\div 2=4\\), and \\(32 \\div 8=4\\). The common ratio is \\(4\\)."
+      },
+      {
+        "id": "ch11_s1_q156",
+        "type": "mc",
+        "prompt": "The third term in a sequence is \\(25\\) and the fifth term is \\(625\\). Which number could be the common ratio of the sequence?",
+        "choices": [
+          "\\(\\frac{1}{5}\\)",
+          "\\(5\\)",
+          "\\(\\frac{1}{25}\\)",
+          "\\(25\\)"
+        ],
+        "answerIndex": 1,
+        "explanation": "In a geometric sequence, moving from the third term to the fifth term multiplies by \\(r^2\\). Since \\(25r^2=625\\), we get \\(r^2=25\\), so \\(r=\\pm 5\\). Of the choices, \\(5\\) works."
+      },
+      {
+        "id": "ch11_s1_q157",
+        "type": "mc",
+        "prompt": "A geometric sequence with a common ratio of \\(-3\\) is",
+        "choices": [
+          "\\(-10,-7,-4,-1,\\ldots\\)",
+          "\\(14,11,8,5,\\ldots\\)",
+          "\\(-2,-6,-18,-54,\\ldots\\)",
+          "\\(4,-12,36,-108,\\ldots\\)"
+        ],
+        "answerIndex": 3,
+        "explanation": "A geometric sequence with ratio \\(-3\\) must multiply each term by \\(-3\\). Since \\(4(-3)=-12\\), \\(-12)(-3)=36\\), and \\(36(-3)=-108\\), choice 4 is correct."
+      }
+     
+    ]
+  }

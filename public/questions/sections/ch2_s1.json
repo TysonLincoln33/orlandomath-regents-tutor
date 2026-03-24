@@ -1,0 +1,93 @@
+{
+  "sectionId": "ch2_s1",
+  "title": "Conversions",
+  "lesson": {
+    "title": "Unit Conversions",
+    "intro": [
+      "A conversion uses unit ratios equal to \\(1\\) to change from one measurement system to another.",
+      "To choose the correct conversion, units must cancel in the right order.",
+      "Write the starting rate first, then multiply by conversion factors so unwanted units cancel out.",
+      "The final units tell you whether the setup is correct."
+    ]
+  },
+  "workedExample": {
+    "enabled": false,
+    "problem": "A car travels \\(60\\) miles per hour. Convert this speed to feet per minute.",
+    "steps": [
+      "Start with \\(60\\ \\frac{\\text{mi}}{\\text{hr}}\\).",
+      "Multiply by \\(\\frac{5280\\ \\text{ft}}{1\\ \\text{mi}}\\) so miles cancel.",
+      "Multiply by \\(\\frac{1\\ \\text{hr}}{60\\ \\text{min}}\\) so hours cancel.",
+      "This gives \\(60 \\cdot 5280 \\div 60 = 5280\\).",
+      "So the speed is \\(5280\\ \\frac{\\text{ft}}{\\text{min}}\\)."
+    ],
+    "answer": "\\(5280\\ \\frac{\\text{ft}}{\\text{min}}\\)",
+    "aiHint": "Set up conversion factors so the original units cancel and only the desired units remain."
+  },
+  "questions": [
+    {
+      "id": "ch2_s1_q1",
+      "type": "mc",
+      "prompt": "Wayde van Niekerk, a runner from South Africa, ran 400 meters in 43.03 seconds to set a world record. Which calculation would determine his average speed, in miles per hour?",
+      "choices": [
+        "\\(\\frac{400\\ m}{43.03\\ sec} \\cdot \\frac{1000\\ m}{0.62\\ mi} \\cdot \\frac{1\\ hr}{3600\\ sec}\\)",
+        "\\(\\frac{400\\ m}{43.03\\ sec} \\cdot \\frac{0.62\\ mi}{1000\\ m} \\cdot \\frac{1\\ hr}{3600\\ sec}\\)",
+        "\\(\\frac{400\\ m}{43.03\\ sec} \\cdot \\frac{0.62\\ mi}{1000\\ m} \\cdot \\frac{3600\\ sec}{1\\ hr}\\)",
+        "\\(\\frac{400\\ m}{43.03\\ sec} \\cdot \\frac{1000\\ m}{0.62\\ mi} \\cdot \\frac{3600\\ sec}{1\\ hr}\\)"
+      ],
+      "answerIndex": 1,
+      "explanation": "Meters must cancel with meters, seconds in the denominator must convert to hours in the denominator, and the final units should be miles per hour. Only choice 2 gives \\(\\frac{\\text{mi}}{\\text{hr}}\\)."
+    },
+    {
+      "id": "ch2_s1_q2",
+      "type": "mc",
+      "prompt": "Joe is ordering water for his swimming pool. He determines the volume of his pool to be about 3240 cubic feet. There are approximately 7.5 gallons of water in 1 cubic foot. A truck load holds 6000 gallons of water. Which expression would allow Joe to correctly calculate the number of truck loads of water he needs to fill his pool?",
+      "choices": [
+        "\\(\\frac{3240\\ ft^3}{1\\ pool} \\cdot \\frac{1\\ ft^3}{7.5\\ gal} \\cdot \\frac{6000\\ gal}{1\\ truck\\ load}\\)",
+        "\\(\\frac{3240\\ ft^3}{1\\ pool} \\cdot \\frac{1\\ ft^3}{7.5\\ gal} \\cdot \\frac{1\\ truck\\ load}{6000\\ gal}\\)",
+        "\\(\\frac{3240\\ ft^3}{1\\ pool} \\cdot \\frac{7.5\\ gal}{1\\ ft^3} \\cdot \\frac{6000\\ gal}{1\\ truck\\ load}\\)",
+        "\\(\\frac{3240\\ ft^3}{1\\ pool} \\cdot \\frac{7.5\\ gal}{1\\ ft^3} \\cdot \\frac{1\\ truck\\ load}{6000\\ gal}\\)"
+      ],
+      "answerIndex": 3,
+      "explanation": "Joe must convert cubic feet to gallons, then gallons to truck loads. The correct chain is \\(\\frac{3240\\ ft^3}{1\\ pool} \\cdot \\frac{7.5\\ gal}{1\\ ft^3} \\cdot \\frac{1\\ truck\\ load}{6000\\ gal}\\)."
+    },
+    {
+      "id": "ch2_s1_q3",
+      "type": "mc",
+      "prompt": "Elena’s fastest time for the 50-meter dash is 7 seconds. She wants to know how fast this is in inches per minute. Which expression can Elena use for a correct conversion?",
+      "choices": [
+        "\\(\\frac{7\\ sec}{50\\ meters} \\cdot \\frac{60\\ sec}{1\\ min} \\cdot \\frac{1\\ meter}{39.37\\ in}\\)",
+        "\\(\\frac{7\\ sec}{50\\ meters} \\cdot \\frac{1\\ min}{60\\ sec} \\cdot \\frac{39.37\\ in}{1\\ meter}\\)",
+        "\\(\\frac{50\\ meters}{7\\ sec} \\cdot \\frac{60\\ sec}{1\\ min} \\cdot \\frac{1\\ meter}{39.37\\ in}\\)",
+        "\\(\\frac{50\\ meters}{7\\ sec} \\cdot \\frac{60\\ sec}{1\\ min} \\cdot \\frac{39.37\\ in}{1\\ meter}\\)"
+      ],
+      "answerIndex": 3,
+      "explanation": "She wants inches per minute, so the starting rate must be meters per second, then convert seconds to minutes and meters to inches. Only choice 4 results in \\(\\frac{\\text{in}}{\\text{min}}\\)."
+    },
+    {
+      "id": "ch2_s1_q4",
+      "type": "mc",
+      "prompt": "Each day, a freight train passes by Anna’s house. This freight train travels at 49 miles per hour. Each railroad car is 56 feet long. Which expression represents the number of railroad cars that pass by Anna's house per minute?",
+      "choices": [
+        "\\(\\frac{49\\ mi}{1\\ hr} \\cdot \\frac{1\\ mi}{5280\\ ft} \\cdot \\frac{1\\ hr}{60\\ min} \\cdot \\frac{1\\ car}{56\\ ft}\\)",
+        "\\(\\frac{49\\ mi}{1\\ hr} \\cdot \\frac{1\\ mi}{5280\\ ft} \\cdot \\frac{60\\ min}{1\\ hr} \\cdot \\frac{1\\ car}{56\\ ft}\\)",
+        "\\(\\frac{49\\ mi}{1\\ hr} \\cdot \\frac{5280\\ ft}{1\\ mi} \\cdot \\frac{1\\ hr}{60\\ min} \\cdot \\frac{1\\ car}{56\\ ft}\\)",
+        "\\(\\frac{49\\ mi}{1\\ hr} \\cdot \\frac{5280\\ ft}{1\\ mi} \\cdot \\frac{60\\ min}{1\\ hr} \\cdot \\frac{1\\ car}{56\\ ft}\\)"
+      ],
+      "answerIndex": 2,
+      "explanation": "Convert miles to feet, hours to minutes, and feet to cars. The correct result is cars per minute, which comes from choice 3."
+    },
+    {
+      "id": "ch2_s1_q5",
+      "type": "mc",
+      "prompt": "In 2009, Usain Bolt, a sprinter from Jamaica, set the world record in the 100-meter dash with a time of 9.58 seconds. His approximate speed, in kilometers per hour, can be found using which conversion?",
+      "choices": [
+        "\\(\\frac{9.58\\ sec}{100\\ m} \\cdot \\frac{1000\\ m}{1\\ km} \\cdot \\frac{1\\ min}{60\\ sec} \\cdot \\frac{1\\ hr}{60\\ min}\\)",
+        "\\(\\frac{100\\ m}{9.58\\ sec} \\cdot \\frac{60\\ sec}{1\\ min} \\cdot \\frac{1000\\ m}{1\\ km} \\cdot \\frac{60\\ min}{1\\ hr}\\)",
+        "\\(\\frac{100\\ m}{9.58\\ sec} \\cdot \\frac{1\\ km}{1000\\ m} \\cdot \\frac{1\\ min}{60\\ sec} \\cdot \\frac{1\\ hr}{60\\ min}\\)",
+        "\\(\\frac{100\\ m}{9.58\\ sec} \\cdot \\frac{60\\ sec}{1\\ min} \\cdot \\frac{1\\ km}{1000\\ m} \\cdot \\frac{60\\ min}{1\\ hr}\\)"
+      ],
+      "answerIndex": 3,
+      "explanation": "Start with meters per second, convert meters to kilometers, then seconds to minutes and minutes to hours. Only choice 4 produces \\(\\frac{\\text{km}}{\\text{hr}}\\)."
+    }
+  ]
+}

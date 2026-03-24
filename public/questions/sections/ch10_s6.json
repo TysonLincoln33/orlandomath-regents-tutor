@@ -1,0 +1,59 @@
+{
+  "sectionId": "ch10_s6",
+  "title": "Comparing Functions",
+  "lesson": {
+    "title": "Comparing Functions",
+    "intro": [
+      "Functions can be compared using graphs, equations, and tables.",
+      "A y-intercept is the value of a function when \\(x=0\\).",
+      "To compare rates of change or intercepts, use the representation that is given and evaluate carefully."
+    ]
+  },
+  "workedExample": {
+    "enabled": false,
+    "problem": "Compare the y-intercepts of \\(f(x)=2x+1\\) and \\(g(x)=x^2-4\\).",
+    "steps": [
+      "Substitute \\(x=0\\) into each function.",
+      "For \\(f(x)\\), \\(f(0)=2(0)+1=1\\).",
+      "For \\(g(x)\\), \\(g(0)=0^2-4=-4\\).",
+      "The functions have different y-intercepts."
+    ],
+    "answer": "The y-intercepts are 1 and -4.",
+    "aiHint": "To find a y-intercept, substitute \\(x=0\\)."
+  },
+  "questions": [
+    {
+      "id": "ch10_s6_q1",
+      "type": "mc",
+      "prompt": "Which graph below represents a function that is always decreasing over the entire interval \\(-3 < x < 3\\)?",
+      "choiceImages": [
+        "/questions/regents-images/152_answer_choice_1.png",
+        "/questions/regents-images/152_answer_choice_2.png",
+        "/questions/regents-images/152_answer_choice_3.png",
+        "/questions/regents-images/152_answer_choice_4.png"
+      ],
+      "choices": [
+        "1",
+        "2",
+        "3",
+        "4"
+      ],
+      "answerIndex": 3,
+      "explanation": "Only choice 4 is decreasing for every \\(x\\) in the interval \\(-3 < x < 3\\)."
+    },
+    {
+      "id": "ch10_s6_q2",
+      "type": "mc",
+      "prompt": "Three functions are given below. Which functions have the same y-intercept?",
+      "image": "/questions/regents-images/153_3_representations.png",
+      "choices": [
+        "\\(f(x)\\) and \\(g(x)\\)",
+        "\\(g(x)\\) and \\(h(x)\\)",
+        "\\(f(x)\\) and \\(h(x)\\)",
+        "The functions all have different y-intercepts."
+      ],
+      "answerIndex": 0,
+      "explanation": "Evaluate each function at \\(x=0\\). \\(f(0)=-|0+2|+7=5\\), \\(g(0)=(0-3)^2-4=5\\), and from the table \\(h(0)=-3\\). Therefore, \\(f(x)\\) and \\(g(x)\\) have the same y-intercept."
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "sectionId": "ch4_s1",
+  "title": "Solving Linear Inequalities",
+  "lesson": {
+    "title": "Solving Linear Inequalities",
+    "intro": [
+      "Solving a linear inequality is similar to solving a linear equation.",
+      "You can add, subtract, multiply, or divide both sides by the same number.",
+      "If you multiply or divide both sides by a negative number, you must reverse the inequality symbol.",
+      "The solution to an inequality is often a range of values shown on a number line."
+    ]
+  },
+  "workedExample": {
+    "enabled": false,
+    "problem": "Solve the inequality \\(3x - 5 > 7\\).",
+    "steps": [
+      "Add 5 to both sides: \\(3x > 12\\).",
+      "Divide both sides by 3: \\(x > 4\\)."
+    ],
+    "answer": "\\(x > 4\\)",
+    "aiHint": "Solve it like an equation, but remember to reverse the inequality if multiplying or dividing by a negative."
+  },
+  "questions": [
+    {
+      "id": "ch4_s1_q1",
+      "type": "mc",
+      "prompt": "What is the solution to the inequality \\(2m - 4 \\le 3(2m + 4)\\)?",
+      "choices": [
+        "\\(m \\le -2\\)",
+        "\\(m \\ge -2\\)",
+        "\\(m \\le -4\\)",
+        "\\(m \\ge -4\\)"
+      ],
+      "answerIndex": 3,
+      "explanation": "Distribute: \\(2m - 4 \\le 6m + 12\\). Subtract \\(2m\\): \\(-4 \\le 4m + 12\\). Subtract 12: \\(-16 \\le 4m\\). Divide by 4: \\(-4 \\le m\\), which means \\(m \\ge -4\\)."
+    },
+    {
+      "id": "ch4_s1_q2",
+      "type": "mc",
+      "prompt": "Which graph is the solution to the inequality \\(6.4 - 4x \\ge -2.8\\)?",
+      "choiceImages": [
+        "/questions/regents-images/41_answer_choice_1.png",
+        "/questions/regents-images/41_answer_choice_2.png",
+        "/questions/regents-images/41_answer_choice_3.png",
+        "/questions/regents-images/41_answer_choice_4.png"
+      ],
+      "choices": [
+        "1",
+        "2",
+        "3",
+        "4"
+      ],
+      "answerIndex": 3,
+      "explanation": "Solve the inequality: \\(6.4 - 4x \\ge -2.8\\). Subtract 6.4: \\(-4x \\ge -9.2\\). Divide by -4 and reverse the inequality: \\(x \\le 2.3\\). The correct graph is choice 4."
+    }
+  ]
+}

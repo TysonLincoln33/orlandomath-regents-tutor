@@ -1,0 +1,78 @@
+{
+  "sectionId": "ch1_s2",
+  "title": "Identifying Properties",
+  "lesson": {
+    "title": "Identifying Properties",
+    "intro": [
+      "Properties of equality justify the steps used to transform equations.",
+      "When the same quantity is added to both sides of an equation, the addition property of equality is used.",
+      "When the same quantity is subtracted from both sides of an equation, the subtraction property of equality is used.",
+      "A correct justification explains why one equation is equivalent to the next."
+    ]
+  },
+  "workedExample": {
+    "enabled": false,
+    "problem": "A student changes \\(x^2-9=4\\) to \\(x^2=13\\). Which property justifies the step?",
+    "steps": [
+      "The student added \\(9\\) to both sides of the equation.",
+      "Adding the same value to both sides keeps the equation balanced.",
+      "This is the addition property of equality."
+    ],
+    "answer": "Addition property of equality.",
+    "aiHint": "Ask what number was added or subtracted on both sides."
+  },
+  "questions": [
+    {
+      "id": "ch1_s2_q1",
+      "type": "mc",
+      "prompt": "When solving the equation \\(4x^2-16=0\\), Laura wrote \\(4x^2=16\\) as her first step. Which property justifies Laura's first step?",
+      "choices": [
+        "distributive property of multiplication over addition",
+        "multiplication property of equality",
+        "commutative property of addition",
+        "addition property of equality"
+      ],
+      "answerIndex": 3,
+      "explanation": "Laura added \\(16\\) to both sides to move from \\(4x^2-16=0\\) to \\(4x^2=16\\), so she used the addition property of equality."
+    },
+    {
+      "id": "ch1_s2_q2",
+      "type": "mc",
+      "prompt": "Stephanie is solving the equation \\(x^2-12=7x-8\\). Her first step is shown below.\n\nGiven: \\(x^2-12=7x-8\\)\nStep 1: \\(x^2-4=7x\\)\n\nWhich property justifies her first step?",
+      "choices": [
+        "associative property",
+        "commutative property",
+        "distributive property",
+        "addition property of equality"
+      ],
+      "answerIndex": 3,
+      "explanation": "Stephanie added \\(8\\) to both sides, so the correct justification is the addition property of equality."
+    },
+    {
+      "id": "ch1_s2_q3",
+      "type": "mc",
+      "prompt": "Chloe is solving the equation \\(x^2+5x=3x+3\\). Her first step is shown below.\n\nGiven: \\(x^2+5x=3x+3\\)\nStep 1: \\(x^2+2x-3=0\\)\n\nWhich property justifies this step?",
+      "choices": [
+        "the zero product property",
+        "the commutative property",
+        "the distributive property",
+        "the subtraction property of equality"
+      ],
+      "answerIndex": 3,
+      "explanation": "Chloe subtracted \\(3x\\) and \\(3\\) to move all terms to one side, so this is the subtraction property of equality."
+    },
+    {
+      "id": "ch1_s2_q4",
+      "type": "mc",
+      "prompt": "When solving \\(x^2+6x=-8\\) for \\(x\\), a student wrote \\(x^2+6x+8=0\\) as their first step. Which property justifies this step?",
+      "choices": [
+        "associative property",
+        "commutative property",
+        "zero property of addition",
+        "addition property of equality"
+      ],
+      "answerIndex": 3,
+      "explanation": "The student added \\(8\\) to both sides, which is the addition property of equality."
+    }
+  ]
+}

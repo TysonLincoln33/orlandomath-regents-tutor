@@ -1,0 +1,31 @@
+{
+  "sectionId": "ch12_s6",
+  "standardCode": "S.ID.C.8",
+  "title": "Correlation Coefficient",
+  "questions": [
+    {
+      "id": "ch12_s6_q1",
+      "prompt": "Placeholder — Correlation Coefficient. Rewrite the expression \\(2x + 3x\\) in simplest form.",
+      "choices": [
+        "\\(5x\\)",
+        "\\(6x\\)",
+        "\\(x^2\\)",
+        "\\(5\\)"
+      ],
+      "answerIndex": 0,
+      "explanation": "Combine like terms: \\(2x + 3x = 5x\\)."
+    },
+    {
+      "id": "ch12_s6_q2",
+      "prompt": "A scatterplot shows a strong positive linear trend. Which statement is best?",
+      "choices": [
+        "As \\(x\\) increases, \\(y\\) tends to increase.",
+        "As \\(x\\) increases, \\(y\\) tends to decrease.",
+        "There is no relationship.",
+        "All points lie on a circle."
+      ],
+      "answerIndex": 0,
+      "explanation": "A strong positive trend means larger \\(x\\) values are generally paired with larger \\(y\\) values."
+    }
+  ]
+}

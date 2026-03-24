@@ -1,0 +1,43 @@
+{
+  "sectionId": "ch9_s3",
+  "chapter": 9,
+  "section": 3,
+  "title": "Graphing Systems of Linear Inequalities",
+  "lesson": {
+    "title": "Graphing Systems of Linear Inequalities",
+    "image": "/lesson-images/9_3_shaded_system.png",
+    "intro": [
+      "A system of linear inequalities represents a region where all inequalities are true at the same time.",
+      "Each inequality creates a shaded half-plane on the coordinate plane.",
+      "The solution to the system is the overlapping shaded region.",
+      "Words like **at least** and **at most** help determine whether the inequality symbols are \\(\\ge\\) or \\(\\le\\)."
+    ]
+  },
+  "workedExample": {
+    "enabled": false,
+    "image": "/lesson-images/9_3_shaded_system.png",
+    "problem": "Graph the system \\(y \\ge x - 1\\) and \\(y < -x + 4\\).",
+    "steps": [
+      "Graph the boundary line \\(y = x - 1\\). Since the symbol is \\(\\ge\\), use a solid line and shade above it.",
+      "Graph the boundary line \\(y = -x + 4\\). Since the symbol is \\(<\\), use a dashed line and shade below it.",
+      "The solution is the region where the two shaded areas overlap."
+    ],
+    "answer": "The solution is the overlapping shaded region.",
+    "aiHint": "Graph each boundary line first, then shade the correct side for each inequality."
+  },
+  "questions": [
+    {
+      "id": "ch9_s3_q1",
+      "type": "mc",
+      "prompt": "A tour bus can seat, at most, 48 passengers. An adult ticket costs $18 and a child ticket costs $12. The bus company must collect at least $650 to make a profit. If \\(a\\) represents the number of adult tickets sold and \\(c\\) represents the number of child tickets sold, which system of inequalities models this situation if they make a profit?",
+      "choices": [
+        "\\(a + c < 48\\) and \\(18a + 12c > 650\\)",
+        "\\(18a + 12c > 650\\) and \\(a + c \\le 48\\)",
+        "\\(18a + 12c \\ge 650\\) and \\(a + c < 48\\)",
+        "\\(18a + 12c < 650\\) and \\(a + c \\le 48\\)"
+      ],
+      "answerIndex": 1,
+      "explanation": "At most 48 passengers means \\(a + c \\le 48\\). At least $650 means \\(18a + 12c \\ge 650\\). In the printed Regents choices, the correct modeling choice is the one pairing the passenger cap with the profit requirement as shown in choice 2."
+    }
+  ]
+}

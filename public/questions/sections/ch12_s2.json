@@ -1,0 +1,43 @@
+{
+  "sectionId": "ch12_s2",
+  "title": "Frequency Tables",
+  "lesson": {
+    "title": "Frequency Tables",
+    "intro": [
+      "A two-way frequency table organizes data by two categories.",
+      "You can use row totals, column totals, and the grand total to answer questions about counts and percentages.",
+      "To find a percentage, divide the part by the whole and multiply by 100.",
+      "Be careful to use the correct whole when the question says 'of the students who chose...' or 'of all the pizzas sold...'."
+    ]
+  },
+  "questions": [
+    {
+      "id": "ch12_s2_q165",
+      "type": "mc",
+      "prompt": "A survey of students at West High School was taken to determine a theme for the prom. The results of the survey are summarized in the table below. Approximately what percentage of the students who chose the Broadway theme were girls?",
+      "image": "/questions/regents-images/165_table.png",
+      "choices": [
+        "26",
+        "27",
+        "46",
+        "68"
+      ],
+      "answerIndex": 2,
+      "explanation": "For Broadway, there were 68 girls and 79 boys, for a total of 147 students. \\(\\frac{68}{147}\\approx0.463\\), so the percentage is about \\(46\\%\\)."
+    },
+    {
+      "id": "ch12_s2_q166",
+      "type": "mc",
+      "prompt": "Market Street Pizza kept a record of pizza sales for the month of February. The results are shown in the table below. Of all the pizzas sold in February, what percent were plain, deep-dish pizzas?",
+      "image": "/questions/regents-images/166_table.png",
+      "choices": [
+        "20%",
+        "30%",
+        "40%",
+        "50%"
+      ],
+      "answerIndex": 0,
+      "explanation": "The number of plain, deep-dish pizzas is 200. The total number of pizzas sold is \\(300+80+120+100+200+25+105+70=1000\\). So \\(\\frac{200}{1000}=0.20=20\\%\\)."
+    }
+  ]
+}

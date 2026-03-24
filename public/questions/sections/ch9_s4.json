@@ -1,0 +1,69 @@
+{
+  "sectionId": "ch9_s4",
+  "chapter": 9,
+  "section": 4,
+  "title": "Quadratic–Linear Systems",
+
+  "lesson": {
+    "title": "Quadratic–Linear Systems",
+    "image": "/lesson-images/9_4_quadratic_linear.png",
+    "intro": [
+      "A quadratic–linear system contains one quadratic equation and one linear equation.",
+      "The solutions to the system are the points where the line and the parabola intersect.",
+      "A quadratic–linear system may have zero, one, or two solutions depending on how the graphs intersect."
+    ]
+  },
+
+  "workedExample": {
+    "enabled": false,
+    "image": "/lesson-images/9_4_quadratic_linear.png",
+    "problem": "Solve the system y = x² − 4 and y = x.",
+    "steps": [
+      "Set the equations equal to each other: x² − 4 = x.",
+      "Rearrange to form x² − x − 4 = 0.",
+      "Solve the quadratic equation to find the x-values.",
+      "Substitute each x-value into y = x to find the ordered pairs."
+    ],
+    "answer": "The solutions are the intersection points of the line and parabola."
+  },
+
+  "questions": [
+
+    {
+      "id": "ch9_s4_q1",
+      "type": "mc",
+
+      "prompt": "Consider the system of equations y = x² − 4 and y = x. How many solutions does the system have?",
+
+      "choices": [
+        "0 solutions",
+        "1 solution",
+        "2 solutions",
+        "infinitely many solutions"
+      ],
+
+      "answerIndex": 2,
+
+      "explanation": "Set the equations equal: x² − 4 = x. Rearranging gives x² − x − 4 = 0, which has two real solutions. Therefore the line and parabola intersect at two points."
+    },
+
+    {
+      "id": "ch9_s4_q2",
+      "type": "mc",
+
+      "prompt": "Which equation results from substituting y = x into the quadratic equation y = x² − 4 to solve the system?",
+
+      "choices": [
+        "x² + x − 4 = 0",
+        "x² − x − 4 = 0",
+        "x² − 4x = 0",
+        "x² − x + 4 = 0"
+      ],
+
+      "answerIndex": 1,
+
+      "explanation": "Substitute y = x into y = x² − 4 to get x = x² − 4. Rearranging gives x² − x − 4 = 0."
+    }
+
+  ]
+}

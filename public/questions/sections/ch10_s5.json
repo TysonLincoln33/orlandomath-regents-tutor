@@ -1,0 +1,97 @@
+{
+  "sectionId": "ch10_s5",
+  "title": "Transformations with Functions",
+  "lesson": {
+    "title": "Transformations with Functions",
+    "intro": [
+      "Transformations change the position or shape of a graph.",
+      "Adding or subtracting outside the function shifts the graph up or down.",
+      "Adding or subtracting inside the function shifts the graph left or right.",
+      "Multiplying a function can stretch, compress, or reflect its graph."
+    ]
+  },
+  "workedExample": {
+    "enabled": false,
+    "problem": "Describe the transformation from \\(f(x)=x^2\\) to \\(g(x)=(x-4)^2-3\\).",
+    "steps": [
+      "The expression \\((x-4)^2\\) shifts the graph right 4 units.",
+      "The \\(-3\\) outside shifts the graph down 3 units.",
+      "So the graph moves right 4 units and down 3 units."
+    ],
+    "answer": "Shift right 4 units and down 3 units.",
+    "aiHint": "Changes inside parentheses move the graph horizontally, and changes outside move it vertically."
+  },
+  "questions": [
+    {
+      "id": "ch10_s5_q1",
+      "type": "mc",
+      "prompt": "Which function represents the graph of \\(w(x)=|x|\\) shifted 2 units to the right?",
+      "choices": [
+        "\\(g(x)=|x+2|\\)",
+        "\\(h(x)=|x-2|\\)",
+        "\\(q(x)=|x|+2\\)",
+        "\\(r(x)=|x|-2\\)"
+      ],
+      "answerIndex": 1,
+      "explanation": "A horizontal shift right by 2 units is represented by replacing \\(x\\) with \\(x-2\\)."
+    },
+    {
+      "id": "ch10_s5_q2",
+      "type": "mc",
+      "prompt": "Given \\(f(x)=x^2\\), which function will shift \\(f(x)\\) to the left 3 units?",
+      "choices": [
+        "\\(g(x)=x^2+3\\)",
+        "\\(h(x)=x^2-3\\)",
+        "\\(j(x)=(x-3)^2\\)",
+        "\\(k(x)=(x+3)^2\\)"
+      ],
+      "answerIndex": 3,
+      "explanation": "A horizontal shift left by 3 units is represented by replacing \\(x\\) with \\(x+3\\)."
+    },
+    {
+      "id": "ch10_s5_q3",
+      "type": "mc",
+      "prompt": "If \\(f(x)=x^2\\), then which function represents a shift of the graph of \\(f(x)\\) 4 units to the right and 3 units down?",
+      "choices": [
+        "\\(g(x)=(x+4)^2+3\\)",
+        "\\(j(x)=(x+4)^2-3\\)",
+        "\\(h(x)=(x-4)^2-3\\)",
+        "\\(k(x)=(x-4)^2+3\\)"
+      ],
+      "answerIndex": 2,
+      "explanation": "Right 4 units gives \\((x-4)^2\\), and down 3 units gives \\((x-4)^2-3\\)."
+    },
+    {
+      "id": "ch10_s5_q4",
+      "type": "mc",
+      "prompt": "The students in Mrs. Smith's algebra class were asked to describe the graph of \\(g(x)=2(x-3)^2\\) compared to the graph of \\(f(x)=x^2\\). Which student response is correct?",
+      "choices": [
+        "Ashley said that the graph of \\(g(x)\\) is wider and shifted left 3 units.",
+        "Beth said that the graph of \\(g(x)\\) is narrower and shifted left 3 units.",
+        "Carl said that the graph of \\(g(x)\\) is wider and shifted right 3 units.",
+        "Don said that the graph of \\(g(x)\\) is narrower and shifted right 3 units."
+      ],
+      "answerIndex": 3,
+      "explanation": "The factor of 2 makes the parabola narrower, and \\((x-3)\\) shifts it right 3 units."
+    },
+    {
+      "id": "ch10_s5_q5",
+      "type": "mc",
+      "prompt": "The function \\(f(x)=x^2\\) is multiplied by \\(k\\), where \\(k<-1\\). Which graph could represent \\(g(x)=kf(x)\\)?",
+      "choiceImages": [
+        "/questions/regents-images/150_answer_choice_1.png",
+        "/questions/regents-images/150_answer_choice_2.png",
+        "/questions/regents-images/150_answer_choice_3.png",
+        "/questions/regents-images/150_answer_choice_4.png"
+      ],
+      "choices": [
+        "1",
+        "2",
+        "3",
+        "4"
+      ],
+      "answerIndex": 3,
+      "explanation": "Since \\(k<-1\\), the parabola is reflected over the x-axis and vertically stretched, so it opens downward and is narrower than \\(y=x^2\\)."
+    }
+  ]
+}

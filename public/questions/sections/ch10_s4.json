@@ -1,0 +1,102 @@
+{
+  "sectionId": "ch10_s4",
+  "title": "Families of Functions",
+  "lesson": {
+    "title": "Families of Functions",
+    "intro": [
+      "Different families of functions describe different patterns of change.",
+      "Linear functions change by a constant amount, quadratic functions involve squared terms and form parabolas, and exponential functions change by a constant percent or factor over equal intervals."
+    ],
+    "example": {
+      "problem": "Identify the type of function represented by the situation: A population grows by \\(8\\%\\) each year.",
+      "steps": [
+        "Step 1: Look for how the quantity changes over time.",
+        "Step 2: A percent increase indicates the amount grows by a constant factor.",
+        "Step 3: Repeated multiplication by a constant factor represents exponential growth."
+      ],
+      "answer": "The situation represents an exponential function."
+    }
+  },
+  "questions": [
+    {
+      "id": "ch10_s4_q1",
+      "type": "mc",
+      "prompt": "On an island, a rare breed of rabbit doubled its population each month for two years. Which type of function best models the increase in population at the end of two years?",
+      "choices": [
+        "linear growth",
+        "linear decay",
+        "exponential growth",
+        "exponential decay"
+      ],
+      "answerIndex": 2,
+      "explanation": "Doubling each month means the population is multiplied by the same factor over equal intervals, which is exponential growth."
+    },
+    {
+      "id": "ch10_s4_q2",
+      "type": "mc",
+      "prompt": "Which scenario represents exponential decay?",
+      "choices": [
+        "A car traveling at a constant speed",
+        "The value of a car decreasing each year",
+        "A person's height as they grow",
+        "A bank account increasing by the same dollar amount each year"
+      ],
+      "answerIndex": 1,
+      "explanation": "When a quantity decreases by a percentage or factor over time, it represents exponential decay."
+    },
+    {
+      "id": "ch10_s4_q3",
+      "type": "mc",
+      "prompt": "Which scenario represents an exponential relationship?",
+      "choices": [
+        "Kirsten's New Year's resolution is to lose one pound each week.",
+        "Sarah wants to increase her grade by 5 points each quarter.",
+        "Tommy wants to reduce his spending by \\(50\\) dollars each month.",
+        "Dylan hopes to grow his business by \\(5\\%\\) each month."
+      ],
+      "answerIndex": 3,
+      "explanation": "A constant percent change over equal time intervals represents exponential growth."
+    },
+    {
+      "id": "ch10_s4_q4",
+      "type": "mc",
+      "prompt": "Which representation shows the function as an equation?",
+      "image": "/questions/regents-images/142_4_representations.png",
+      "choices": [
+        "Representation I",
+        "Representation II",
+        "Representation III",
+        "Representation IV"
+      ],
+      "answerIndex": 3,
+      "explanation": "Among the four representations, the equation form directly expresses the relationship using algebraic notation."
+    },
+    {
+      "id": "ch10_s4_q5",
+      "type": "mc",
+      "prompt": "The inputs and outputs of a function are shown in the table below. This function can best be described as",
+      "image": "/questions/regents-images/143_table.png",
+      "choices": [
+        "linear",
+        "quadratic",
+        "exponential",
+        "absolute value"
+      ],
+      "answerIndex": 2,
+      "explanation": "The outputs increase by a constant multiplicative factor, indicating an exponential relationship."
+    },
+    {
+      "id": "ch10_s4_q6",
+      "type": "mc",
+      "prompt": "If \\(g(x)=-2x^2+16\\), then \\(g(-3)\\) equals",
+      "choices": [
+        "\\(-20\\)",
+        "\\(-2\\)",
+        "\\(34\\)",
+        "\\(52\\)"
+      ],
+      "answerIndex": 1,
+      "explanation": "Substitute \\(-3\\) for \\(x\\): \\(g(-3)=-2(-3)^2+16=-2(9)+16=-18+16=-2\\)."
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "sectionId": "ch7_s5",
+  "title": "Zeros of Polynomials",
+  "lesson": {
+    "title": "Finding Zeros of Polynomial Functions",
+    "intro": [
+      "The zeros of a polynomial are the \\(x\\)-values that make the function equal to zero.",
+      "If a polynomial is written in factored form, set each factor equal to zero.",
+      "A zero corresponds to an \\(x\\)-intercept on the graph.",
+      "Carefully solve each factor to find all zeros."
+    ]
+  },
+  "workedExample": {
+    "enabled": false,
+    "problem": "Find the zeros of \\(f(x)=x(x-3)(x+2)\\).",
+    "steps": [
+      "Set each factor equal to zero.",
+      "\\(x=0\\), \\(x-3=0\\), and \\(x+2=0\\).",
+      "Solve to get \\(x=0\\), \\(x=3\\), and \\(x=-2\\)."
+    ],
+    "answer": "\\(0, 3, -2\\)",
+    "aiHint": "In factored form, each factor gives one possible zero."
+  },
+  "questions": [
+    {
+      "id": "ch7_s5_q1",
+      "type": "mc",
+      "prompt": "The zeros of the function \\(f(x)=x(x-5)(3x+6)\\) are",
+      "choices": [
+        "0, -5, and 2",
+        "0, 5, and -2",
+        "-5 and 2, only",
+        "5 and -2, only"
+      ],
+      "answerIndex": 1,
+      "explanation": "Set each factor equal to zero: \\(x=0\\), \\(x-5=0\\Rightarrow x=5\\), and \\(3x+6=0\\Rightarrow x=-2\\)."
+    },
+    {
+      "id": "ch7_s5_q2",
+      "type": "mc",
+      "prompt": "What are the zeros of \\(f(x)=x^2 - 8x - 20\\)?",
+      "choices": [
+        "10 and 2",
+        "10 and -2",
+        "-10 and 2",
+        "-10 and -2"
+      ],
+      "answerIndex": 1,
+      "explanation": "Factor: \\(x^2 - 8x - 20 = (x-10)(x+2)\\). The zeros are 10 and -2."
+    },
+    {
+      "id": "ch7_s5_q3",
+      "type": "mc",
+      "prompt": "Which function has the zeros \\(-1\\), 3, and \\(-4\\)?",
+      "choices": [
+        "\\(f(x)=(x+1)(x-3)(x-4)\\)",
+        "\\(g(x)=(x-1)(x+3)(x-4)\\)",
+        "\\(h(x)=(x+1)(x-3)(x+4)\\)",
+        "\\(k(x)=(x-1)(x+3)(x+4)\\)"
+      ],
+      "answerIndex": 2,
+      "explanation": "A zero at -1 gives factor \\((x+1)\\), a zero at 3 gives factor \\((x-3)\\), and a zero at -4 gives factor \\((x+4)\\)."
+    }
+  ]
+}

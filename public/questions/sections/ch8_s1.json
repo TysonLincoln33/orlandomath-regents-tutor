@@ -1,0 +1,92 @@
+{
+  "sectionId": "ch8_s1",
+  "title": "Operations with Radicals",
+  "lesson": {
+    "title": "Operations with Radicals",
+    "intro": [
+      "Radicals can only be added or subtracted when they have the **same radicand**.",
+      "When multiplying radicals, multiply the numbers outside and inside the radical, then simplify.",
+      "To simplify a radical, look for perfect-square factors inside the radical.",
+      "Always rewrite the final answer in simplest radical form."
+    ]
+  },
+  "workedExample": {
+    "enabled": false,
+    "problem": "Simplify \\(2\\sqrt{12} + \\sqrt{3}\\).",
+    "steps": [
+      "Rewrite \\(\\sqrt{12}\\) as \\(\\sqrt{4\\cdot 3}\\).",
+      "Simplify: \\(\\sqrt{12} = 2\\sqrt{3}\\).",
+      "Substitute back: \\(2\\sqrt{12} + \\sqrt{3} = 2(2\\sqrt{3}) + \\sqrt{3}\\).",
+      "Combine like radicals: \\(4\\sqrt{3} + \\sqrt{3} = 5\\sqrt{3}\\)."
+    ],
+    "answer": "\\(5\\sqrt{3}\\)",
+    "aiHint": "Simplify each radical first, then combine like radicals."
+  },
+  "questions": [
+    {
+      "id": "ch8_s1_q1",
+      "type": "mc",
+      "prompt": "What is the sum of \\(8\\sqrt{3}\\) and \\(\\sqrt{3}\\)?",
+      "choices": [
+        "\\(8\\sqrt{6}\\)",
+        "\\(9\\sqrt{6}\\)",
+        "\\(7\\sqrt{3}\\)",
+        "\\(9\\sqrt{3}\\)"
+      ],
+      "answerIndex": 3,
+      "explanation": "These are like radicals, so add the coefficients: \\(8\\sqrt{3}+\\sqrt{3}=9\\sqrt{3}\\)."
+    },
+    {
+      "id": "ch8_s1_q2",
+      "type": "mc",
+      "prompt": "What is the sum of \\(3x\\sqrt{7}\\) and \\(2x\\sqrt{7}\\)?",
+      "choices": [
+        "\\(5x\\sqrt{7}\\)",
+        "\\(5x^2\\sqrt{7}\\)",
+        "\\(5x\\sqrt{14}\\)",
+        "\\(5x^2\\sqrt{14}\\)"
+      ],
+      "answerIndex": 0,
+      "explanation": "These are like radicals, so add the coefficients: \\(3x\\sqrt{7}+2x\\sqrt{7}=5x\\sqrt{7}\\)."
+    },
+    {
+      "id": "ch8_s1_q3",
+      "type": "mc",
+      "prompt": "The sum of \\(2\\sqrt{54}\\) and \\(2\\sqrt{6}\\) is",
+      "choices": [
+        "\\(4\\sqrt{60}\\)",
+        "\\(8\\sqrt{15}\\)",
+        "\\(7\\sqrt{6}\\)",
+        "\\(8\\sqrt{6}\\)"
+      ],
+      "answerIndex": 3,
+      "explanation": "Simplify \\(\\sqrt{54}=\\sqrt{9\\cdot 6}=3\\sqrt{6}\\). Then \\(2\\sqrt{54}=6\\sqrt{6}\\), so \\(6\\sqrt{6}+2\\sqrt{6}=8\\sqrt{6}\\)."
+    },
+    {
+      "id": "ch8_s1_q4",
+      "type": "mc",
+      "prompt": "The sum of \\(2\\sqrt{27}\\) and \\(4\\sqrt{12}\\) is",
+      "choices": [
+        "\\(14\\sqrt{3}\\)",
+        "\\(34\\sqrt{3}\\)",
+        "\\(6\\sqrt{39}\\)",
+        "\\(8\\sqrt{39}\\)"
+      ],
+      "answerIndex": 0,
+      "explanation": "Simplify: \\(\\sqrt{27}=3\\sqrt{3}\\) and \\(\\sqrt{12}=2\\sqrt{3}\\). Then \\(2\\sqrt{27}=6\\sqrt{3}\\) and \\(4\\sqrt{12}=8\\sqrt{3}\\). Sum: \\(14\\sqrt{3}\\)."
+    },
+    {
+      "id": "ch8_s1_q5",
+      "type": "mc",
+      "prompt": "The product of \\(2\\sqrt{10}\\) and \\(3\\sqrt{2}\\) is",
+      "choices": [
+        "\\(12\\sqrt{5}\\)",
+        "\\(5\\sqrt{20}\\)",
+        "\\(24\\sqrt{5}\\)",
+        "\\(5\\sqrt{12}\\)"
+      ],
+      "answerIndex": 0,
+      "explanation": "Multiply coefficients and radicals: \\((2\\sqrt{10})(3\\sqrt{2})=6\\sqrt{20}=6\\sqrt{4\\cdot 5}=12\\sqrt{5}\\)."
+    }
+  ]
+}

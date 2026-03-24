@@ -1,0 +1,93 @@
+{
+  "sectionId": "ch1_s3",
+  "title": "Solving Linear Equations",
+  "lesson": {
+    "title": "Solving Linear Equations",
+    "intro": [
+      "To solve a linear equation, isolate the variable by undoing operations while keeping the equation balanced.",
+      "When fractions are present, multiplying both sides by a common denominator can simplify the work.",
+      "When variables appear with parameters like \\(a\\), solve the same way by factoring the variable when needed.",
+      "Always check which answer choice matches the simplified result."
+    ]
+  },
+  "workedExample": {
+    "enabled": false,
+    "problem": "Solve \\(\\frac{2(3x-1)}{3}=x+2\\).",
+    "steps": [
+      "Multiply both sides by \\(3\\): \\(2(3x-1)=3x+6\\).",
+      "Distribute: \\(6x-2=3x+6\\).",
+      "Subtract \\(3x\\): \\(3x-2=6\\).",
+      "Add \\(2\\): \\(3x=8\\).",
+      "Divide by \\(3\\): \\(x=\\frac{8}{3}\\)."
+    ],
+    "answer": "\\(\\frac{8}{3}\\)",
+    "aiHint": "Clear the denominator first."
+  },
+  "questions": [
+    {
+      "id": "ch1_s3_q1",
+      "type": "mc",
+      "prompt": "The solution to \\(\\frac{4(x-5)}{3}+2=14\\) is",
+      "choices": [
+        "15",
+        "14",
+        "6",
+        "4"
+      ],
+      "answerIndex": 1,
+      "explanation": "Subtract \\(2\\), multiply by \\(3\\), divide by \\(4\\), and solve: \\(x=14\\)."
+    },
+    {
+      "id": "ch1_s3_q2",
+      "type": "mc",
+      "prompt": "The solution to the equation \\(\\frac{2(3x-1)}{3}=x+2\\) is",
+      "choices": [
+        "\\(\\frac{1}{3}\\)",
+        "\\(\\frac{2}{3}\\)",
+        "\\(\\frac{4}{3}\\)",
+        "\\(\\frac{8}{3}\\)"
+      ],
+      "answerIndex": 3,
+      "explanation": "Multiply both sides by \\(3\\): \\(2(3x-1)=3x+6\\). Then solve to get \\(x=\\frac{8}{3}\\)."
+    },
+    {
+      "id": "ch1_s3_q3",
+      "type": "mc",
+      "prompt": "When solving \\(-2(3x-5)=\\frac{9}{2}x-2\\) for \\(x\\), the solution is",
+      "choices": [
+        "\\(\\frac{8}{7}\\)",
+        "\\(\\frac{10}{11}\\)",
+        "\\(-\\frac{16}{21}\\)",
+        "\\(-\\frac{16}{3}\\)"
+      ],
+      "answerIndex": 0,
+      "explanation": "Distribute and solve: \\(-6x+10=\\frac{9}{2}x-2\\), so \\(12=\\frac{21}{2}x\\), giving \\(x=\\frac{8}{7}\\)."
+    },
+    {
+      "id": "ch1_s3_q4",
+      "type": "mc",
+      "prompt": "When solved for \\(x\\) in terms of \\(a\\), the solution to the equation \\(3x-7=ax+5\\) is",
+      "choices": [
+        "\\(\\frac{12}{3a}\\)",
+        "\\(\\frac{12}{3-a}\\)",
+        "\\(\\frac{3a}{12}\\)",
+        "\\(\\frac{3-a}{12}\\)"
+      ],
+      "answerIndex": 1,
+      "explanation": "Move the variable terms together: \\(3x-ax=12\\). Factor: \\(x(3-a)=12\\). Then \\(x=\\frac{12}{3-a}\\)."
+    },
+    {
+      "id": "ch1_s3_q5",
+      "type": "mc",
+      "prompt": "When the equation \\(6-ax=ax-2\\) is solved for \\(x\\) in terms of \\(a\\), and \\(a\\neq0\\), the result is",
+      "choices": [
+        "\\(4a\\)",
+        "\\(\\frac{4}{a}\\)",
+        "\\(2a\\)",
+        "\\(\\frac{2}{a}\\)"
+      ],
+      "answerIndex": 1,
+      "explanation": "Add \\(ax\\) to both sides and add \\(2\\): \\(8=2ax\\). Divide by \\(2a\\): \\(x=\\frac{4}{a}\\)."
+    }
+  ]
+}

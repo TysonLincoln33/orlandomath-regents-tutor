@@ -1,0 +1,111 @@
+{
+  "sectionId": "ch2_s2",
+  "title": "Rate of Change",
+  "lesson": {
+    "title": "Average Rate of Change",
+    "intro": [
+      "Average rate of change measures how much a quantity changes over an interval.",
+      "It can be found using the formula \\(\\frac{y_2-y_1}{x_2-x_1}\\).",
+      "For graphs, choose two points and apply the formula.",
+      "For tables, subtract the outputs and divide by the change in inputs."
+    ]
+  },
+  "workedExample": {
+    "enabled": false,
+    "problem": "Find the average rate of change between the points \\((4,12)\\) and \\((12,60)\\).",
+    "steps": [
+      "Use the formula \\(\\frac{y_2-y_1}{x_2-x_1}\\).",
+      "Substitute the values: \\(\\frac{60-12}{12-4}\\).",
+      "Simplify the numerator to get \\(48\\).",
+      "Simplify the denominator to get \\(8\\).",
+      "Compute \\(\\frac{48}{8}=6\\)."
+    ],
+    "answer": "6",
+    "aiHint": "Average rate of change is the change in output divided by the change in input."
+  },
+  "questions": [
+    {
+      "id": "ch2_s2_q1",
+      "type": "mc",
+      "prompt": "One Saturday, Dave took a long bike ride. The graph below models his trip. What was Dave's average rate of change, in miles per hour, on this trip?",
+      "image": "/questions/regents-images/28_question_graph.png",
+      "choices": [
+        "10",
+        "11",
+        "11.6",
+        "14.5"
+      ],
+      "answerIndex": 0,
+      "explanation": "Use two points from the graph such as \\((0,0)\\) and \\((5.5,55)\\). The average rate of change is \\(\\frac{55-0}{5.5-0}=10\\) miles per hour."
+    },
+    {
+      "id": "ch2_s2_q2",
+      "type": "mc",
+      "prompt": "A bookstore owner recorded the number of books sold and the profit made selling the books. What is the average rate of change, in dollars per book, between 100 and 350 books sold?",
+      "table": {
+        "headers": ["Books Sold", "Profit"],
+        "rows": [
+          ["100", "$50.00"],
+          ["250", "$275.00"],
+          ["300", "$350.00"],
+          ["350", "$425.00"]
+        ]
+      },
+      "choices": [
+        "0.50",
+        "0.67",
+        "1.50",
+        "2.00"
+      ],
+      "answerIndex": 2,
+      "explanation": "Use the points \\((100,50)\\) and \\((350,425)\\). The average rate of change is \\(\\frac{425-50}{350-100}=\\frac{375}{250}=1.5\\) dollars per book."
+    },
+    {
+      "id": "ch2_s2_q3",
+      "type": "mc",
+      "prompt": "The function \\(h(x)\\) is used to calculate the average height, in inches, of a tomato plant \\(x\\) weeks after it is transplanted. Between weeks 4 and 12, the average rate of change, in inches per week, is",
+      "table": {
+        "headers": ["x", "h(x)"],
+        "rows": [
+          ["2", "6"],
+          ["4", "12"],
+          ["6", "24"],
+          ["9", "51"],
+          ["12", "60"],
+          ["16", "64"]
+        ]
+      },
+      "choices": [
+        "6",
+        "8",
+        "48",
+        "58"
+      ],
+      "answerIndex": 0,
+      "explanation": "From the table, \\(h(4)=12\\) and \\(h(12)=60\\). The average rate of change is \\(\\frac{60-12}{12-4}=\\frac{48}{8}=6\\)."
+    },
+    {
+      "id": "ch2_s2_q4",
+      "type": "mc",
+      "prompt": "The table below shows the radioactivity level of a substance after the given time, \\(t\\), in seconds. What is the average rate of change in radioactivity level over the interval \\(1 \\leq t \\leq 3\\)?",
+      "table": {
+        "headers": ["Time (seconds)", "Radioactivity Level"],
+        "rows": [
+          ["0", "20"],
+          ["1", "10"],
+          ["2", "5"],
+          ["3", "2.5"],
+          ["4", "1.25"]
+        ]
+      },
+      "choices": [
+        "3.75",
+        "-3.75",
+        "4.6875",
+        "-4.6875"
+      ],
+      "answerIndex": 1,
+      "explanation": "From the table, the value changes from 10 to 2.5 between \\(t=1\\) and \\(t=3\\). The average rate of change is \\(\\frac{2.5-10}{3-1}=\\frac{-7.5}{2}=-3.75\\)."
+    }
+  ]
+}

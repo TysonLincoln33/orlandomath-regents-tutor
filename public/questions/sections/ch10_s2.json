@@ -1,0 +1,83 @@
+{
+  "sectionId": "ch10_s2",
+  "title": "Function Notation",
+  "lesson": {
+    "title": "Function Notation",
+    "intro": [
+      "Function notation describes how each input is assigned exactly one output.",
+      "The notation f(x) means the output of the function when x is substituted into the rule.",
+      "To evaluate a function, replace the variable with the given value and simplify carefully.",
+      "Sometimes you are given an output and must work backward to solve for the input value."
+    ]
+  },
+  "workedExample": {
+    "enabled": false
+  },
+  "questions": [
+    {
+      "id": "ch10_s2_q130",
+      "type": "mc",
+      "prompt": "If g(x) = -2x^2 + 16, then g(-3) equals",
+      "choices": [
+        "-20",
+        "-2",
+        "34",
+        "52"
+      ],
+      "answerIndex": 1,
+      "explanation": "Substitute -3 into the function: g(-3) = -2(-3)^2 + 16 = -2(9) + 16 = -18 + 16 = -2."
+    },
+    {
+      "id": "ch10_s2_q131",
+      "type": "mc",
+      "prompt": "Given the function g(x) = \\(\\frac{2x+3}{x^2-2}\\), what is the value of g(-2)?",
+      "choices": [
+        "\\(-\\frac{1}{2}\\)",
+        "\\(\\frac{1}{2}\\)",
+        "-1",
+        "1"
+      ],
+      "answerIndex": 0,
+      "explanation": "Substitute -2 into the function: g(-2) = \\frac{2(-2)+3}{(-2)^2-2} = \\frac{-4+3}{4-2} = \\frac{-1}{2}."
+    },
+    {
+      "id": "ch10_s2_q132",
+      "type": "mc",
+      "prompt": "If f(x) = \\(\\frac{-3x-5}{2}\\), what is the value of x when f(x) = -22?",
+      "choices": [
+        "11",
+        "13",
+        "15",
+        "17"
+      ],
+      "answerIndex": 1,
+      "explanation": "Solve \\frac{-3x-5}{2} = -22. Multiply by 2 to get -3x - 5 = -44, then add 5 and divide by -3 to get x = 13."
+    },
+    {
+      "id": "ch10_s2_q133",
+      "type": "mc",
+      "prompt": "Given g(x) = x^3 + 2x^2 - x, what is the value of g(-3)?",
+      "choices": [
+        "-12",
+        "-6",
+        "6",
+        "12"
+      ],
+      "answerIndex": 1,
+      "explanation": "Substitute -3 into the function: (-3)^3 + 2(-3)^2 - (-3) = -27 + 18 + 3 = -6."
+    },
+    {
+      "id": "ch10_s2_q134",
+      "type": "mc",
+      "prompt": "If f(x) = \\(\\frac{30x^2}{x+2}\\), determine the value of f\\(\\frac{1}{2}\\).",
+      "choices": [
+        "1",
+        "2",
+        "3",
+        "6"
+      ],
+      "answerIndex": 2,
+      "explanation": "Substitute x = \\frac{1}{2}: f\\left(\\frac{1}{2}\\right) = \\frac{30(1/2)^2}{1/2+2} = \\frac{30(1/4)}{5/2} = \\frac{15/2}{5/2} = 3."
+    }
+  ]
+}

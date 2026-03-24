@@ -1,0 +1,39 @@
+{
+  "sectionId": "ch7_s3",
+  "title": "Factoring Polynomials",
+  "lesson": {
+    "title": "Factoring Quadratic Polynomials",
+    "intro": [
+      "Factoring rewrites a polynomial as a product of simpler expressions.",
+      "For a trinomial like \\(x^2 + bx + c\\), look for two numbers that multiply to \\(c\\) and add to \\(b\\).",
+      "A correct factorization can be checked by multiplying the factors back together.",
+      "Factoring is useful for solving equations and simplifying expressions."
+    ]
+  },
+  "workedExample": {
+    "enabled": false,
+    "problem": "Factor \\(x^2 + 5x + 6\\).",
+    "steps": [
+      "Find two numbers that multiply to 6 and add to 5.",
+      "Those numbers are 2 and 3.",
+      "Write the factors as \\((x+2)(x+3)\\)."
+    ],
+    "answer": "\\((x+2)(x+3)\\)",
+    "aiHint": "Look for two numbers that multiply to the constant and add to the middle coefficient."
+  },
+  "questions": [
+    {
+      "id": "ch7_s3_q1",
+      "type": "mc",
+      "prompt": "What is the correct factorization of \\(x^2 + 4x - 12\\)?",
+      "choices": [
+        "\\((x + 3)(x - 4)\\)",
+        "\\((x - 3)(x + 4)\\)",
+        "\\((x + 2)(x - 6)\\)",
+        "\\((x - 2)(x + 6)\\)"
+      ],
+      "answerIndex": 3,
+      "explanation": "The numbers must multiply to -12 and add to 4. Those numbers are 6 and -2, so \\((x - 2)(x + 6)\\)."
+    }
+  ]
+}

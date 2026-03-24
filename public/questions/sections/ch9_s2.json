@@ -1,0 +1,50 @@
+{
+  "sectionId": "ch9_s2",
+  "chapter": 9,
+  "section": 2,
+  "title": "Graphing Linear Systems",
+
+  "lesson": {
+    "title": "Graphing Linear Systems",
+    "image": "/lesson-images/9_2_intersection_example.png",
+    "intro": [
+      "A system of equations can be solved by graphing each equation on the same coordinate plane.",
+      "The solution to the system is the point where the graphs intersect.",
+      "If the graphs intersect once, the system has one solution. If they never intersect, the system has no solution."
+    ]
+  },
+
+  "workedExample": {
+    "enabled": false,
+    "image": "/lesson-images/9_2_intersection_example.png",
+    "problem": "Solve the system y = x + 2 and y = −x + 4 by graphing.",
+    "steps": [
+      "Graph each equation on the same coordinate plane.",
+      "Identify the point where the lines intersect.",
+      "The intersection represents the solution to the system."
+    ],
+    "answer": "(1,3)"
+  },
+
+  "questions": [
+
+    {
+      "id": "ch9_s2_q1",
+      "type": "mc",
+
+      "prompt": "Anna plans to spend $30 on balloons and party hats for her daughter’s birthday party. Including tax, balloons cost $2 each and party hats cost $1.50 each. The number of party hats Anna needs is twice the number of balloons. If x represents the number of balloons and y represents the number of party hats, which system of equations models this situation?",
+
+      "choices": [
+        "2x + 1.5y = 30  and  y = x",
+        "2x + 1.5y = 30  and  y = 2x",
+        "1.5x + 2y = 30  and  y = 2x",
+        "2x + 1.5y = 30  and  x = 2y"
+      ],
+
+      "answerIndex": 1,
+
+      "explanation": "The total cost equation is 2x + 1.5y = 30. The relationship between the quantities is y = 2x because the number of party hats is twice the number of balloons."
+    }
+
+  ]
+}

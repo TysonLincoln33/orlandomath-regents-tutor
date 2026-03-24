@@ -1,0 +1,91 @@
+{
+  "sectionId": "ch1_s1",
+  "title": "Modeling Expressions",
+  "lesson": {
+    "title": "Modeling Expressions",
+    "intro": [
+      "A polynomial is an expression made of terms added or subtracted together.",
+      "The degree of a term is the exponent on its variable, and the degree of a polynomial is the greatest exponent in the expression.",
+      "A constant term has no variable attached to it.",
+      "Standard form lists polynomial terms from greatest exponent to least exponent."
+    ]
+  },
+  "workedExample": {
+    "enabled": false,
+    "problem": "Identify the degree, constant term, and leading coefficient of \\(4x^5-8x^2+5\\).",
+    "steps": [
+      "Look for the greatest exponent. The greatest exponent is \\(5\\), so the degree is \\(5\\).",
+      "Find the term with no variable. The constant term is \\(5\\).",
+      "In standard form, the first term is \\(4x^5\\), so the leading coefficient is \\(4\\)."
+    ],
+    "answer": "Degree 5, constant term 5, leading coefficient 4.",
+    "aiHint": "Check the first term and the highest exponent."
+  },
+  "questions": [
+    {
+      "id": "ch1_s1_q1",
+      "type": "mc",
+      "prompt": "What is the degree of the polynomial \\(2x-x^2+4x^3\\)?",
+      "choices": [
+        "1",
+        "2",
+        "3",
+        "4"
+      ],
+      "answerIndex": 2,
+      "explanation": "The highest exponent in \\(2x-x^2+4x^3\\) is \\(3\\), so the degree is \\(3\\)."
+    },
+    {
+      "id": "ch1_s1_q2",
+      "type": "mc",
+      "prompt": "What is the constant term of the polynomial \\(2x^3-x+5+4x^2\\)?",
+      "choices": [
+        "5",
+        "2",
+        "3",
+        "4"
+      ],
+      "answerIndex": 0,
+      "explanation": "The constant term is the term with no variable. In this polynomial, that term is \\(5\\)."
+    },
+    {
+      "id": "ch1_s1_q3",
+      "type": "mc",
+      "prompt": "Which trinomial is written in standard form and has a constant term of five?",
+      "choices": [
+        "\\(x^5-4x^2+10\\)",
+        "\\(2x^2+6x^4+5\\)",
+        "\\(5x^4-3x^2+1\\)",
+        "\\(4x^5-8x^2+5\\)"
+      ],
+      "answerIndex": 3,
+      "explanation": "Standard form lists exponents from greatest to least, and the constant term must be \\(5\\). Only \\(4x^5-8x^2+5\\) satisfies both conditions."
+    },
+    {
+      "id": "ch1_s1_q4",
+      "type": "mc",
+      "prompt": "A student creates a fourth-degree trinomial with a leading coefficient of 2 and a constant value of 5. The trinomial could be",
+      "choices": [
+        "\\(2x^4+3x^2+5\\)",
+        "\\(2x^4+5x+3\\)",
+        "\\(4x^2-3x+5\\)",
+        "\\(4x^3-5x^2+3\\)"
+      ],
+      "answerIndex": 0,
+      "explanation": "A fourth-degree trinomial needs highest exponent \\(4\\), leading coefficient \\(2\\), and constant \\(5\\). Only \\(2x^4+3x^2+5\\) works."
+    },
+    {
+      "id": "ch1_s1_q5",
+      "type": "mc",
+      "prompt": "Which expression has a degree of 3 and a leading coefficient of 2?",
+      "choices": [
+        "\\(2x^2+3x+1\\)",
+        "\\(6x^3+3x^2-2x\\)",
+        "\\(3x^2+2x+2\\)",
+        "\\(2x^3+x^2+4x\\)"
+      ],
+      "answerIndex": 3,
+      "explanation": "The correct expression must have highest exponent \\(3\\) and leading coefficient \\(2\\). That is \\(2x^3+x^2+4x\\)."
+    }
+  ]
+}

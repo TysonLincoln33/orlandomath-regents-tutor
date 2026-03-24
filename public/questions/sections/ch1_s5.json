@@ -1,0 +1,64 @@
+{
+  "sectionId": "ch1_s5",
+  "title": "Transforming Formulas",
+  "lesson": {
+    "title": "Transforming Formulas",
+    "intro": [
+      "Transforming a formula means solving it for a different variable.",
+      "Use inverse operations to isolate the requested variable.",
+      "When a variable appears in a denominator or as part of a product, undo multiplication and division carefully.",
+      "Keep the equation balanced at each step."
+    ]
+  },
+  "workedExample": {
+    "enabled": false,
+    "problem": "Solve \\(p=2l+2w\\) for \\(w\\).",
+    "steps": [
+      "Subtract \\(2l\\) from both sides: \\(p-2l=2w\\).",
+      "Divide both sides by \\(2\\): \\(w=\\frac{p-2l}{2}\\)."
+    ],
+    "answer": "\\(w=\\frac{p-2l}{2}\\)",
+    "aiHint": "Move the term without \\(w\\) first, then divide."
+  },
+  "questions": [
+    {
+      "id": "ch1_s5_q1",
+      "type": "mc",
+      "prompt": "The formula to calculate kinetic energy is \\(K=\\frac{1}{2}mv^2\\), where \\(K\\) is kinetic energy, \\(m\\) is mass, and \\(v\\) is velocity. When \\(m\\) is written in terms of \\(K\\) and \\(v\\), the equation is",
+      "choices": [
+        "\\(m=\\frac{2K}{v^2}\\)",
+        "\\(m=2Kv^2\\)",
+        "\\(m=2Kv^{-2}\\)",
+        "\\(m=\\frac{K}{2v^2}\\)"
+      ],
+      "answerIndex": 0,
+      "explanation": "From \\(K=\\frac{1}{2}mv^2\\), multiply both sides by \\(2\\) to get \\(2K=mv^2\\), then divide by \\(v^2\\): \\(m=\\frac{2K}{v^2}\\)."
+    },
+    {
+      "id": "ch1_s5_q2",
+      "type": "mc",
+      "prompt": "When the formula \\(p=2l+2w\\) is solved for \\(w\\), the result is",
+      "choices": [
+        "\\(w=\\frac{2l+p}{2}\\)",
+        "\\(w=\\frac{p-2l}{2}\\)",
+        "\\(w=\\frac{p}{2}+l\\)",
+        "\\(w=l-\\frac{p}{2}\\)"
+      ],
+      "answerIndex": 1,
+      "explanation": "Subtract \\(2l\\) from both sides to get \\(p-2l=2w\\), then divide by \\(2\\): \\(w=\\frac{p-2l}{2}\\)."
+    },
+    {
+      "id": "ch1_s5_q3",
+      "type": "mc",
+      "prompt": "The formula for the area of a trapezoid is \\(A=\\frac{1}{2}h(b_1+b_2)\\). The height, \\(h\\), of the trapezoid may be expressed as",
+      "choices": [
+        "\\(\\frac{2A}{b_1+b_2}\\)",
+        "\\(\\frac{1}{2}A(b_1+b_2)\\)",
+        "\\(\\frac{b_1+b_2}{2A}\\)",
+        "\\(\\frac{1}{2}A-(b_1+b_2)\\)"
+      ],
+      "answerIndex": 0,
+      "explanation": "Multiply both sides by \\(2\\): \\(2A=h(b_1+b_2)\\). Then divide by \\((b_1+b_2)\\): \\(h=\\frac{2A}{b_1+b_2}\\)."
+    }
+  ]
+}

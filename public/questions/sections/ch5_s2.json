@@ -1,0 +1,49 @@
+{
+  "sectionId": "ch5_s2",
+  "title": "Graphing Quadratic Functions",
+  "lesson": {
+    "title": "Interpreting Quadratic Graphs from Tables",
+    "intro": [
+      "Quadratic relationships often show a maximum or minimum value.",
+      "A table of values can reveal the vertex of a parabola.",
+      "When a quadratic models a real-world situation, the vertex often has the most important meaning.",
+      "Look for the input where the output is highest or lowest."
+    ]
+  },
+  "workedExample": {
+    "enabled": false,
+    "problem": "A table shows heights of a ball at times \\(0,1,2,3,4\\) seconds as \\(10,18,22,18,10\\). When does the ball reach its maximum height?",
+    "steps": [
+      "Look for the greatest height in the table.",
+      "The largest value is \\(22\\).",
+      "That occurs at \\(2\\) seconds."
+    ],
+    "answer": "2 seconds",
+    "aiHint": "Find the highest output value in the table."
+  },
+  "questions": [
+    {
+      "id": "ch5_s2_q1",
+      "type": "mc",
+      "prompt": "A ball was launched into the air, and its height above the ground was recorded each second, as shown in the table below. Based on these data, which statement is a valid conclusion?",
+      "table": {
+        "headers": ["Time (sec)", "Height (ft)"],
+        "rows": [
+          ["0", "11"],
+          ["1", "59"],
+          ["2", "75"],
+          ["3", "59"],
+          ["4", "11"]
+        ]
+      },
+      "choices": [
+        "The ball lands on the ground at 4 seconds.",
+        "The ball reaches a maximum height of 11 feet.",
+        "The ball was launched from a height of 0 feet.",
+        "The ball reaches its maximum height at 2 seconds."
+      ],
+      "answerIndex": 3,
+      "explanation": "The greatest height in the table is 75 feet, and it happens at 2 seconds."
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "sectionId": "ch6_s1",
+  "title": "Multiplication of Powers",
+  "lesson": {
+    "title": "Multiplying Powers with the Same Base",
+    "intro": [
+      "When multiplying powers with the **same base**, add the exponents.",
+      "The rule is \\(a^m \\cdot a^n = a^{m+n}\\).",
+      "This rule works because multiplying powers combines repeated multiplication.",
+      "Always make sure the bases are the same before adding exponents."
+    ]
+  },
+  "workedExample": {
+    "enabled": false,
+    "problem": "Simplify \\(x^4 \\cdot x^3\\).",
+    "steps": [
+      "The bases are the same.",
+      "Add the exponents: 4 + 3.",
+      "Rewrite as \\(x^7\\)."
+    ],
+    "answer": "\\(x^7\\)",
+    "aiHint": "When multiplying powers with the same base, add the exponents."
+  },
+  "questions": [
+    {
+      "id": "ch6_s1_q1",
+      "type": "mc",
+      "prompt": "Which expression is equivalent to \\(3x^2(2x^3)\\)?",
+      "choices": [
+        "\\(6x^5\\)",
+        "\\(6x^6\\)",
+        "\\(5x^5\\)",
+        "\\(6x^9\\)"
+      ],
+      "answerIndex": 0,
+      "explanation": "Multiply coefficients: 3 × 2 = 6. Add exponents: \\(x^{2+3} = x^5\\)."
+    },
+    {
+      "id": "ch6_s1_q2",
+      "type": "mc",
+      "prompt": "Which expression is equivalent to \\((2a^3)(5a^4)\\)?",
+      "choices": [
+        "\\(10a^7\\)",
+        "\\(10a^{12}\\)",
+        "\\(7a^7\\)",
+        "\\(10a^8\\)"
+      ],
+      "answerIndex": 0,
+      "explanation": "Multiply coefficients: 2 × 5 = 10 and add exponents: \\(a^{3+4} = a^7\\)."
+    },
+    {
+      "id": "ch6_s1_q3",
+      "type": "mc",
+      "prompt": "Which expression is equivalent to \\(x^5 \\cdot x^3\\)?",
+      "choices": [
+        "\\(x^8\\)",
+        "\\(x^{15}\\)",
+        "\\(x^2\\)",
+        "\\(2x^8\\)"
+      ],
+      "answerIndex": 0,
+      "explanation": "Add exponents when multiplying powers with the same base: \\(x^{5+3} = x^8\\)."
+    }
+  ]
+}

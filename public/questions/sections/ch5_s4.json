@@ -1,0 +1,59 @@
+{
+  "sectionId": "ch5_s4",
+  "title": "Comparing Quadratic Functions",
+  "lesson": {
+    "title": "Comparing Quadratic Functions",
+    "intro": [
+      "Quadratic functions can be compared by their minimum or maximum values.",
+      "A function written in equation form can often be analyzed by finding its vertex or axis of symmetry.",
+      "A graph can also be used to compare quadratic functions visually.",
+      "The axis of symmetry of a parabola is the vertical line through its vertex."
+    ]
+  },
+  "workedExample": {
+    "enabled": false,
+    "problem": "Find the axis of symmetry of \\(h(x)=x^2-4x-5\\).",
+    "steps": [
+      "Use the formula \\(x=\\frac{-b}{2a}\\).",
+      "Here, \\(a=1\\) and \\(b=-4\\).",
+      "So \\(x=\\frac{-(-4)}{2(1)}=\\frac{4}{2}=2\\)."
+    ],
+    "answer": "\\(x=2\\)",
+    "aiHint": "For a quadratic in standard form, use \\(x=\\frac{-b}{2a}\\)."
+  },
+  "questions": [
+    {
+      "id": "ch5_s4_q1",
+      "type": "mc",
+      "prompt": "Four quadratic functions are represented below. Which function has the smallest minimum value?",
+      "image": "/questions/regents-images/64_4_representations.png",
+      "choices": [
+        "I",
+        "II",
+        "III",
+        "IV"
+      ],
+      "answerIndex": 2,
+      "explanation": "From the graph, function III has the lowest vertex, so it has the smallest minimum value."
+    },
+    {
+      "id": "ch5_s4_q2",
+      "type": "mc",
+      "prompt": "The axis of symmetry is \\(x=2\\) for which quadratic function?",
+      "choiceImages": [
+        "/questions/regents-images/65_answer_choice_1.png",
+        "",
+        "/questions/regents-images/65_answer_choice_3.png",
+        ""
+      ],
+      "choices": [
+        "1",
+        "\\(j(x)=2x^2+8x\\)",
+        "3",
+        "\\(h(x)=x^2-4x-5\\)"
+      ],
+      "answerIndex": 3,
+      "explanation": "For \\(h(x)=x^2-4x-5\\), the axis of symmetry is \\(x=\\frac{-b}{2a}=\\frac{-(-4)}{2(1)}=2\\)."
+    }
+  ]
+}

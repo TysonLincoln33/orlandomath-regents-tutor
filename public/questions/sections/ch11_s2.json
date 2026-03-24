@@ -1,0 +1,64 @@
+{
+  "sectionId": "ch11_s2",
+  "title": "Arithmetic and Geometric Sequences",
+  "lesson": {
+    "title": "Arithmetic and Geometric Sequences",
+    "intro": [
+      "An arithmetic sequence changes by a constant difference between consecutive terms.",
+      "A geometric sequence changes by multiplying by a constant ratio.",
+      "Arithmetic sequences can be written using the formula \\(a_n = a_1 + d(n-1)\\).",
+      "Geometric sequences can be written using the formula \\(a_n = a_1 r^{n-1}\\)."
+    ],
+    "example": {
+      "problem": "Write an explicit formula for the arithmetic sequence \\(5,8,11,14,\\ldots\\).",
+      "steps": [
+        "Identify the first term: \\(a_1=5\\).",
+        "Find the common difference: \\(8-5=3\\).",
+        "Use the arithmetic formula \\(a_n=a_1+d(n-1)\\).",
+        "Substitute values."
+      ],
+      "answer": "\\(a_n=5+3(n-1)\\)"
+    }
+  },
+  "questions": [
+    {
+      "id": "ch11_s2_q158",
+      "type": "mc",
+      "prompt": "The equation that represents the sequence \\(-2,-5,-8,-11,-14,\\ldots\\) is",
+      "choices": [
+        "\\(a_n=-3+(-2)(n-1)\\)",
+        "\\(a_n=-2+(-3)(n-1)\\)",
+        "\\(a_n=3+(-2)(n-1)\\)",
+        "\\(a_n=-2+(3)(n-1)\\)"
+      ],
+      "answerIndex": 1,
+      "explanation": "The sequence decreases by 3 each term, so the common difference is \\(d=-3\\). Using \\(a_n=a_1+d(n-1)\\) with \\(a_1=-2\\) gives \\(a_n=-2+(-3)(n-1)\\)."
+    },
+    {
+      "id": "ch11_s2_q159",
+      "type": "mc",
+      "prompt": "In an arithmetic sequence, the first term is \\(25\\) and the third term is \\(15\\). What is the tenth term in this sequence?",
+      "choices": [
+        "\\(-20\\)",
+        "\\(-25\\)",
+        "\\(70\\)",
+        "\\(75\\)"
+      ],
+      "answerIndex": 0,
+      "explanation": "For an arithmetic sequence, \\(a_3=a_1+2d\\). So \\(15=25+2d\\), giving \\(2d=-10\\) and \\(d=-5\\). Then \\(a_{10}=25+9(-5)=-20\\)."
+    },
+    {
+      "id": "ch11_s2_q160",
+      "type": "mc",
+      "prompt": "Which equation represents the sequence \\(12,6,3,\\frac{3}{2},\\ldots\\), where \\(a_1=12\\)?",
+      "choices": [
+        "\\(a_n=12\\left(\\frac{1}{2}\\right)^{n-1}\\)",
+        "\\(a_n=12\\left(\\frac{1}{2}\\right)^n\\)",
+        "\\(a_n=12(2)^{n-1}\\)",
+        "\\(a_n=12(2)^n\\)"
+      ],
+      "answerIndex": 0,
+      "explanation": "Each term is multiplied by \\(\\frac{1}{2}\\), so the common ratio is \\(r=\\frac{1}{2}\\). Using \\(a_n=a_1 r^{n-1}\\) with \\(a_1=12\\) gives \\(a_n=12\\left(\\frac{1}{2}\\right)^{n-1}\\)."
+    }
+  ]
+}

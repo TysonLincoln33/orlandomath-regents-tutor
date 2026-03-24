@@ -1,0 +1,39 @@
+{
+    "sectionId": "ch6_s2",
+    "title": "Powers of Powers",
+    "lesson": {
+      "title": "Power of a Power Rule",
+      "intro": [
+        "When raising a power to another power, multiply the exponents.",
+        "The rule is **(a^m)^n = a^(mn)**.",
+        "This works because repeated multiplication groups identical bases together.",
+        "Always multiply the exponents when a power is raised to another power."
+      ]
+    },
+    "workedExample": {
+      "enabled": false,
+      "problem": "Simplify \\((x^3)^4\\).",
+      "steps": [
+        "Use the power rule.",
+        "Multiply exponents: 3 × 4.",
+        "Rewrite as \\(x^{12}\\)."
+      ],
+      "answer": "\\(x^{12}\\)",
+      "aiHint": "When a power is raised to another power, multiply the exponents."
+    },
+    "questions": [
+      {
+        "id": "ch6_s2_q1",
+        "type": "mc",
+        "prompt": "Which expression is equivalent to \\((2x^3)^4\\)?",
+        "choices": [
+          "\\(16x^{12}\\)",
+          "\\(8x^{12}\\)",
+          "\\(16x^7\\)",
+          "\\(8x^7\\)"
+        ],
+        "answerIndex": 0,
+        "explanation": "Raise the coefficient: 2^4 = 16 and multiply exponents: x^(3×4) = x^12."
+      }
+    ]
+  }

@@ -1,0 +1,43 @@
+{
+  "sectionId": "ch12_s1",
+  "title": "Central Tendency and Dispersion",
+  "lesson": {
+    "title": "Central Tendency and Dispersion",
+    "intro": [
+      "Measures of central tendency describe the center of a data set.",
+      "Common measures include the mean and median.",
+      "Measures of dispersion describe how spread out the data are.",
+      "Standard deviation and interquartile range are common measures of spread."
+    ]
+  },
+  "questions": [
+    {
+      "id": "ch12_s1_q163",
+      "type": "mc",
+      "prompt": "The geometry test scores for Andrea and Joe are shown in the table below. Which statement about their test scores is correct?",
+      "image": "/questions/regents-images/163_table.png",
+      "choices": [
+        "Both the mean and standard deviation of Andrea's test scores are higher than Joe's.",
+        "Both the mean and standard deviation of Joe's test scores are higher than Andrea's.",
+        "The mean of Andrea's test scores is higher than Joe's, but Joe's standard deviation is higher than Andrea's.",
+        "The mean of Joe's test scores is higher than Andrea's, but Andrea's standard deviation is higher than Joe's."
+      ],
+      "answerIndex": 3,
+      "explanation": "Joe's scores have a higher average, but Andrea's scores vary more, giving her a larger standard deviation."
+    },
+    {
+      "id": "ch12_s1_q164",
+      "type": "mc",
+      "prompt": "The table below shows the highest temperatures recorded in August for several years in one town. The interquartile range of these data is",
+      "image": "/questions/regents-images/164_table.png",
+      "choices": [
+        "7",
+        "10",
+        "11",
+        "18"
+      ],
+      "answerIndex": 2,
+      "explanation": "Order the temperatures and determine Q1 and Q3. The interquartile range is Q3 − Q1 = 11."
+    }
+  ]
+}

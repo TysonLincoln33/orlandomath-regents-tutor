@@ -1,0 +1,39 @@
+{
+  "sectionId": "ch4_s2",
+  "title": "Modeling Linear Inequalities",
+  "lesson": {
+    "title": "Modeling Linear Inequalities",
+    "intro": [
+      "Linear inequalities can model situations where values have limits or minimum requirements.",
+      "Words like 'at least', 'no more than', and 'greater than' often indicate an inequality.",
+      "When translating a situation into an inequality, carefully identify the quantities and relationships described.",
+      "The solution represents all values that satisfy the situation."
+    ]
+  },
+  "workedExample": {
+    "enabled": false,
+    "problem": "A concert venue sells lawn tickets for $25 each. A group wants to spend no more than $200. Write an inequality representing the number of tickets \\(x\\) they can buy.",
+    "steps": [
+      "Each ticket costs $25, so the total cost is \\(25x\\).",
+      "The phrase 'no more than $200' means less than or equal to 200.",
+      "Write the inequality \\(25x \\le 200\\)."
+    ],
+    "answer": "\\(25x \\le 200\\)",
+    "aiHint": "Look for words like 'at least', 'at most', or 'no more than' to determine the inequality symbol."
+  },
+  "questions": [
+    {
+      "id": "ch4_s2_q1",
+      "type": "mc",
+      "prompt": "The number of fish in a pond is eight more than the number of frogs. The total number of fish and frogs in the pond is at least 20. If \\(x\\) represents the number of frogs, which inequality can be used to represent this situation?",
+      "choices": [
+        "\\(x + 8x \\ge 20\\)",
+        "\\(2x + 8 \\ge 20\\)",
+        "\\(x + 8x \\le 20\\)",
+        "\\(2x + 8 \\le 20\\)"
+      ],
+      "answerIndex": 1,
+      "explanation": "If frogs are \\(x\\), then fish are \\(x + 8\\). The total is \\(x + (x + 8)\\), which simplifies to \\(2x + 8\\). The phrase 'at least 20' means \\(\\ge 20\\), so the inequality is \\(2x + 8 \\ge 20\\)."
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "sectionId": "ch12_s3",
+  "title": "Box Plots",
+  "lesson": {
+    "title": "Box Plots",
+    "intro": [
+      "A box plot summarizes a data set using the five-number summary.",
+      "The five-number summary consists of the minimum, Q1, median, Q3, and maximum.",
+      "The box shows the interquartile range (IQR), which is Q3 − Q1.",
+      "The median is represented by the line inside the box."
+    ]
+  },
+  "questions": [
+    {
+      "id": "ch12_s3_q170",
+      "type": "mc",
+      "prompt": "The box plot below represents the heights of students in a class. What is the median height?",
+      "image": "/questions/regents-images/170_table.png",
+      "choices": [
+        "68",
+        "72",
+        "74",
+        "80"
+      ],
+      "answerIndex": 1
+    },
+    {
+      "id": "ch12_s3_q171",
+      "type": "mc",
+      "prompt": "Which box plot represents the data set shown?",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "choiceImages": [
+        "/questions/regents-images/171_answer_choice_1.png",
+        "/questions/regents-images/171_answer_choice_2.png",
+        "/questions/regents-images/171_answer_choice_3.png",
+        "/questions/regents-images/171_answer_choice_4.png"
+      ],
+      "answerIndex": 2
+    },
+    {
+      "id": "ch12_s3_q172",
+      "type": "mc",
+      "prompt": "Two data sets are represented below. Which statement comparing the box plots is true?",
+      "image": "/questions/regents-images/172_2_representations.png",
+      "choices": [
+        "Data set I has a larger median.",
+        "Data set II has a larger median.",
+        "Data set I has a larger interquartile range.",
+        "Both data sets have the same median."
+      ],
+      "answerIndex": 2
+    }
+  ]
+}

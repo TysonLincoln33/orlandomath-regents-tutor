@@ -1,0 +1,68 @@
+{
+  "sectionId": "ch9_s1",
+  "chapter": 9,
+  "section": 1,
+  "title": "Modeling Linear Systems",
+
+  "lesson": {
+    "title": "Modeling Linear Systems",
+    "image": "/lesson-images/9_1_modeling_system.png",
+    "intro": [
+      "A system of equations can be used to model situations where two quantities are related in different ways.",
+      "Each equation represents a relationship between variables.",
+      "Solving the system finds the values that satisfy both equations at the same time."
+    ]
+  },
+
+  "workedExample": {
+    "enabled": false,
+    "image": "/lesson-images/9_1_modeling_system.png",
+    "problem": "Two taxi companies charge different starting fees and per-mile rates. Their cost equations are y = 2x + 3 and y = 4x − 5.",
+    "steps": [
+      "Each equation represents a cost model.",
+      "Graph both equations on the same coordinate plane.",
+      "The point where the graphs intersect represents when both companies cost the same amount."
+    ],
+    "answer": "The intersection point represents the break-even point."
+  },
+
+  "questions": [
+
+    {
+      "id": "ch9_s1_q1",
+      "type": "mc",
+
+      "prompt": "Alex had $1.70 in nickels and dimes on his desk. There were 25 coins in all.\n\nIf n represents the number of nickels and d represents the number of dimes, which system of equations models the situation?",
+
+      "choices": [
+        "n + d = 25   and   5n + 10d = 170",
+        "n + d = 25   and   0.05n + 0.10d = 1.70",
+        "n − d = 25   and   0.05n + 0.10d = 1.70",
+        "n + d = 1.70   and   5n + 10d = 25"
+      ],
+
+      "answerIndex": 1,
+
+      "explanation": "The total number of coins is n + d = 25. The total value in dollars is 0.05n + 0.10d = 1.70."
+    },
+
+    {
+      "id": "ch9_s1_q2",
+      "type": "mc",
+
+      "prompt": "Courtney went to a coffee shop to purchase lattes and donuts for her friends.\n\nOne day she spent $15.50 on four lattes and two donuts. The next day she spent $18.10 on three lattes and five donuts.\n\nIf x represents the cost of one latte and y represents the cost of one donut, which system correctly models the situation?",
+
+      "choices": [
+        "4x + 2y = 15.50   and   3x + 5y = 18.10",
+        "4x + 2y = 18.10   and   3x + 5y = 15.50",
+        "4x + 2y = 15.50   and   3x + 5y = 18.10",
+        "4x + 2y = 15.50   and   3x + 5y = 18.10"
+      ],
+
+      "answerIndex": 2,
+
+      "explanation": "The equations are 4x + 2y = 15.50 and 3x + 5y = 18.10."
+    }
+
+  ]
+}

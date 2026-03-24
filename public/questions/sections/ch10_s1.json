@@ -1,0 +1,95 @@
+{
+  "sectionId": "ch10_s1",
+  "title": "Defining Functions",
+  "lesson": {
+    "title": "Defining Functions",
+    "intro": [
+      "A **function** is a relation in which each input has exactly **one** output.",
+      "You can test a relation by checking ordered pairs, tables, mappings, and graphs. If one input is paired with two different outputs, the relation is **not** a function.",
+      "On graphs, use the **vertical line test**: if any vertical line hits the graph more than once, the graph does not represent a function."
+    ]
+  },
+  "workedExample": {
+    "enabled": false
+  },
+  "questions": [
+    {
+      "id": "ch10_s1_q125",
+      "type": "mc",
+      "prompt": "Three relations are shown below. Which relations represent a function?",
+      "image": "/questions/regents-images/125_4_representations.png",
+      "choices": [
+        "I and II, only",
+        "I and III, only",
+        "II and III, only",
+        "I, II, and III"
+      ],
+      "answerIndex": 3,
+      "explanation": "All three relations are functions. In I, each x-value appears once. In II, each input points to exactly one output. In III, every x-value on the graph has only one y-value."
+    },
+    {
+      "id": "ch10_s1_q126",
+      "type": "mc",
+      "prompt": "Which of the graphs represent(s) a function?",
+      "image": "/questions/regents-images/126_graphs.png",
+      "choices": [
+        "A, only",
+        "A and B, only",
+        "A, B, and C, only",
+        "A, B, C, and D"
+      ],
+      "answerIndex": 1,
+      "explanation": "Graphs A and B are functions because each x-value gives only one y-value. Graph C fails the vertical line test because of the vertical line, and graph D fails because a circle gives two y-values for many x-values."
+    },
+    {
+      "id": "ch10_s1_q127",
+      "type": "mc",
+      "prompt": "Given the relation **R = {(-1,1),(0,3),(-2,-4),(x,5)}**, which value of **x** will make the relation a function?",
+      "choices": [
+        "-2",
+        "0",
+        "4",
+        "-1"
+      ],
+      "answerIndex": 2,
+      "explanation": "To be a function, no input can repeat with a different output. The existing x-values are -1, 0, and -2, so choosing 4 keeps all inputs unique."
+    },
+    {
+      "id": "ch10_s1_custom1",
+      "type": "mc",
+      "prompt": "The table below represents a relation. What value of **x** would make the relation a function?",
+      "table": {
+        "headers": [
+          "x",
+          "y"
+        ],
+        "rows": [
+          [
+            "1",
+            "4"
+          ],
+          [
+            "2",
+            "7"
+          ],
+          [
+            "x",
+            "7"
+          ],
+          [
+            "4",
+            "9"
+          ]
+        ]
+      },
+      "choices": [
+        "1",
+        "2",
+        "3",
+        "4"
+      ],
+      "answerIndex": 2,
+      "explanation": "A function cannot repeat an input with a different output. Choosing 3 keeps all x-values unique."
+    }
+  ]
+}

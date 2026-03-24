@@ -1,0 +1,40 @@
+{
+  "sectionId": "ch5_s3",
+  "title": "Graphing Quadratic Functions",
+  "lesson": {
+    "title": "Intervals of Increase and Decrease",
+    "intro": [
+      "A parabola changes direction at its vertex.",
+      "To the left of the vertex, a parabola may be increasing or decreasing.",
+      "To the right of the vertex, the behavior reverses.",
+      "An interval of increase describes where the function values get larger as \\(x\\) increases."
+    ]
+  },
+  "workedExample": {
+    "enabled": false,
+    "problem": "A parabola has a vertex at \\((3,-2)\\) and opens upward. Over what interval is it increasing?",
+    "steps": [
+      "For an upward-opening parabola, the graph decreases to the vertex and increases after the vertex.",
+      "The vertex occurs at \\(x=3\\).",
+      "So the function increases for \\(x>3\\)."
+    ],
+    "answer": "\\((3,\\infty)\\)",
+    "aiHint": "Check whether the parabola opens up or down, then look to the right of the vertex."
+  },
+  "questions": [
+    {
+      "id": "ch5_s3_q1",
+      "type": "mc",
+      "prompt": "A parabola is graphed on the set of axes below. Over which interval is the parabola only increasing?",
+      "image": "/questions/regents-images/60_graph.png",
+      "choices": [
+        "\\([1,4]\\)",
+        "\\([3,\\infty)\\)",
+        "\\(( -\\infty,3 ]\\)",
+        "\\([-1,1]\\)"
+      ],
+      "answerIndex": 1,
+      "explanation": "From the graph, the vertex is at \\(x=3\\), and the parabola opens upward, so it is increasing for \\(x \\ge 3\\)."
+    }
+  ]
+}
