@@ -11,6 +11,7 @@ type NavProfile = {
   username: string | null;
   full_name: string | null;
   email: string | null;
+  role: string | null;
 };
 
 export default function TopNav() {
@@ -24,6 +25,7 @@ export default function TopNav() {
 
   const showBack = pathname !== '/dashboard' && pathname !== '/';
   const showSave = pathname !== '/resume' && !pathname.startsWith('/resume/');
+  const isTeacher = profile?.role === 'teacher';
 
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
@@ -43,7 +45,7 @@ export default function TopNav() {
 
       const { data } = await supabase
         .from('profiles')
-        .select('username, full_name, email')
+        .select('username, full_name, email, role')
         .eq('id', user.id)
         .maybeSingle();
 
@@ -56,6 +58,7 @@ export default function TopNav() {
           user.user_metadata?.full_name ??
           null,
         email: profileData?.email ?? user.email ?? null,
+        role: profileData?.role ?? null,
       });
     }
 
@@ -138,6 +141,12 @@ export default function TopNav() {
                 <Link href="/dashboard" className="om-navlink">
                   Dashboard
                 </Link>
+
+                {isAuthenticated && isTeacher && (
+                  <Link href="/teacher/classrooms" className="om-navlink">
+                    My Classrooms
+                  </Link>
+                )}
 
                 {!isAuthenticated ? (
                   <>
@@ -222,6 +231,16 @@ export default function TopNav() {
               >
                 Dashboard
               </Link>
+
+              {isAuthenticated && isTeacher && (
+                <Link
+                  href="/teacher/classrooms"
+                  onClick={closeMenu}
+                  className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-900 hover:bg-slate-50"
+                >
+                  My Classrooms
+                </Link>
+              )}
 
               {!isAuthenticated ? (
                 <>

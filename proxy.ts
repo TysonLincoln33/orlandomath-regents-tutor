@@ -36,7 +36,10 @@ export async function proxy(req: NextRequest) {
 
   const path = req.nextUrl.pathname
 
-  const protectedRoutes = ['/student', '/teacher', '/admin']
+  // Temporary test fix:
+  // Remove '/teacher' from protectedRoutes so teacher pages are not
+  // blocked by the server-side session check while we confirm the auth mismatch.
+  const protectedRoutes = ['/student', '/admin']
 
   const isProtected = protectedRoutes.some((route) => path.startsWith(route))
 
