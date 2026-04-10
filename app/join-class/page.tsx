@@ -1,16 +1,21 @@
+// app/join-class/page.tsx
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { joinClassroomByCode, type JoinedClassroomResult } from "@/lib/classrooms/joinClassroomByCode";
+import {
+  joinClassroomByCode,
+  type JoinedClassroomResult,
+} from "@/lib/classrooms/joinClassroomByCode";
 
-export default function JoinClassPage() {
+function JoinClassPageContent() {
   const searchParams = useSearchParams();
 
   const [code, setCode] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [joinedClassroom, setJoinedClassroom] = useState<JoinedClassroomResult | null>(null);
+  const [joinedClassroom, setJoinedClassroom] =
+    useState<JoinedClassroomResult | null>(null);
 
   useEffect(() => {
     const codeFromUrl = searchParams.get("code");
@@ -47,7 +52,9 @@ export default function JoinClassPage() {
       </div>
 
       <div className="bg-white rounded-xl shadow p-6 border border-gray-200">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Enter Class Code</h2>
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">
+          Enter Class Code
+        </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -73,7 +80,9 @@ export default function JoinClassPage() {
             <div className="bg-green-50 border border-green-300 text-green-800 p-4 rounded-lg text-sm space-y-1">
               <p className="font-semibold">Success — you joined the classroom.</p>
               <p>
-                <span className="font-semibold text-green-900">{joinedClassroom.name}</span>
+                <span className="font-semibold text-green-900">
+                  {joinedClassroom.name}
+                </span>
                 {" • "}
                 {joinedClassroom.subject}
                 {" • "}
@@ -98,5 +107,21 @@ export default function JoinClassPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function JoinClassPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="max-w-3xl mx-auto px-4 py-8">
+          <div className="bg-white rounded-xl shadow p-6 border border-gray-200">
+            <p className="text-sm text-gray-600">Loading join page...</p>
+          </div>
+        </div>
+      }
+    >
+      <JoinClassPageContent />
+    </Suspense>
   );
 }
