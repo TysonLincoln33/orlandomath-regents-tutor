@@ -149,6 +149,12 @@ export default function TopNav() {
                   Dashboard
                 </Link>
 
+                {isAuthenticated && !isTeacher && (
+                  <Link href="/join-class" className="om-navlink">
+                    Join Classroom
+                  </Link>
+                )}
+
                 {isAuthenticated && isTeacher && (
                   <Link href="/teacher/classrooms" className="om-navlink">
                     My Classrooms
@@ -238,6 +244,16 @@ export default function TopNav() {
               >
                 Dashboard
               </Link>
+
+              {isAuthenticated && !isTeacher && (
+                <Link
+                  href="/join-class"
+                  onClick={closeMenu}
+                  className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-900 hover:bg-slate-50"
+                >
+                  Join Classroom
+                </Link>
+              )}
 
               {isAuthenticated && isTeacher && (
                 <Link
