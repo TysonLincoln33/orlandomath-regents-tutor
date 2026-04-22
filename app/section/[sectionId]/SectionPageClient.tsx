@@ -215,6 +215,48 @@ export default function SectionPageClient({ data }: { data: SectionData }) {
               {renderBoldText(question.prompt)}
             </div>
 
+            {question.image && (
+              <img
+                src={question.image}
+                alt="Question visual"
+                className="my-4 max-w-full rounded-lg border"
+              />
+            )}
+
+            {question.table && (
+              <div className="my-4 overflow-x-auto">
+                <table className="border-collapse border border-gray-300 text-sm">
+                  <thead>
+                    <tr>
+                      {question.table.headers.map((header, i) => (
+                        <th
+                          key={i}
+                          className="border border-gray-300 px-3 py-2 bg-gray-100 text-left text-gray-900"
+                        >
+                          {renderBoldText(header)}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {question.table.rows.map((row, i) => (
+                      <tr key={i}>
+                        {row.map((cell, j) => (
+                          <td
+                            key={j}
+                            className="border border-gray-300 px-3 py-2 text-gray-900"
+                          >
+                            {renderBoldText(cell)}
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
             {/* ANSWERS */}
             <div className="space-y-3 mt-4">
               {question.choices.map((choice, choiceIndex) => {
@@ -239,10 +281,27 @@ export default function SectionPageClient({ data }: { data: SectionData }) {
                     onClick={() => handleSelect(question.id, choiceIndex)}
                     className={buttonClass}
                   >
-                    <span className="font-semibold mr-2">
-                      {String.fromCharCode(65 + choiceIndex)}.
-                    </span>
-                    {renderBoldText(choice)}
+                    {question.choiceImages &&
+                    question.choiceImages[choiceIndex] ? (
+                      <div className="flex items-start gap-3">
+                        <span className="font-semibold mt-1 shrink-0">
+                          {String.fromCharCode(65 + choiceIndex)}.
+                        </span>
+
+                        <img
+                          src={question.choiceImages[choiceIndex]}
+                          alt={`Choice ${choiceIndex + 1}`}
+                          className="max-w-full rounded"
+                        />
+                      </div>
+                    ) : (
+                      <>
+                        <span className="font-semibold mr-2">
+                          {String.fromCharCode(65 + choiceIndex)}.
+                        </span>
+                        {renderBoldText(choice)}
+                      </>
+                    )}
                   </button>
                 );
               })}

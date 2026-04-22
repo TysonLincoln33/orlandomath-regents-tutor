@@ -15,20 +15,22 @@ export async function recordQuestionAttempt(payload: AttemptPayload) {
 
   const supabase: any = getSupabaseBrowserClient();
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
+  let user = null;
+  let userError = null;
+
+  try {
+    const result = await supabase.auth.getUser();
+    user = result?.data?.user ?? null;
+    userError = result?.error ?? null;
+  } catch (err) {
+    console.warn("[recordQuestionAttempt] auth lookup threw:", err);
+    return;
+  }
 
   console.log("[recordQuestionAttempt] user:", user);
   console.log("[recordQuestionAttempt] userError:", userError);
 
-  if (userError) {
-    console.error("[recordQuestionAttempt] user lookup failed:", userError);
-    throw userError;
-  }
-
-  if (!user) {
+  if (userError || !user) {
     console.warn("[recordQuestionAttempt] No logged-in user found. Skipping RPC.");
     return;
   }

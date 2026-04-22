@@ -31,35 +31,42 @@ export default function TopNav() {
     const supabase = getSupabaseBrowserClient();
 
     async function loadAuthState() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      try {
+        const {
+          data: { user },
+          error,
+        } = await supabase.auth.getUser();
 
-      if (!user) {
+        if (error || !user) {
+          setIsAuthenticated(false);
+          setProfile(null);
+          return;
+        }
+
+        setIsAuthenticated(true);
+
+        const { data } = await supabase
+          .from('profiles')
+          .select('username, full_name, email, role')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        const profileData = (data ?? null) as NavProfile | null;
+
+        setProfile({
+          username: profileData?.username ?? null,
+          full_name:
+            profileData?.full_name ??
+            user.user_metadata?.full_name ??
+            null,
+          email: profileData?.email ?? user.email ?? null,
+          role: profileData?.role ?? null,
+        });
+      } catch (err) {
+        console.warn('No active auth session in TopNav:', err);
         setIsAuthenticated(false);
         setProfile(null);
-        return;
       }
-
-      setIsAuthenticated(true);
-
-      const { data } = await supabase
-        .from('profiles')
-        .select('username, full_name, email, role')
-        .eq('id', user.id)
-        .maybeSingle();
-
-      const profileData = (data ?? null) as NavProfile | null;
-
-      setProfile({
-        username: profileData?.username ?? null,
-        full_name:
-          profileData?.full_name ??
-          user.user_metadata?.full_name ??
-          null,
-        email: profileData?.email ?? user.email ?? null,
-        role: profileData?.role ?? null,
-      });
     }
 
     loadAuthState();
