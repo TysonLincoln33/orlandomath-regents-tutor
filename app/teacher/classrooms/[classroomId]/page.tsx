@@ -4,6 +4,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { isTeacherLikeRole } from "@/lib/auth/roles";
 import { getTeacherClassroomById } from "@/lib/classrooms/getTeacherClassroomById";
 import {
   getClassroomRoster,
@@ -106,7 +107,7 @@ export default function ClassroomDetailPage({ params }: PageProps) {
         );
       }
 
-      if (!profile || profile.role !== "teacher") {
+      if (!profile || !isTeacherLikeRole(profile.role)) {
         throw new Error("Teacher access required.");
       }
 

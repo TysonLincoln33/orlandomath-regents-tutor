@@ -1,5 +1,6 @@
 // src/lib/classrooms/getClassroomAssignments.ts
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { isTeacherLikeRole } from "@/lib/auth/roles";
 import type { ClassroomAssignment } from "@/lib/classrooms/createClassroomAssignment";
 
 export async function getClassroomAssignments(
@@ -32,7 +33,7 @@ export async function getClassroomAssignments(
     );
   }
 
-  if (!teacherProfile || teacherProfile.role !== "teacher") {
+  if (!teacherProfile || !isTeacherLikeRole(teacherProfile.role)) {
     throw new Error("Teacher access required.");
   }
 

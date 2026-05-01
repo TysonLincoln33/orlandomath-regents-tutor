@@ -1,5 +1,6 @@
 // src/lib/classrooms/searchStudentsForClassroom.ts
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { isTeacherLikeRole } from "@/lib/auth/roles";
 
 export type SearchStudentResult = {
   id: string;
@@ -57,7 +58,7 @@ export async function searchStudentsForClassroom(
     );
   }
 
-  if (!teacherProfile || teacherProfile.role !== "teacher") {
+  if (!teacherProfile || !isTeacherLikeRole(teacherProfile.role)) {
     throw new Error("Teacher access required.");
   }
 

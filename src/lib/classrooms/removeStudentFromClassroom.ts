@@ -1,5 +1,6 @@
 // src/lib/classrooms/removeStudentFromClassroom.ts
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { isTeacherLikeRole } from "@/lib/auth/roles";
 
 export async function removeStudentFromClassroom(
   classroomId: string,
@@ -30,7 +31,7 @@ export async function removeStudentFromClassroom(
     throw new Error(profileError.message || "Failed to verify teacher access.");
   }
 
-  if (!profile || profile.role !== "teacher") {
+  if (!profile || !isTeacherLikeRole(profile.role)) {
     throw new Error("Teacher access required.");
   }
 

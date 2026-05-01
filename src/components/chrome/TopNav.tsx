@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 import BookTutoringCTA from '@/components/BookTutoringCTA';
 import SaveProgressModal from '@/components/SaveProgressModal';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
+import { isTeacherLikeRole, isMasterRole } from '@/lib/auth/roles';
 
 type NavProfile = {
   username: string | null;
@@ -25,7 +26,8 @@ export default function TopNav() {
 
   const showBack = pathname !== '/dashboard' && pathname !== '/';
   const showSave = pathname !== '/resume' && !pathname.startsWith('/resume/');
-  const isTeacher = profile?.role === 'teacher';
+  const isTeacher = isTeacherLikeRole(profile?.role);
+  const isMaster = isMasterRole(profile?.role);
 
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
@@ -161,6 +163,12 @@ export default function TopNav() {
                   </Link>
                 )}
 
+                {isAuthenticated && isMaster && (
+                  <Link href="/master" className="om-navlink">
+                    Master Dashboard
+                  </Link>
+                )}
+
                 {!isAuthenticated ? (
                   <>
                     <Link href="/signup" className="om-navlink">
@@ -262,6 +270,16 @@ export default function TopNav() {
                   className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-900 hover:bg-slate-50"
                 >
                   My Classrooms
+                </Link>
+              )}
+
+              {isAuthenticated && isMaster && (
+                <Link
+                  href="/master"
+                  onClick={closeMenu}
+                  className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-900 hover:bg-slate-50"
+                >
+                  Master Dashboard
                 </Link>
               )}
 

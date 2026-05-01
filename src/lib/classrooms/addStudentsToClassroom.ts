@@ -1,5 +1,6 @@
 // src/lib/classrooms/addStudentsToClassroom.ts
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { isTeacherLikeRole } from "@/lib/auth/roles";
 
 export type AddStudentsResult = {
   added_count: number;
@@ -47,7 +48,7 @@ export async function addStudentsToClassroom(
     );
   }
 
-  if (!teacherProfile || teacherProfile.role !== "teacher") {
+  if (!teacherProfile || !isTeacherLikeRole(teacherProfile.role)) {
     throw new Error("Teacher access required.");
   }
 

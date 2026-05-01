@@ -1,6 +1,7 @@
 // app/api/teacher/classrooms/[classroomId]/create-student/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { isTeacherLikeRole } from "@/lib/auth/roles";
 
 type RouteContext = {
   params: Promise<{
@@ -110,7 +111,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
       );
     }
 
-    if (!teacherProfile || teacherProfile.role !== "teacher") {
+    if (!teacherProfile || !isTeacherLikeRole(teacherProfile.role)) {
       return NextResponse.json(
         { error: "Teacher access required." },
         { status: 403 }
