@@ -14,6 +14,9 @@ type Profile = {
   approval_status?: string | null;
 };
 
+const MASTER_APP_ID = 'regents-algebra';
+const MASTER_COURSE_ID = 'algebra1';
+
 type StudentSummary = {
   id: string;
   name: string;
@@ -35,11 +38,14 @@ type SummaryRow = {
   attempts: number | null;
   correct: number | null;
   last_active: string | null;
+  app_id: string | null;
+  course_id: string | null;
 };
 
 type AttemptRow = {
   id?: string;
   user_id: string;
+  app_id: string | null;
   course_id: string | null;
   chapter_id: string | null;
   section_id: string | null;
@@ -132,14 +138,20 @@ export default function MasterPage() {
         const [summaryResult, attemptsResult] = await Promise.all([
           supabase
             .from('master_student_summary')
-            .select('user_id, full_name, email, completion, accuracy, attempts, correct, last_active')
+            .select(
+              'user_id, full_name, email, completion, accuracy, attempts, correct, last_active, app_id, course_id'
+            )
+            .eq('app_id', MASTER_APP_ID)
+            .eq('course_id', MASTER_COURSE_ID)
             .order('last_active', { ascending: false }),
 
           supabase
             .from('question_attempts')
             .select(
-              'id, user_id, course_id, chapter_id, section_id, question_id, selected_answer, correct, attempted_at'
+              'id, user_id, app_id, course_id, chapter_id, section_id, question_id, selected_answer, correct, attempted_at'
             )
+            .eq('app_id', MASTER_APP_ID)
+            .eq('course_id', MASTER_COURSE_ID)
             .order('attempted_at', { ascending: false })
             .limit(100),
         ]);
