@@ -4,6 +4,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { SECTIONS } from "@/lib/course/algebra1";
 import { isTeacherLikeRole } from "@/lib/auth/roles";
 import { getTeacherClassroomById } from "@/lib/classrooms/getTeacherClassroomById";
 import {
@@ -33,6 +34,18 @@ type PageProps = {
   }>;
 };
 
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback;
+}
+
+function getSectionLabel(sectionId: string | null) {
+  const section = SECTIONS.find((item) => item.id === sectionId);
+
+  if (!section) return sectionId ?? "No section";
+
+  return `Chapter ${section.chapterNumber}, Section ${section.sectionNumber}: ${section.title}`;
+}
+
 export default function ClassroomDetailPage({ params }: PageProps) {
   const [classroomId, setClassroomId] = useState<string>("");
   const [classroom, setClassroom] = useState<Classroom | null>(null);
@@ -57,6 +70,13 @@ export default function ClassroomDetailPage({ params }: PageProps) {
   const [assignmentTitle, setAssignmentTitle] = useState("");
   const [assignmentDescription, setAssignmentDescription] = useState("");
   const [assignmentDueDate, setAssignmentDueDate] = useState("");
+  const [assignmentSectionId, setAssignmentSectionId] = useState("");
+  const [assignmentTarget, setAssignmentTarget] = useState<"class" | "students">(
+    "class"
+  );
+  const [assignmentRecipientIds, setAssignmentRecipientIds] = useState<string[]>(
+    []
+  );
   const [creatingAssignment, setCreatingAssignment] = useState(false);
   const [assignmentMessage, setAssignmentMessage] = useState<string | null>(null);
 
@@ -81,7 +101,7 @@ export default function ClassroomDetailPage({ params }: PageProps) {
       setLoading(true);
       setError(null);
 
-      const supabase: any = getSupabaseBrowserClient();
+      const supabase = getSupabaseBrowserClient();
       const {
         data: { user },
         error: userError,
@@ -95,7 +115,7 @@ export default function ClassroomDetailPage({ params }: PageProps) {
         throw new Error("Please log in to view this classroom.");
       }
 
-      const { data: profile, error: profileError } = await supabase
+      const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("role")
         .eq("id", user.id)
@@ -106,6 +126,8 @@ export default function ClassroomDetailPage({ params }: PageProps) {
           profileError.message || "Failed to verify teacher access."
         );
       }
+
+      const profile = profileData as { role: string | null } | null;
 
       if (!profile || !isTeacherLikeRole(profile.role)) {
         throw new Error("Teacher access required.");
@@ -126,12 +148,12 @@ export default function ClassroomDetailPage({ params }: PageProps) {
       setClassroom(classroomData);
       setRoster(rosterData ?? []);
       setAssignments(assignmentData ?? []);
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
       setClassroom(null);
       setRoster([]);
       setAssignments([]);
-      setError(err?.message || "Failed to load classroom.");
+      setError(getErrorMessage(err, "Failed to load classroom."));
     } finally {
       setLoading(false);
     }
@@ -190,9 +212,9 @@ export default function ClassroomDetailPage({ params }: PageProps) {
       setSelectedStudentIds((prev) =>
         prev.filter((id) => id !== member.user_id)
       );
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      setRosterMessage(err?.message || "Failed to remove student.");
+      setRosterMessage(getErrorMessage(err, "Failed to remove student."));
     } finally {
       setRemovingUserId(null);
     }
@@ -221,11 +243,11 @@ export default function ClassroomDetailPage({ params }: PageProps) {
       if (results.length === 0) {
         setRosterMessage("No matching registered students found.");
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
       setSearchResults([]);
       setSelectedStudentIds([]);
-      setRosterMessage(err?.message || "Failed to search students.");
+      setRosterMessage(getErrorMessage(err, "Failed to search students."));
     } finally {
       setSearchingStudents(false);
     }
@@ -271,9 +293,9 @@ export default function ClassroomDetailPage({ params }: PageProps) {
             : student
         )
       );
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      setRosterMessage(err?.message || "Failed to add selected students.");
+      setRosterMessage(getErrorMessage(err, "Failed to add selected students."));
     } finally {
       setAddingStudents(false);
     }
@@ -320,12 +342,20 @@ export default function ClassroomDetailPage({ params }: PageProps) {
         setSearchResults(refreshedResults);
         setSelectedStudentIds([]);
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      setRosterMessage(err?.message || "Failed to create student.");
+      setRosterMessage(getErrorMessage(err, "Failed to create student."));
     } finally {
       setCreatingStudent(false);
     }
+  };
+
+  const toggleAssignmentRecipient = (studentUserId: string) => {
+    setAssignmentRecipientIds((prev) =>
+      prev.includes(studentUserId)
+        ? prev.filter((id) => id !== studentUserId)
+        : [...prev, studentUserId]
+    );
   };
 
   const handleCreateAssignment = async () => {
@@ -335,21 +365,32 @@ export default function ClassroomDetailPage({ params }: PageProps) {
       setCreatingAssignment(true);
       setAssignmentMessage(null);
 
-      const newAssignment = await createClassroomAssignment({
+      const result = await createClassroomAssignment({
         classroomId,
         title: assignmentTitle,
         description: assignmentDescription,
         dueDate: assignmentDueDate,
+        sectionId: assignmentSectionId,
+        target: assignmentTarget,
+        recipientUserIds:
+          assignmentTarget === "students" ? assignmentRecipientIds : undefined,
       });
 
-      setAssignments((prev) => [newAssignment, ...prev]);
+      setAssignments((prev) => [result.assignment, ...prev]);
       setAssignmentTitle("");
       setAssignmentDescription("");
       setAssignmentDueDate("");
-      setAssignmentMessage("Assignment created.");
-    } catch (err: any) {
+      setAssignmentSectionId("");
+      setAssignmentTarget("class");
+      setAssignmentRecipientIds([]);
+      setAssignmentMessage(
+        `Assignment created for ${result.recipient_count} student${
+          result.recipient_count === 1 ? "" : "s"
+        }.`
+      );
+    } catch (err) {
       console.error(err);
-      setAssignmentMessage(err?.message || "Failed to create assignment.");
+      setAssignmentMessage(getErrorMessage(err, "Failed to create assignment."));
     } finally {
       setCreatingAssignment(false);
     }
@@ -664,6 +705,24 @@ export default function ClassroomDetailPage({ params }: PageProps) {
 
                 <div>
                   <label className="block text-sm font-semibold mb-1 text-gray-800">
+                    Section
+                  </label>
+                  <select
+                    value={assignmentSectionId}
+                    onChange={(e) => setAssignmentSectionId(e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">Choose an Algebra 1 section</option>
+                    {SECTIONS.map((section) => (
+                      <option key={section.id} value={section.id}>
+                        {getSectionLabel(section.id)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold mb-1 text-gray-800">
                     Due Date
                   </label>
                   <input
@@ -674,10 +733,110 @@ export default function ClassroomDetailPage({ params }: PageProps) {
                   />
                 </div>
 
+                <div>
+                  <p className="block text-sm font-semibold mb-2 text-gray-800">
+                    Assign To
+                  </p>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <label className="flex cursor-pointer items-start gap-2 rounded-lg border border-gray-200 bg-white p-3 text-sm text-gray-800">
+                      <input
+                        type="radio"
+                        name="assignment-target"
+                        value="class"
+                        checked={assignmentTarget === "class"}
+                        onChange={() => {
+                          setAssignmentTarget("class");
+                          setAssignmentRecipientIds([]);
+                        }}
+                        className="mt-1"
+                      />
+                      <span>
+                        <span className="block font-semibold">Entire Class</span>
+                        <span className="text-xs text-gray-500">
+                          Assign to all current roster students.
+                        </span>
+                      </span>
+                    </label>
+
+                    <label className="flex cursor-pointer items-start gap-2 rounded-lg border border-gray-200 bg-white p-3 text-sm text-gray-800">
+                      <input
+                        type="radio"
+                        name="assignment-target"
+                        value="students"
+                        checked={assignmentTarget === "students"}
+                        onChange={() => setAssignmentTarget("students")}
+                        className="mt-1"
+                      />
+                      <span>
+                        <span className="block font-semibold">Selected Students</span>
+                        <span className="text-xs text-gray-500">
+                          Pick individual roster students below.
+                        </span>
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                {assignmentTarget === "students" && (
+                  <div className="rounded-xl border border-gray-200 bg-white p-3">
+                    <p className="mb-2 text-sm font-semibold text-gray-900">
+                      Select Students
+                    </p>
+
+                    {roster.length === 0 ? (
+                      <p className="text-sm text-gray-600">
+                        No students are currently on this roster.
+                      </p>
+                    ) : (
+                      <div className="max-h-48 space-y-2 overflow-y-auto pr-1">
+                        {roster.map((member) => {
+                          const checked = assignmentRecipientIds.includes(
+                            member.user_id
+                          );
+
+                          return (
+                            <label
+                              key={member.id}
+                              className={`flex cursor-pointer items-start gap-2 rounded-lg border p-3 text-sm ${
+                                checked
+                                  ? "border-blue-300 bg-blue-50"
+                                  : "border-gray-200 bg-gray-50"
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={() =>
+                                  toggleAssignmentRecipient(member.user_id)
+                                }
+                                className="mt-1"
+                              />
+                              <span>
+                                <span className="block font-semibold text-gray-900">
+                                  {member.full_name?.trim() || "Student"}
+                                </span>
+                                {member.email && (
+                                  <span className="text-xs text-gray-500">
+                                    {member.email}
+                                  </span>
+                                )}
+                              </span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <button
                   type="button"
                   onClick={handleCreateAssignment}
-                  disabled={creatingAssignment}
+                  disabled={
+                    creatingAssignment ||
+                    (assignmentTarget === "students" &&
+                      assignmentRecipientIds.length === 0)
+                  }
                   className="rounded-lg border border-blue-600 bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {creatingAssignment ? "Creating..." : "Create Assignment"}
@@ -712,6 +871,12 @@ export default function ClassroomDetailPage({ params }: PageProps) {
                       )}
 
                       <div className="mt-2 text-xs text-gray-500 space-y-1">
+                        <p>
+                          Section{" "}
+                          <span className="font-semibold text-gray-700">
+                            {getSectionLabel(assignment.section_id)}
+                          </span>
+                        </p>
                         <p>
                           Created{" "}
                           {new Date(assignment.created_at).toLocaleDateString()}
