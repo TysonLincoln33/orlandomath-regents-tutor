@@ -4,6 +4,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { SECTIONS } from "@/lib/course/algebra1";
 import { isTeacherLikeRole } from "@/lib/auth/roles";
 import { getTeacherClassroomById } from "@/lib/classrooms/getTeacherClassroomById";
 import {
@@ -25,6 +26,16 @@ import {
   type ClassroomAssignment,
 } from "@/lib/classrooms/createClassroomAssignment";
 import { getClassroomAssignments } from "@/lib/classrooms/getClassroomAssignments";
+import { updateClassroomAssignment } from "@/lib/classrooms/updateClassroomAssignment";
+import { archiveClassroomAssignment } from "@/lib/classrooms/archiveClassroomAssignment";
+import {
+  getTeacherClassroomProgress,
+  type TeacherClassroomProgress,
+} from "@/lib/classrooms/getTeacherClassroomProgress";
+import {
+  getTeacherClassroomStudentProgress,
+  type TeacherClassroomStudentProgress,
+} from "@/lib/classrooms/getTeacherClassroomStudentProgress";
 import type { Classroom } from "@/types/classroom";
 
 type PageProps = {
@@ -33,11 +44,63 @@ type PageProps = {
   }>;
 };
 
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback;
+}
+
+function formatProgressDate(value: string | null) {
+  if (!value) return "No activity yet";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "No activity yet";
+
+  return date.toLocaleString([], {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+function formatAssignmentDate(value: string | null | undefined) {
+  if (!value) return "No due date";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "No due date";
+
+  return date.toLocaleDateString([], {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function getSectionLabel(sectionId: string | null) {
+  const section = SECTIONS.find((item) => item.id === sectionId);
+
+  if (!section) return sectionId ?? "No section";
+
+  return `Chapter ${section.chapterNumber}, Section ${section.sectionNumber}: ${section.title}`;
+}
+
 export default function ClassroomDetailPage({ params }: PageProps) {
   const [classroomId, setClassroomId] = useState<string>("");
   const [classroom, setClassroom] = useState<Classroom | null>(null);
   const [roster, setRoster] = useState<ClassroomRosterMember[]>([]);
   const [assignments, setAssignments] = useState<ClassroomAssignment[]>([]);
+  const [classProgress, setClassProgress] =
+    useState<TeacherClassroomProgress | null>(null);
+  const [progressLoading, setProgressLoading] = useState(false);
+  const [progressError, setProgressError] = useState<string | null>(null);
+  const [selectedProgressStudentId, setSelectedProgressStudentId] = useState<
+    string | null
+  >(null);
+  const [studentProgress, setStudentProgress] =
+    useState<TeacherClassroomStudentProgress | null>(null);
+  const [studentProgressLoading, setStudentProgressLoading] = useState(false);
+  const [studentProgressError, setStudentProgressError] = useState<
+    string | null
+  >(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<"code" | "link" | null>(null);
@@ -57,8 +120,31 @@ export default function ClassroomDetailPage({ params }: PageProps) {
   const [assignmentTitle, setAssignmentTitle] = useState("");
   const [assignmentDescription, setAssignmentDescription] = useState("");
   const [assignmentDueDate, setAssignmentDueDate] = useState("");
+  const [assignmentSectionId, setAssignmentSectionId] = useState("");
+  const [assignmentTarget, setAssignmentTarget] = useState<
+    "class" | "students"
+  >("class");
+  const [assignmentRecipientIds, setAssignmentRecipientIds] = useState<
+    string[]
+  >([]);
   const [creatingAssignment, setCreatingAssignment] = useState(false);
-  const [assignmentMessage, setAssignmentMessage] = useState<string | null>(null);
+  const [assignmentMessage, setAssignmentMessage] = useState<string | null>(
+    null,
+  );
+  const [editingAssignmentId, setEditingAssignmentId] = useState<string | null>(
+    null,
+  );
+  const [editAssignmentTitle, setEditAssignmentTitle] = useState("");
+  const [editAssignmentDescription, setEditAssignmentDescription] =
+    useState("");
+  const [editAssignmentDueDate, setEditAssignmentDueDate] = useState("");
+  const [savingAssignmentId, setSavingAssignmentId] = useState<string | null>(
+    null,
+  );
+  const [archivingAssignmentId, setArchivingAssignmentId] = useState<
+    string | null
+  >(null);
+  const [showArchivedAssignments, setShowArchivedAssignments] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -80,8 +166,13 @@ export default function ClassroomDetailPage({ params }: PageProps) {
     try {
       setLoading(true);
       setError(null);
+      setProgressLoading(true);
+      setProgressError(null);
+      setSelectedProgressStudentId(null);
+      setStudentProgress(null);
+      setStudentProgressError(null);
 
-      const supabase: any = getSupabaseBrowserClient();
+      const supabase = getSupabaseBrowserClient();
       const {
         data: { user },
         error: userError,
@@ -95,7 +186,7 @@ export default function ClassroomDetailPage({ params }: PageProps) {
         throw new Error("Please log in to view this classroom.");
       }
 
-      const { data: profile, error: profileError } = await supabase
+      const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("role")
         .eq("id", user.id)
@@ -103,9 +194,11 @@ export default function ClassroomDetailPage({ params }: PageProps) {
 
       if (profileError) {
         throw new Error(
-          profileError.message || "Failed to verify teacher access."
+          profileError.message || "Failed to verify teacher access.",
         );
       }
+
+      const profile = profileData as { role: string | null } | null;
 
       if (!profile || !isTeacherLikeRole(profile.role)) {
         throw new Error("Teacher access required.");
@@ -118,22 +211,42 @@ export default function ClassroomDetailPage({ params }: PageProps) {
       ]);
 
       if (!classroomData) {
-        throw new Error(
-          "Classroom not found or you do not have access to it."
-        );
+        throw new Error("Classroom not found or you do not have access to it.");
       }
 
+      const nextRoster = rosterData ?? [];
+
       setClassroom(classroomData);
-      setRoster(rosterData ?? []);
+      setRoster(nextRoster);
       setAssignments(assignmentData ?? []);
-    } catch (err: any) {
+
+      try {
+        const progressData = await getTeacherClassroomProgress(
+          classroomId,
+          nextRoster.length,
+        );
+        setClassProgress(progressData);
+      } catch (progressErr) {
+        console.error(progressErr);
+        setClassProgress(null);
+        setProgressError(
+          getErrorMessage(progressErr, "Failed to load classroom progress."),
+        );
+      }
+    } catch (err) {
       console.error(err);
       setClassroom(null);
       setRoster([]);
       setAssignments([]);
-      setError(err?.message || "Failed to load classroom.");
+      setClassProgress(null);
+      setProgressError(null);
+      setSelectedProgressStudentId(null);
+      setStudentProgress(null);
+      setStudentProgressError(null);
+      setError(getErrorMessage(err, "Failed to load classroom."));
     } finally {
       setLoading(false);
+      setProgressLoading(false);
     }
   }, [classroomId]);
 
@@ -149,6 +262,16 @@ export default function ClassroomDetailPage({ params }: PageProps) {
     url.searchParams.set("code", classroom.class_code);
     return url.toString();
   }, [classroom?.class_code]);
+
+  const activeAssignments = useMemo(
+    () => assignments.filter((assignment) => !assignment.archived_at),
+    [assignments],
+  );
+
+  const archivedAssignments = useMemo(
+    () => assignments.filter((assignment) => assignment.archived_at),
+    [assignments],
+  );
 
   const handleCopy = async (value: string, type: "code" | "link") => {
     if (!value) return;
@@ -167,7 +290,7 @@ export default function ClassroomDetailPage({ params }: PageProps) {
 
     const displayName = member.full_name?.trim() || "this student";
     const confirmed = window.confirm(
-      `Remove ${displayName} from this classroom?`
+      `Remove ${displayName} from this classroom?`,
     );
 
     if (!confirmed) return;
@@ -184,15 +307,15 @@ export default function ClassroomDetailPage({ params }: PageProps) {
         prev.map((student) =>
           student.id === member.user_id
             ? { ...student, already_in_classroom: false }
-            : student
-        )
+            : student,
+        ),
       );
       setSelectedStudentIds((prev) =>
-        prev.filter((id) => id !== member.user_id)
+        prev.filter((id) => id !== member.user_id),
       );
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      setRosterMessage(err?.message || "Failed to remove student.");
+      setRosterMessage(getErrorMessage(err, "Failed to remove student."));
     } finally {
       setRemovingUserId(null);
     }
@@ -221,11 +344,11 @@ export default function ClassroomDetailPage({ params }: PageProps) {
       if (results.length === 0) {
         setRosterMessage("No matching registered students found.");
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
       setSearchResults([]);
       setSelectedStudentIds([]);
-      setRosterMessage(err?.message || "Failed to search students.");
+      setRosterMessage(getErrorMessage(err, "Failed to search students."));
     } finally {
       setSearchingStudents(false);
     }
@@ -235,7 +358,7 @@ export default function ClassroomDetailPage({ params }: PageProps) {
     setSelectedStudentIds((prev) =>
       prev.includes(studentId)
         ? prev.filter((id) => id !== studentId)
-        : [...prev, studentId]
+        : [...prev, studentId],
     );
   };
 
@@ -252,7 +375,7 @@ export default function ClassroomDetailPage({ params }: PageProps) {
       const parts: string[] = [];
       if (result.added_count > 0) {
         parts.push(
-          `${result.added_count} student${result.added_count === 1 ? "" : "s"} added`
+          `${result.added_count} student${result.added_count === 1 ? "" : "s"} added`,
         );
       }
       if (result.already_enrolled_count > 0) {
@@ -268,12 +391,14 @@ export default function ClassroomDetailPage({ params }: PageProps) {
         prev.map((student) =>
           idsToAdd.includes(student.id)
             ? { ...student, already_in_classroom: true }
-            : student
-        )
+            : student,
+        ),
       );
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      setRosterMessage(err?.message || "Failed to add selected students.");
+      setRosterMessage(
+        getErrorMessage(err, "Failed to add selected students."),
+      );
     } finally {
       setAddingStudents(false);
     }
@@ -290,7 +415,7 @@ export default function ClassroomDetailPage({ params }: PageProps) {
         await createStudentAndAddToClassroom(
           classroomId,
           newStudentFullName,
-          newStudentEmail
+          newStudentEmail,
         );
 
       setNewStudentFullName("");
@@ -298,15 +423,15 @@ export default function ClassroomDetailPage({ params }: PageProps) {
 
       if (result.status === "created_and_added") {
         setRosterMessage(
-          `${result.full_name || "Student"} was created, invited by email, and added to the classroom.`
+          `${result.full_name || "Student"} was created, invited by email, and added to the classroom.`,
         );
       } else if (result.status === "existing_user_added") {
         setRosterMessage(
-          `${result.full_name || "Student"} already existed and was added to the classroom.`
+          `${result.full_name || "Student"} already existed and was added to the classroom.`,
         );
       } else {
         setRosterMessage(
-          `${result.full_name || "Student"} is already enrolled in this classroom.`
+          `${result.full_name || "Student"} is already enrolled in this classroom.`,
         );
       }
 
@@ -315,16 +440,142 @@ export default function ClassroomDetailPage({ params }: PageProps) {
       if (studentSearch.trim().length >= 2) {
         const refreshedResults = await searchStudentsForClassroom(
           classroomId,
-          studentSearch.trim()
+          studentSearch.trim(),
         );
         setSearchResults(refreshedResults);
         setSelectedStudentIds([]);
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error(err);
-      setRosterMessage(err?.message || "Failed to create student.");
+      setRosterMessage(getErrorMessage(err, "Failed to create student."));
     } finally {
       setCreatingStudent(false);
+    }
+  };
+
+  const toggleAssignmentRecipient = (studentUserId: string) => {
+    setAssignmentRecipientIds((prev) =>
+      prev.includes(studentUserId)
+        ? prev.filter((id) => id !== studentUserId)
+        : [...prev, studentUserId],
+    );
+  };
+
+  const handleViewStudentProgress = async (member: ClassroomRosterMember) => {
+    if (!classroomId) return;
+
+    try {
+      setSelectedProgressStudentId(member.user_id);
+      setStudentProgress(null);
+      setStudentProgressError(null);
+      setStudentProgressLoading(true);
+
+      const nextStudentProgress = await getTeacherClassroomStudentProgress(
+        classroomId,
+        member.user_id,
+        member,
+      );
+
+      setStudentProgress(nextStudentProgress);
+    } catch (err) {
+      console.error(err);
+      setStudentProgress(null);
+      setStudentProgressError(
+        getErrorMessage(err, "Failed to load student progress."),
+      );
+    } finally {
+      setStudentProgressLoading(false);
+    }
+  };
+
+  const handleBackToClassProgress = () => {
+    setSelectedProgressStudentId(null);
+    setStudentProgress(null);
+    setStudentProgressError(null);
+    setStudentProgressLoading(false);
+  };
+
+  const startEditingAssignment = (assignment: ClassroomAssignment) => {
+    setEditingAssignmentId(assignment.id);
+    setEditAssignmentTitle(assignment.title);
+    setEditAssignmentDescription(assignment.description ?? "");
+    setEditAssignmentDueDate(assignment.due_date ?? "");
+    setAssignmentMessage(null);
+  };
+
+  const cancelEditingAssignment = () => {
+    setEditingAssignmentId(null);
+    setEditAssignmentTitle("");
+    setEditAssignmentDescription("");
+    setEditAssignmentDueDate("");
+  };
+
+  const replaceAssignment = (nextAssignment: ClassroomAssignment) => {
+    setAssignments((prev) =>
+      prev.map((assignment) =>
+        assignment.id === nextAssignment.id ? nextAssignment : assignment,
+      ),
+    );
+  };
+
+  const handleSaveAssignment = async (assignmentId: string) => {
+    if (!classroomId) return;
+
+    try {
+      setSavingAssignmentId(assignmentId);
+      setAssignmentMessage(null);
+
+      const nextAssignment = await updateClassroomAssignment({
+        classroomId,
+        assignmentId,
+        title: editAssignmentTitle,
+        description: editAssignmentDescription,
+        dueDate: editAssignmentDueDate,
+      });
+
+      replaceAssignment(nextAssignment);
+      cancelEditingAssignment();
+      setAssignmentMessage("Assignment updated.");
+    } catch (err) {
+      console.error(err);
+      setAssignmentMessage(
+        getErrorMessage(err, "Failed to update assignment."),
+      );
+    } finally {
+      setSavingAssignmentId(null);
+    }
+  };
+
+  const handleArchiveAssignment = async (assignment: ClassroomAssignment) => {
+    if (!classroomId) return;
+
+    const confirmed = window.confirm(
+      `Archive "${assignment.title}"? It will move out of the active assignment list.`,
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setArchivingAssignmentId(assignment.id);
+      setAssignmentMessage(null);
+
+      const archivedAssignment = await archiveClassroomAssignment(
+        classroomId,
+        assignment.id,
+      );
+
+      replaceAssignment(archivedAssignment);
+      if (editingAssignmentId === assignment.id) {
+        cancelEditingAssignment();
+      }
+      setAssignmentMessage("Assignment archived.");
+    } catch (err) {
+      console.error(err);
+      setAssignmentMessage(
+        getErrorMessage(err, "Failed to archive assignment."),
+      );
+    } finally {
+      setArchivingAssignmentId(null);
     }
   };
 
@@ -335,21 +586,35 @@ export default function ClassroomDetailPage({ params }: PageProps) {
       setCreatingAssignment(true);
       setAssignmentMessage(null);
 
-      const newAssignment = await createClassroomAssignment({
+      const result = await createClassroomAssignment({
         classroomId,
         title: assignmentTitle,
         description: assignmentDescription,
         dueDate: assignmentDueDate,
+        sectionId: assignmentSectionId,
+        target: assignmentTarget,
+        recipientUserIds:
+          assignmentTarget === "students" ? assignmentRecipientIds : undefined,
       });
 
-      setAssignments((prev) => [newAssignment, ...prev]);
+      setAssignments((prev) => [result.assignment, ...prev]);
+      setShowArchivedAssignments(false);
       setAssignmentTitle("");
       setAssignmentDescription("");
       setAssignmentDueDate("");
-      setAssignmentMessage("Assignment created.");
-    } catch (err: any) {
+      setAssignmentSectionId("");
+      setAssignmentTarget("class");
+      setAssignmentRecipientIds([]);
+      setAssignmentMessage(
+        `Assignment created for ${result.recipient_count} student${
+          result.recipient_count === 1 ? "" : "s"
+        }.`,
+      );
+    } catch (err) {
       console.error(err);
-      setAssignmentMessage(err?.message || "Failed to create assignment.");
+      setAssignmentMessage(
+        getErrorMessage(err, "Failed to create assignment."),
+      );
     } finally {
       setCreatingAssignment(false);
     }
@@ -497,7 +762,9 @@ export default function ClassroomDetailPage({ params }: PageProps) {
 
                   <div className="space-y-2">
                     {searchResults.map((student) => {
-                      const isSelected = selectedStudentIds.includes(student.id);
+                      const isSelected = selectedStudentIds.includes(
+                        student.id,
+                      );
 
                       return (
                         <label
@@ -600,7 +867,11 @@ export default function ClassroomDetailPage({ params }: PageProps) {
                   {roster.map((member) => (
                     <div
                       key={member.id}
-                      className="rounded-xl border border-gray-200 bg-gray-50 p-4"
+                      className={`rounded-xl border p-4 ${
+                        selectedProgressStudentId === member.user_id
+                          ? "border-blue-300 bg-blue-50"
+                          : "border-gray-200 bg-gray-50"
+                      }`}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
@@ -613,16 +884,29 @@ export default function ClassroomDetailPage({ params }: PageProps) {
                           </p>
                         </div>
 
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveStudent(member)}
-                          disabled={removingUserId === member.user_id}
-                          className="rounded-lg border border-red-300 bg-white px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          {removingUserId === member.user_id
-                            ? "Removing..."
-                            : "Remove"}
-                        </button>
+                        <div className="flex flex-col gap-2 sm:flex-row">
+                          <button
+                            type="button"
+                            onClick={() => handleViewStudentProgress(member)}
+                            disabled={studentProgressLoading}
+                            className="rounded-lg border border-blue-300 bg-white px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {selectedProgressStudentId === member.user_id
+                              ? "Viewing"
+                              : "View Progress"}
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveStudent(member)}
+                            disabled={removingUserId === member.user_id}
+                            className="rounded-lg border border-red-300 bg-white px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {removingUserId === member.user_id
+                              ? "Removing..."
+                              : "Remove"}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -664,6 +948,24 @@ export default function ClassroomDetailPage({ params }: PageProps) {
 
                 <div>
                   <label className="block text-sm font-semibold mb-1 text-gray-800">
+                    Section
+                  </label>
+                  <select
+                    value={assignmentSectionId}
+                    onChange={(e) => setAssignmentSectionId(e.target.value)}
+                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">Choose an Algebra 1 section</option>
+                    {SECTIONS.map((section) => (
+                      <option key={section.id} value={section.id}>
+                        {getSectionLabel(section.id)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold mb-1 text-gray-800">
                     Due Date
                   </label>
                   <input
@@ -674,10 +976,114 @@ export default function ClassroomDetailPage({ params }: PageProps) {
                   />
                 </div>
 
+                <div>
+                  <p className="block text-sm font-semibold mb-2 text-gray-800">
+                    Assign To
+                  </p>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <label className="flex cursor-pointer items-start gap-2 rounded-lg border border-gray-200 bg-white p-3 text-sm text-gray-800">
+                      <input
+                        type="radio"
+                        name="assignment-target"
+                        value="class"
+                        checked={assignmentTarget === "class"}
+                        onChange={() => {
+                          setAssignmentTarget("class");
+                          setAssignmentRecipientIds([]);
+                        }}
+                        className="mt-1"
+                      />
+                      <span>
+                        <span className="block font-semibold">
+                          Entire Class
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          Assign to all current roster students.
+                        </span>
+                      </span>
+                    </label>
+
+                    <label className="flex cursor-pointer items-start gap-2 rounded-lg border border-gray-200 bg-white p-3 text-sm text-gray-800">
+                      <input
+                        type="radio"
+                        name="assignment-target"
+                        value="students"
+                        checked={assignmentTarget === "students"}
+                        onChange={() => setAssignmentTarget("students")}
+                        className="mt-1"
+                      />
+                      <span>
+                        <span className="block font-semibold">
+                          Selected Students
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          Pick individual roster students below.
+                        </span>
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                {assignmentTarget === "students" && (
+                  <div className="rounded-xl border border-gray-200 bg-white p-3">
+                    <p className="mb-2 text-sm font-semibold text-gray-900">
+                      Select Students
+                    </p>
+
+                    {roster.length === 0 ? (
+                      <p className="text-sm text-gray-600">
+                        No students are currently on this roster.
+                      </p>
+                    ) : (
+                      <div className="max-h-48 space-y-2 overflow-y-auto pr-1">
+                        {roster.map((member) => {
+                          const checked = assignmentRecipientIds.includes(
+                            member.user_id,
+                          );
+
+                          return (
+                            <label
+                              key={member.id}
+                              className={`flex cursor-pointer items-start gap-2 rounded-lg border p-3 text-sm ${
+                                checked
+                                  ? "border-blue-300 bg-blue-50"
+                                  : "border-gray-200 bg-gray-50"
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={() =>
+                                  toggleAssignmentRecipient(member.user_id)
+                                }
+                                className="mt-1"
+                              />
+                              <span>
+                                <span className="block font-semibold text-gray-900">
+                                  {member.full_name?.trim() || "Student"}
+                                </span>
+                                {member.email && (
+                                  <span className="text-xs text-gray-500">
+                                    {member.email}
+                                  </span>
+                                )}
+                              </span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <button
                   type="button"
                   onClick={handleCreateAssignment}
-                  disabled={creatingAssignment}
+                  disabled={
+                    creatingAssignment ||
+                    (assignmentTarget === "students" &&
+                      assignmentRecipientIds.length === 0)
+                  }
                   className="rounded-lg border border-blue-600 bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {creatingAssignment ? "Creating..." : "Create Assignment"}
@@ -691,53 +1097,590 @@ export default function ClassroomDetailPage({ params }: PageProps) {
               )}
 
               <div className="mt-4 space-y-3">
-                {assignments.length === 0 ? (
+                {activeAssignments.length === 0 ? (
                   <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-600">
-                    No assignments yet.
+                    No active assignments yet.
                   </div>
                 ) : (
-                  assignments.map((assignment) => (
-                    <div
+                  activeAssignments.map((assignment) => (
+                    <AssignmentManagementCard
                       key={assignment.id}
-                      className="rounded-xl border border-gray-200 bg-gray-50 p-4"
-                    >
-                      <p className="font-semibold text-gray-900">
-                        {assignment.title}
-                      </p>
-
-                      {assignment.description && (
-                        <p className="mt-1 text-sm text-gray-600 whitespace-pre-wrap">
-                          {assignment.description}
-                        </p>
-                      )}
-
-                      <div className="mt-2 text-xs text-gray-500 space-y-1">
-                        <p>
-                          Created{" "}
-                          {new Date(assignment.created_at).toLocaleDateString()}
-                        </p>
-                        <p>
-                          Due{" "}
-                          {assignment.due_date
-                            ? new Date(assignment.due_date).toLocaleDateString()
-                            : "No due date"}
-                        </p>
-                      </div>
-                    </div>
+                      assignment={assignment}
+                      isEditing={editingAssignmentId === assignment.id}
+                      editTitle={editAssignmentTitle}
+                      editDescription={editAssignmentDescription}
+                      editDueDate={editAssignmentDueDate}
+                      saving={savingAssignmentId === assignment.id}
+                      archiving={archivingAssignmentId === assignment.id}
+                      onEdit={() => startEditingAssignment(assignment)}
+                      onCancelEdit={cancelEditingAssignment}
+                      onSave={() => handleSaveAssignment(assignment.id)}
+                      onArchive={() => handleArchiveAssignment(assignment)}
+                      onEditTitleChange={setEditAssignmentTitle}
+                      onEditDescriptionChange={setEditAssignmentDescription}
+                      onEditDueDateChange={setEditAssignmentDueDate}
+                    />
                   ))
                 )}
               </div>
+
+              {archivedAssignments.length > 0 && (
+                <div className="mt-5 rounded-xl border border-gray-200 bg-white p-3">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setShowArchivedAssignments((current) => !current)
+                    }
+                    className="flex w-full items-center justify-between text-left text-sm font-semibold text-gray-800"
+                  >
+                    <span>
+                      Archived assignments ({archivedAssignments.length})
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      {showArchivedAssignments ? "Hide" : "Show"}
+                    </span>
+                  </button>
+
+                  {showArchivedAssignments && (
+                    <div className="mt-3 space-y-3">
+                      {archivedAssignments.map((assignment) => (
+                        <AssignmentManagementCard
+                          key={assignment.id}
+                          assignment={assignment}
+                          isArchived
+                          isEditing={false}
+                          editTitle=""
+                          editDescription=""
+                          editDueDate=""
+                          saving={false}
+                          archiving={false}
+                          onEdit={() => undefined}
+                          onCancelEdit={() => undefined}
+                          onSave={() => undefined}
+                          onArchive={() => undefined}
+                          onEditTitleChange={() => undefined}
+                          onEditDescriptionChange={() => undefined}
+                          onEditDueDateChange={() => undefined}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </section>
 
             <section className="xl:col-span-1 bg-white rounded-xl shadow border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900">Progress</h3>
-              <div className="mt-4 rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-600">
-                Class progress summaries will go here in a later phase.
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Progress
+                  </h3>
+                  <p className="mt-1 text-sm text-gray-600">
+                    {selectedProgressStudentId
+                      ? "Individual Regents Algebra 1 progress for the selected student."
+                      : "Full-class Regents Algebra 1 activity for students on this roster."}
+                  </p>
+                </div>
+
+                {selectedProgressStudentId && (
+                  <button
+                    type="button"
+                    onClick={handleBackToClassProgress}
+                    className="rounded-lg border border-blue-300 bg-white px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-50"
+                  >
+                    Back to Full Class View
+                  </button>
+                )}
               </div>
+
+              {selectedProgressStudentId ? (
+                <IndividualStudentProgressView
+                  progress={studentProgress}
+                  loading={studentProgressLoading}
+                  error={studentProgressError}
+                  formatDate={formatProgressDate}
+                />
+              ) : (
+                <FullClassProgressView
+                  progress={classProgress}
+                  loading={progressLoading}
+                  error={progressError}
+                  formatDate={formatProgressDate}
+                />
+              )}
             </section>
           </div>
         </>
       )}
+    </div>
+  );
+}
+
+function AssignmentManagementCard({
+  assignment,
+  isArchived = false,
+  isEditing,
+  editTitle,
+  editDescription,
+  editDueDate,
+  saving,
+  archiving,
+  onEdit,
+  onCancelEdit,
+  onSave,
+  onArchive,
+  onEditTitleChange,
+  onEditDescriptionChange,
+  onEditDueDateChange,
+}: {
+  assignment: ClassroomAssignment;
+  isArchived?: boolean;
+  isEditing: boolean;
+  editTitle: string;
+  editDescription: string;
+  editDueDate: string;
+  saving: boolean;
+  archiving: boolean;
+  onEdit: () => void;
+  onCancelEdit: () => void;
+  onSave: () => void;
+  onArchive: () => void;
+  onEditTitleChange: (value: string) => void;
+  onEditDescriptionChange: (value: string) => void;
+  onEditDueDateChange: (value: string) => void;
+}) {
+  const recipientCount = assignment.recipient_count ?? 0;
+  const completedCount = assignment.completed_count ?? 0;
+  const excusedCount = assignment.excused_count ?? 0;
+  const incompleteCount =
+    assignment.incomplete_count ??
+    Math.max(recipientCount - completedCount - excusedCount, 0);
+
+  return (
+    <div
+      className={`rounded-xl border p-4 ${
+        isArchived
+          ? "border-gray-200 bg-gray-100 opacity-90"
+          : "border-gray-200 bg-gray-50"
+      }`}
+    >
+      {isEditing ? (
+        <div className="space-y-3">
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500">
+              Title
+            </label>
+            <input
+              type="text"
+              value={editTitle}
+              onChange={(event) => onEditTitleChange(event.target.value)}
+              className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500">
+              Description
+            </label>
+            <textarea
+              value={editDescription}
+              onChange={(event) => onEditDescriptionChange(event.target.value)}
+              rows={3}
+              className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold uppercase tracking-wide text-gray-500">
+              Due Date
+            </label>
+            <input
+              type="date"
+              value={editDueDate}
+              onChange={(event) => onEditDueDateChange(event.target.value)}
+              className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={onSave}
+              disabled={saving}
+              className="rounded-lg border border-blue-600 bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {saving ? "Saving..." : "Save Changes"}
+            </button>
+            <button
+              type="button"
+              onClick={onCancelEdit}
+              disabled={saving}
+              className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="font-semibold text-gray-900">
+                  {assignment.title}
+                </p>
+                {isArchived && (
+                  <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs font-semibold text-gray-600">
+                    Archived
+                  </span>
+                )}
+              </div>
+
+              {assignment.description && (
+                <p className="mt-1 whitespace-pre-wrap text-sm text-gray-600">
+                  {assignment.description}
+                </p>
+              )}
+            </div>
+
+            {!isArchived && (
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={onEdit}
+                  className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100"
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  onClick={onArchive}
+                  disabled={archiving}
+                  className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-800 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {archiving ? "Archiving..." : "Archive"}
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="mt-3 grid gap-2 text-xs text-gray-500 sm:grid-cols-2">
+            <p>
+              Section{" "}
+              <span className="font-semibold text-gray-700">
+                {getSectionLabel(assignment.section_id)}
+              </span>
+            </p>
+            <p>Due {formatAssignmentDate(assignment.due_date)}</p>
+            <p>Created {formatAssignmentDate(assignment.created_at)}</p>
+            {assignment.updated_at && (
+              <p>Updated {formatAssignmentDate(assignment.updated_at)}</p>
+            )}
+            {isArchived && assignment.archived_at && (
+              <p>Archived {formatAssignmentDate(assignment.archived_at)}</p>
+            )}
+          </div>
+
+          <div className="mt-3 grid gap-2 sm:grid-cols-4">
+            <AssignmentCountPill label="Recipients" value={recipientCount} />
+            <AssignmentCountPill label="Completed" value={completedCount} />
+            <AssignmentCountPill label="Incomplete" value={incompleteCount} />
+            <AssignmentCountPill label="Excused" value={excusedCount} />
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function AssignmentCountPill({
+  label,
+  value,
+}: {
+  label: string;
+  value: number;
+}) {
+  return (
+    <div className="rounded-lg border border-gray-200 bg-white px-3 py-2">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+        {label}
+      </p>
+      <p className="text-lg font-bold text-gray-900">{value}</p>
+    </div>
+  );
+}
+
+function FullClassProgressView({
+  progress,
+  loading,
+  error,
+  formatDate,
+}: {
+  progress: TeacherClassroomProgress | null;
+  loading: boolean;
+  error: string | null;
+  formatDate: (value: string | null) => string;
+}) {
+  if (loading) {
+    return (
+      <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">
+        Loading class progress...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+        {error}
+      </div>
+    );
+  }
+
+  if (!progress || progress.rows.length === 0) {
+    return (
+      <div className="mt-4 rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-600">
+        No Regents Algebra 1 progress is visible for this classroom yet.
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-4 space-y-4">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <ProgressStatCard
+          label="Roster"
+          value={progress.summary.rosterStudents}
+        />
+        <ProgressStatCard
+          label="With Progress"
+          value={progress.summary.studentsWithProgress}
+        />
+        <ProgressStatCard
+          label="Avg Completion"
+          value={`${progress.summary.averageCompletion}%`}
+        />
+        <ProgressStatCard
+          label="Avg Accuracy"
+          value={`${progress.summary.averageAccuracy}%`}
+        />
+        <ProgressStatCard
+          label="Attempts"
+          value={progress.summary.totalAttempts}
+        />
+        <ProgressStatCard
+          label="Correct"
+          value={progress.summary.totalCorrect}
+        />
+      </div>
+
+      <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm text-gray-700">
+        Most recent activity: {formatDate(progress.summary.mostRecentActivity)}
+      </div>
+
+      <ProgressSectionTable
+        sections={progress.sections}
+        formatDate={formatDate}
+      />
+    </div>
+  );
+}
+
+function IndividualStudentProgressView({
+  progress,
+  loading,
+  error,
+  formatDate,
+}: {
+  progress: TeacherClassroomStudentProgress | null;
+  loading: boolean;
+  error: string | null;
+  formatDate: (value: string | null) => string;
+}) {
+  if (loading) {
+    return (
+      <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">
+        Loading student progress...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+        {error}
+      </div>
+    );
+  }
+
+  if (!progress || progress.rows.length === 0) {
+    return (
+      <div className="mt-4 rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-600">
+        No Regents Algebra 1 progress is visible for this student yet.
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-4 space-y-4">
+      <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+        <p className="text-sm font-semibold text-gray-900">
+          {progress.student.fullName?.trim() || "Student"}
+        </p>
+        {progress.student.email && (
+          <p className="mt-1 text-xs text-gray-500">{progress.student.email}</p>
+        )}
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <ProgressStatCard
+          label="Overall Completion"
+          value={`${progress.summary.overallCompletion}%`}
+        />
+        <ProgressStatCard
+          label="Overall Accuracy"
+          value={`${progress.summary.overallAccuracy}%`}
+        />
+        <ProgressStatCard
+          label="Attempts"
+          value={progress.summary.totalAttempts}
+        />
+        <ProgressStatCard
+          label="Correct"
+          value={progress.summary.totalCorrect}
+        />
+      </div>
+
+      <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm text-gray-700">
+        Most recent activity: {formatDate(progress.summary.mostRecentActivity)}
+      </div>
+
+      <ProgressSectionTable
+        sections={progress.sections}
+        formatDate={formatDate}
+      />
+
+      <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+        <h4 className="text-sm font-semibold text-gray-900">Recent Activity</h4>
+        {progress.recentAttempts.length === 0 ? (
+          <p className="mt-2 text-sm text-gray-600">No recent attempts yet.</p>
+        ) : (
+          <div className="mt-3 space-y-2">
+            {progress.recentAttempts.map((attempt, index) => (
+              <div
+                key={`${attempt.sectionId}-${attempt.questionId}-${attempt.attemptedAt}-${index}`}
+                className="rounded-lg border border-gray-200 bg-white p-3 text-sm"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-gray-900">
+                      {attempt.sectionTitle}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {formatDate(attempt.attemptedAt)}
+                    </p>
+                  </div>
+                  <span
+                    className={
+                      attempt.correct
+                        ? "rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-700"
+                        : "rounded-full bg-red-100 px-2 py-1 text-xs font-semibold text-red-700"
+                    }
+                  >
+                    {attempt.correct ? "Correct" : "Incorrect"}
+                  </span>
+                </div>
+                <p className="mt-2 text-xs text-gray-500">
+                  Question: {attempt.questionId ?? "—"}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ProgressSectionTable({
+  sections,
+  formatDate,
+}: {
+  sections: Array<{
+    sectionId: string;
+    title: string;
+    studentsStarted?: number;
+    studentsCompleted?: number;
+    averageCompletion?: number;
+    averageAccuracy?: number;
+    completionPercent?: number;
+    accuracyPercent?: number;
+    totalAttempts: number;
+    mostRecentActivity: string | null;
+  }>;
+  formatDate: (value: string | null) => string;
+}) {
+  return (
+    <div className="overflow-x-auto rounded-xl border border-gray-200">
+      <table className="min-w-full divide-y divide-gray-200 text-sm">
+        <thead className="bg-gray-50 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+          <tr>
+            <th className="px-3 py-2">Section</th>
+            <th className="px-3 py-2">Started</th>
+            <th className="px-3 py-2">Completed</th>
+            <th className="px-3 py-2">Completion</th>
+            <th className="px-3 py-2">Accuracy</th>
+            <th className="px-3 py-2">Attempts</th>
+            <th className="px-3 py-2">Recent</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-100 bg-white">
+          {sections.map((section) => (
+            <tr key={section.sectionId}>
+              <td className="px-3 py-3 align-top">
+                <p className="font-semibold text-gray-900">{section.title}</p>
+                <p className="text-xs text-gray-500">{section.sectionId}</p>
+              </td>
+              <td className="px-3 py-3 align-top text-gray-700">
+                {section.studentsStarted ?? (section.totalAttempts > 0 ? 1 : 0)}
+              </td>
+              <td className="px-3 py-3 align-top text-gray-700">
+                {section.studentsCompleted ??
+                  ((section.completionPercent ?? 0) >= 100 ? 1 : 0)}
+              </td>
+              <td className="px-3 py-3 align-top text-gray-700">
+                {section.averageCompletion ?? section.completionPercent ?? 0}%
+              </td>
+              <td className="px-3 py-3 align-top text-gray-700">
+                {section.averageAccuracy ?? section.accuracyPercent ?? 0}%
+              </td>
+              <td className="px-3 py-3 align-top text-gray-700">
+                {section.totalAttempts}
+              </td>
+              <td className="px-3 py-3 align-top text-gray-700">
+                {formatDate(section.mostRecentActivity)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function ProgressStatCard({
+  label,
+  value,
+}: {
+  label: string;
+  value: string | number;
+}) {
+  return (
+    <div className="rounded-xl border border-gray-200 bg-gray-50 p-3">
+      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+        {label}
+      </p>
+      <p className="mt-1 text-2xl font-bold text-gray-900">{value}</p>
     </div>
   );
 }

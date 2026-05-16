@@ -1,6 +1,5 @@
 // src/lib/classrooms/createClassroomAssignment.ts
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import { isTeacherLikeRole } from "@/lib/auth/roles";
 
 export type ClassroomAssignment = {
   id: string;
@@ -11,25 +10,43 @@ export type ClassroomAssignment = {
   section_id: string | null;
   created_by: string;
   created_at: string;
+  updated_at?: string | null;
+  archived_at?: string | null;
+  recipient_count?: number;
+  completed_count?: number;
+  incomplete_count?: number;
+  excused_count?: number;
 };
 
-type CreateAssignmentInput = {
+export type AssignmentTarget = "class" | "students";
+
+export type CreateAssignmentInput = {
   classroomId: string;
   title: string;
   description?: string;
   dueDate?: string;
   sectionId?: string;
+  target: AssignmentTarget;
+  recipientUserIds?: string[];
+};
+
+export type CreateClassroomAssignmentResult = {
+  assignment: ClassroomAssignment;
+  recipient_count: number;
 };
 
 export async function createClassroomAssignment(
-  input: CreateAssignmentInput
-): Promise<ClassroomAssignment> {
-  const supabase: any = getSupabaseBrowserClient();
+  input: CreateAssignmentInput,
+): Promise<CreateClassroomAssignmentResult> {
+  const supabase = getSupabaseBrowserClient();
 
   const title = input.title.trim();
   const description = input.description?.trim() || null;
   const dueDate = input.dueDate?.trim() || null;
   const sectionId = input.sectionId?.trim() || null;
+  const recipientUserIds = [
+    ...new Set(input.recipientUserIds?.filter(Boolean) ?? []),
+  ];
 
   if (!title) {
     throw new Error("Assignment title is required.");
@@ -39,70 +56,49 @@ export async function createClassroomAssignment(
     throw new Error("Please select a section.");
   }
 
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  if (userError) {
-    throw new Error(userError.message || "Failed to verify user.");
+  if (input.target === "students" && recipientUserIds.length === 0) {
+    throw new Error("Please select at least one student.");
   }
 
-  if (!user) {
+  const {
+    data: { session },
+    error: sessionError,
+  } = await supabase.auth.getSession();
+
+  if (sessionError) {
+    throw new Error(sessionError.message || "Failed to verify session.");
+  }
+
+  const accessToken = session?.access_token;
+
+  if (!accessToken) {
     throw new Error("Please log in to create assignments.");
   }
 
-  const { data: teacherProfile, error: teacherProfileError } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .maybeSingle();
+  const response = await fetch(
+    `/api/teacher/classrooms/${input.classroomId}/assignments`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        title,
+        description,
+        due_date: dueDate,
+        section_id: sectionId,
+        target: input.target,
+        recipient_user_ids: recipientUserIds,
+      }),
+    },
+  );
 
-  if (teacherProfileError) {
-    throw new Error(
-      teacherProfileError.message || "Failed to verify teacher access."
-    );
+  const payload = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new Error(payload?.error || "Failed to create assignment.");
   }
 
-  if (!teacherProfile || !isTeacherLikeRole(teacherProfile.role)) {
-    throw new Error("Teacher access required.");
-  }
-
-  const { data: classroom, error: classroomError } = await supabase
-    .from("classrooms")
-    .select("id")
-    .eq("id", input.classroomId)
-    .eq("teacher_id", user.id)
-    .maybeSingle();
-
-  if (classroomError) {
-    throw new Error(
-      classroomError.message || "Failed to verify classroom ownership."
-    );
-  }
-
-  if (!classroom) {
-    throw new Error("Classroom not found or you do not have access to it.");
-  }
-
-  const { data, error } = await supabase
-    .from("assignments")
-    .insert({
-      classroom_id: input.classroomId,
-      title,
-      description,
-      due_date: dueDate || null,
-      section_id: sectionId,
-      created_by: user.id,
-    })
-    .select(
-      "id, classroom_id, title, description, due_date, section_id, created_by, created_at"
-    )
-    .single();
-
-  if (error) {
-    throw new Error(error.message || "Failed to create assignment.");
-  }
-
-  return data as ClassroomAssignment;
+  return payload as CreateClassroomAssignmentResult;
 }
