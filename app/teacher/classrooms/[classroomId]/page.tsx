@@ -30,6 +30,10 @@ import {
   getTeacherClassroomProgress,
   type TeacherClassroomProgress,
 } from "@/lib/classrooms/getTeacherClassroomProgress";
+import {
+  getTeacherClassroomStudentProgress,
+  type TeacherClassroomStudentProgress,
+} from "@/lib/classrooms/getTeacherClassroomStudentProgress";
 import type { Classroom } from "@/types/classroom";
 
 type PageProps = {
@@ -73,6 +77,14 @@ export default function ClassroomDetailPage({ params }: PageProps) {
     useState<TeacherClassroomProgress | null>(null);
   const [progressLoading, setProgressLoading] = useState(false);
   const [progressError, setProgressError] = useState<string | null>(null);
+  const [selectedProgressStudentId, setSelectedProgressStudentId] =
+    useState<string | null>(null);
+  const [studentProgress, setStudentProgress] =
+    useState<TeacherClassroomStudentProgress | null>(null);
+  const [studentProgressLoading, setStudentProgressLoading] = useState(false);
+  const [studentProgressError, setStudentProgressError] = useState<string | null>(
+    null
+  );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<"code" | "link" | null>(null);
@@ -124,6 +136,9 @@ export default function ClassroomDetailPage({ params }: PageProps) {
       setError(null);
       setProgressLoading(true);
       setProgressError(null);
+      setSelectedProgressStudentId(null);
+      setStudentProgress(null);
+      setStudentProgressError(null);
 
       const supabase = getSupabaseBrowserClient();
       const {
@@ -195,6 +210,9 @@ export default function ClassroomDetailPage({ params }: PageProps) {
       setAssignments([]);
       setClassProgress(null);
       setProgressError(null);
+      setSelectedProgressStudentId(null);
+      setStudentProgress(null);
+      setStudentProgressError(null);
       setError(getErrorMessage(err, "Failed to load classroom."));
     } finally {
       setLoading(false);
@@ -399,6 +417,40 @@ export default function ClassroomDetailPage({ params }: PageProps) {
         ? prev.filter((id) => id !== studentUserId)
         : [...prev, studentUserId]
     );
+  };
+
+  const handleViewStudentProgress = async (member: ClassroomRosterMember) => {
+    if (!classroomId) return;
+
+    try {
+      setSelectedProgressStudentId(member.user_id);
+      setStudentProgress(null);
+      setStudentProgressError(null);
+      setStudentProgressLoading(true);
+
+      const nextStudentProgress = await getTeacherClassroomStudentProgress(
+        classroomId,
+        member.user_id,
+        member
+      );
+
+      setStudentProgress(nextStudentProgress);
+    } catch (err) {
+      console.error(err);
+      setStudentProgress(null);
+      setStudentProgressError(
+        getErrorMessage(err, "Failed to load student progress.")
+      );
+    } finally {
+      setStudentProgressLoading(false);
+    }
+  };
+
+  const handleBackToClassProgress = () => {
+    setSelectedProgressStudentId(null);
+    setStudentProgress(null);
+    setStudentProgressError(null);
+    setStudentProgressLoading(false);
   };
 
   const handleCreateAssignment = async () => {
@@ -684,7 +736,11 @@ export default function ClassroomDetailPage({ params }: PageProps) {
                   {roster.map((member) => (
                     <div
                       key={member.id}
-                      className="rounded-xl border border-gray-200 bg-gray-50 p-4"
+                      className={`rounded-xl border p-4 ${
+                        selectedProgressStudentId === member.user_id
+                          ? "border-blue-300 bg-blue-50"
+                          : "border-gray-200 bg-gray-50"
+                      }`}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
@@ -697,16 +753,29 @@ export default function ClassroomDetailPage({ params }: PageProps) {
                           </p>
                         </div>
 
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveStudent(member)}
-                          disabled={removingUserId === member.user_id}
-                          className="rounded-lg border border-red-300 bg-white px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          {removingUserId === member.user_id
-                            ? "Removing..."
-                            : "Remove"}
-                        </button>
+                        <div className="flex flex-col gap-2 sm:flex-row">
+                          <button
+                            type="button"
+                            onClick={() => handleViewStudentProgress(member)}
+                            disabled={studentProgressLoading}
+                            className="rounded-lg border border-blue-300 bg-white px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {selectedProgressStudentId === member.user_id
+                              ? "Viewing"
+                              : "View Progress"}
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveStudent(member)}
+                            disabled={removingUserId === member.user_id}
+                            className="rounded-lg border border-red-300 bg-white px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {removingUserId === member.user_id
+                              ? "Removing..."
+                              : "Remove"}
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -938,105 +1007,263 @@ export default function ClassroomDetailPage({ params }: PageProps) {
             </section>
 
             <section className="xl:col-span-1 bg-white rounded-xl shadow border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900">Progress</h3>
-              <p className="mt-1 text-sm text-gray-600">
-                Full-class Regents Algebra 1 activity for students on this roster.
-              </p>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Progress</h3>
+                  <p className="mt-1 text-sm text-gray-600">
+                    {selectedProgressStudentId
+                      ? "Individual Regents Algebra 1 progress for the selected student."
+                      : "Full-class Regents Algebra 1 activity for students on this roster."}
+                  </p>
+                </div>
 
-              {progressLoading ? (
-                <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">
-                  Loading class progress...
-                </div>
-              ) : progressError ? (
-                <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
-                  {progressError}
-                </div>
-              ) : !classProgress || classProgress.rows.length === 0 ? (
-                <div className="mt-4 rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-600">
-                  No Regents Algebra 1 progress is visible for this classroom yet.
-                </div>
+                {selectedProgressStudentId && (
+                  <button
+                    type="button"
+                    onClick={handleBackToClassProgress}
+                    className="rounded-lg border border-blue-300 bg-white px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-50"
+                  >
+                    Back to Full Class View
+                  </button>
+                )}
+              </div>
+
+              {selectedProgressStudentId ? (
+                <IndividualStudentProgressView
+                  progress={studentProgress}
+                  loading={studentProgressLoading}
+                  error={studentProgressError}
+                  formatDate={formatProgressDate}
+                />
               ) : (
-                <div className="mt-4 space-y-4">
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <ProgressStatCard
-                      label="Roster"
-                      value={classProgress.summary.rosterStudents}
-                    />
-                    <ProgressStatCard
-                      label="With Progress"
-                      value={classProgress.summary.studentsWithProgress}
-                    />
-                    <ProgressStatCard
-                      label="Avg Completion"
-                      value={`${classProgress.summary.averageCompletion}%`}
-                    />
-                    <ProgressStatCard
-                      label="Avg Accuracy"
-                      value={`${classProgress.summary.averageAccuracy}%`}
-                    />
-                    <ProgressStatCard
-                      label="Attempts"
-                      value={classProgress.summary.totalAttempts}
-                    />
-                    <ProgressStatCard
-                      label="Correct"
-                      value={classProgress.summary.totalCorrect}
-                    />
-                  </div>
-
-                  <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm text-gray-700">
-                    Most recent activity: {formatProgressDate(classProgress.summary.mostRecentActivity)}
-                  </div>
-
-                  <div className="overflow-x-auto rounded-xl border border-gray-200">
-                    <table className="min-w-full divide-y divide-gray-200 text-sm">
-                      <thead className="bg-gray-50 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-                        <tr>
-                          <th className="px-3 py-2">Section</th>
-                          <th className="px-3 py-2">Started</th>
-                          <th className="px-3 py-2">Completed</th>
-                          <th className="px-3 py-2">Avg Completion</th>
-                          <th className="px-3 py-2">Avg Accuracy</th>
-                          <th className="px-3 py-2">Attempts</th>
-                          <th className="px-3 py-2">Recent</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-100 bg-white">
-                        {classProgress.sections.map((section) => (
-                          <tr key={section.sectionId}>
-                            <td className="px-3 py-3 align-top">
-                              <p className="font-semibold text-gray-900">{section.title}</p>
-                              <p className="text-xs text-gray-500">{section.sectionId}</p>
-                            </td>
-                            <td className="px-3 py-3 align-top text-gray-700">
-                              {section.studentsStarted}
-                            </td>
-                            <td className="px-3 py-3 align-top text-gray-700">
-                              {section.studentsCompleted}
-                            </td>
-                            <td className="px-3 py-3 align-top text-gray-700">
-                              {section.averageCompletion}%
-                            </td>
-                            <td className="px-3 py-3 align-top text-gray-700">
-                              {section.averageAccuracy}%
-                            </td>
-                            <td className="px-3 py-3 align-top text-gray-700">
-                              {section.totalAttempts}
-                            </td>
-                            <td className="px-3 py-3 align-top text-gray-700">
-                              {formatProgressDate(section.mostRecentActivity)}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+                <FullClassProgressView
+                  progress={classProgress}
+                  loading={progressLoading}
+                  error={progressError}
+                  formatDate={formatProgressDate}
+                />
               )}
             </section>
           </div>
         </>
       )}
+    </div>
+  );
+}
+
+function FullClassProgressView({
+  progress,
+  loading,
+  error,
+  formatDate,
+}: {
+  progress: TeacherClassroomProgress | null;
+  loading: boolean;
+  error: string | null;
+  formatDate: (value: string | null) => string;
+}) {
+  if (loading) {
+    return (
+      <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">
+        Loading class progress...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+        {error}
+      </div>
+    );
+  }
+
+  if (!progress || progress.rows.length === 0) {
+    return (
+      <div className="mt-4 rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-600">
+        No Regents Algebra 1 progress is visible for this classroom yet.
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-4 space-y-4">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <ProgressStatCard label="Roster" value={progress.summary.rosterStudents} />
+        <ProgressStatCard label="With Progress" value={progress.summary.studentsWithProgress} />
+        <ProgressStatCard label="Avg Completion" value={`${progress.summary.averageCompletion}%`} />
+        <ProgressStatCard label="Avg Accuracy" value={`${progress.summary.averageAccuracy}%`} />
+        <ProgressStatCard label="Attempts" value={progress.summary.totalAttempts} />
+        <ProgressStatCard label="Correct" value={progress.summary.totalCorrect} />
+      </div>
+
+      <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm text-gray-700">
+        Most recent activity: {formatDate(progress.summary.mostRecentActivity)}
+      </div>
+
+      <ProgressSectionTable sections={progress.sections} formatDate={formatDate} />
+    </div>
+  );
+}
+
+function IndividualStudentProgressView({
+  progress,
+  loading,
+  error,
+  formatDate,
+}: {
+  progress: TeacherClassroomStudentProgress | null;
+  loading: boolean;
+  error: string | null;
+  formatDate: (value: string | null) => string;
+}) {
+  if (loading) {
+    return (
+      <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">
+        Loading student progress...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+        {error}
+      </div>
+    );
+  }
+
+  if (!progress || progress.rows.length === 0) {
+    return (
+      <div className="mt-4 rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-600">
+        No Regents Algebra 1 progress is visible for this student yet.
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-4 space-y-4">
+      <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+        <p className="text-sm font-semibold text-gray-900">
+          {progress.student.fullName?.trim() || "Student"}
+        </p>
+        {progress.student.email && (
+          <p className="mt-1 text-xs text-gray-500">{progress.student.email}</p>
+        )}
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <ProgressStatCard label="Overall Completion" value={`${progress.summary.overallCompletion}%`} />
+        <ProgressStatCard label="Overall Accuracy" value={`${progress.summary.overallAccuracy}%`} />
+        <ProgressStatCard label="Attempts" value={progress.summary.totalAttempts} />
+        <ProgressStatCard label="Correct" value={progress.summary.totalCorrect} />
+      </div>
+
+      <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm text-gray-700">
+        Most recent activity: {formatDate(progress.summary.mostRecentActivity)}
+      </div>
+
+      <ProgressSectionTable sections={progress.sections} formatDate={formatDate} />
+
+      <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+        <h4 className="text-sm font-semibold text-gray-900">Recent Activity</h4>
+        {progress.recentAttempts.length === 0 ? (
+          <p className="mt-2 text-sm text-gray-600">No recent attempts yet.</p>
+        ) : (
+          <div className="mt-3 space-y-2">
+            {progress.recentAttempts.map((attempt, index) => (
+              <div
+                key={`${attempt.sectionId}-${attempt.questionId}-${attempt.attemptedAt}-${index}`}
+                className="rounded-lg border border-gray-200 bg-white p-3 text-sm"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-gray-900">{attempt.sectionTitle}</p>
+                    <p className="text-xs text-gray-500">{formatDate(attempt.attemptedAt)}</p>
+                  </div>
+                  <span
+                    className={
+                      attempt.correct
+                        ? "rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-700"
+                        : "rounded-full bg-red-100 px-2 py-1 text-xs font-semibold text-red-700"
+                    }
+                  >
+                    {attempt.correct ? "Correct" : "Incorrect"}
+                  </span>
+                </div>
+                <p className="mt-2 text-xs text-gray-500">
+                  Question: {attempt.questionId ?? "—"}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ProgressSectionTable({
+  sections,
+  formatDate,
+}: {
+  sections: Array<{
+    sectionId: string;
+    title: string;
+    studentsStarted?: number;
+    studentsCompleted?: number;
+    averageCompletion?: number;
+    averageAccuracy?: number;
+    completionPercent?: number;
+    accuracyPercent?: number;
+    totalAttempts: number;
+    mostRecentActivity: string | null;
+  }>;
+  formatDate: (value: string | null) => string;
+}) {
+  return (
+    <div className="overflow-x-auto rounded-xl border border-gray-200">
+      <table className="min-w-full divide-y divide-gray-200 text-sm">
+        <thead className="bg-gray-50 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+          <tr>
+            <th className="px-3 py-2">Section</th>
+            <th className="px-3 py-2">Started</th>
+            <th className="px-3 py-2">Completed</th>
+            <th className="px-3 py-2">Completion</th>
+            <th className="px-3 py-2">Accuracy</th>
+            <th className="px-3 py-2">Attempts</th>
+            <th className="px-3 py-2">Recent</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-100 bg-white">
+          {sections.map((section) => (
+            <tr key={section.sectionId}>
+              <td className="px-3 py-3 align-top">
+                <p className="font-semibold text-gray-900">{section.title}</p>
+                <p className="text-xs text-gray-500">{section.sectionId}</p>
+              </td>
+              <td className="px-3 py-3 align-top text-gray-700">
+                {section.studentsStarted ?? (section.totalAttempts > 0 ? 1 : 0)}
+              </td>
+              <td className="px-3 py-3 align-top text-gray-700">
+                {section.studentsCompleted ?? ((section.completionPercent ?? 0) >= 100 ? 1 : 0)}
+              </td>
+              <td className="px-3 py-3 align-top text-gray-700">
+                {section.averageCompletion ?? section.completionPercent ?? 0}%
+              </td>
+              <td className="px-3 py-3 align-top text-gray-700">
+                {section.averageAccuracy ?? section.accuracyPercent ?? 0}%
+              </td>
+              <td className="px-3 py-3 align-top text-gray-700">
+                {section.totalAttempts}
+              </td>
+              <td className="px-3 py-3 align-top text-gray-700">
+                {formatDate(section.mostRecentActivity)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
