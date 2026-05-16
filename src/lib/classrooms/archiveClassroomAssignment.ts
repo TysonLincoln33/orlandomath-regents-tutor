@@ -1,10 +1,11 @@
-// src/lib/classrooms/getClassroomAssignments.ts
+// src/lib/classrooms/archiveClassroomAssignment.ts
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { ClassroomAssignment } from "@/lib/classrooms/createClassroomAssignment";
 
-export async function getClassroomAssignments(
+export async function archiveClassroomAssignment(
   classroomId: string,
-): Promise<ClassroomAssignment[]> {
+  assignmentId: string,
+): Promise<ClassroomAssignment> {
   const supabase = getSupabaseBrowserClient();
 
   const {
@@ -19,23 +20,26 @@ export async function getClassroomAssignments(
   const accessToken = session?.access_token;
 
   if (!accessToken) {
-    return [];
+    throw new Error("Please log in to archive assignments.");
   }
 
   const response = await fetch(
-    `/api/teacher/classrooms/${classroomId}/assignments`,
+    `/api/teacher/classrooms/${classroomId}/assignments/${assignmentId}`,
     {
+      method: "PATCH",
       headers: {
+        "Content-Type": "application/json",
         Authorization: `Bearer ${accessToken}`,
       },
+      body: JSON.stringify({ archived: true }),
     },
   );
 
   const payload = await response.json().catch(() => null);
 
   if (!response.ok) {
-    throw new Error(payload?.error || "Failed to load assignments.");
+    throw new Error(payload?.error || "Failed to archive assignment.");
   }
 
-  return (payload?.assignments ?? []) as ClassroomAssignment[];
+  return payload.assignment as ClassroomAssignment;
 }
