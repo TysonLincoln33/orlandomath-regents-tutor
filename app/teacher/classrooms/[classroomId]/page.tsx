@@ -26,6 +26,10 @@ import {
   type ClassroomAssignment,
 } from "@/lib/classrooms/createClassroomAssignment";
 import { getClassroomAssignments } from "@/lib/classrooms/getClassroomAssignments";
+import {
+  getTeacherClassroomProgress,
+  type TeacherClassroomProgress,
+} from "@/lib/classrooms/getTeacherClassroomProgress";
 import type { Classroom } from "@/types/classroom";
 
 type PageProps = {
@@ -36,6 +40,20 @@ type PageProps = {
 
 function getErrorMessage(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback;
+}
+
+function formatProgressDate(value: string | null) {
+  if (!value) return "No activity yet";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "No activity yet";
+
+  return date.toLocaleString([], {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
 }
 
 function getSectionLabel(sectionId: string | null) {
@@ -51,6 +69,10 @@ export default function ClassroomDetailPage({ params }: PageProps) {
   const [classroom, setClassroom] = useState<Classroom | null>(null);
   const [roster, setRoster] = useState<ClassroomRosterMember[]>([]);
   const [assignments, setAssignments] = useState<ClassroomAssignment[]>([]);
+  const [classProgress, setClassProgress] =
+    useState<TeacherClassroomProgress | null>(null);
+  const [progressLoading, setProgressLoading] = useState(false);
+  const [progressError, setProgressError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<"code" | "link" | null>(null);
@@ -100,6 +122,8 @@ export default function ClassroomDetailPage({ params }: PageProps) {
     try {
       setLoading(true);
       setError(null);
+      setProgressLoading(true);
+      setProgressError(null);
 
       const supabase = getSupabaseBrowserClient();
       const {
@@ -145,17 +169,36 @@ export default function ClassroomDetailPage({ params }: PageProps) {
         );
       }
 
+      const nextRoster = rosterData ?? [];
+
       setClassroom(classroomData);
-      setRoster(rosterData ?? []);
+      setRoster(nextRoster);
       setAssignments(assignmentData ?? []);
+
+      try {
+        const progressData = await getTeacherClassroomProgress(
+          classroomId,
+          nextRoster.length
+        );
+        setClassProgress(progressData);
+      } catch (progressErr) {
+        console.error(progressErr);
+        setClassProgress(null);
+        setProgressError(
+          getErrorMessage(progressErr, "Failed to load classroom progress.")
+        );
+      }
     } catch (err) {
       console.error(err);
       setClassroom(null);
       setRoster([]);
       setAssignments([]);
+      setClassProgress(null);
+      setProgressError(null);
       setError(getErrorMessage(err, "Failed to load classroom."));
     } finally {
       setLoading(false);
+      setProgressLoading(false);
     }
   }, [classroomId]);
 
@@ -896,13 +939,121 @@ export default function ClassroomDetailPage({ params }: PageProps) {
 
             <section className="xl:col-span-1 bg-white rounded-xl shadow border border-gray-200 p-6">
               <h3 className="text-lg font-semibold text-gray-900">Progress</h3>
-              <div className="mt-4 rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-600">
-                Class progress summaries will go here in a later phase.
-              </div>
+              <p className="mt-1 text-sm text-gray-600">
+                Full-class Regents Algebra 1 activity for students on this roster.
+              </p>
+
+              {progressLoading ? (
+                <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">
+                  Loading class progress...
+                </div>
+              ) : progressError ? (
+                <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+                  {progressError}
+                </div>
+              ) : !classProgress || classProgress.rows.length === 0 ? (
+                <div className="mt-4 rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-600">
+                  No Regents Algebra 1 progress is visible for this classroom yet.
+                </div>
+              ) : (
+                <div className="mt-4 space-y-4">
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <ProgressStatCard
+                      label="Roster"
+                      value={classProgress.summary.rosterStudents}
+                    />
+                    <ProgressStatCard
+                      label="With Progress"
+                      value={classProgress.summary.studentsWithProgress}
+                    />
+                    <ProgressStatCard
+                      label="Avg Completion"
+                      value={`${classProgress.summary.averageCompletion}%`}
+                    />
+                    <ProgressStatCard
+                      label="Avg Accuracy"
+                      value={`${classProgress.summary.averageAccuracy}%`}
+                    />
+                    <ProgressStatCard
+                      label="Attempts"
+                      value={classProgress.summary.totalAttempts}
+                    />
+                    <ProgressStatCard
+                      label="Correct"
+                      value={classProgress.summary.totalCorrect}
+                    />
+                  </div>
+
+                  <div className="rounded-xl border border-gray-200 bg-gray-50 p-3 text-sm text-gray-700">
+                    Most recent activity: {formatProgressDate(classProgress.summary.mostRecentActivity)}
+                  </div>
+
+                  <div className="overflow-x-auto rounded-xl border border-gray-200">
+                    <table className="min-w-full divide-y divide-gray-200 text-sm">
+                      <thead className="bg-gray-50 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
+                        <tr>
+                          <th className="px-3 py-2">Section</th>
+                          <th className="px-3 py-2">Started</th>
+                          <th className="px-3 py-2">Completed</th>
+                          <th className="px-3 py-2">Avg Completion</th>
+                          <th className="px-3 py-2">Avg Accuracy</th>
+                          <th className="px-3 py-2">Attempts</th>
+                          <th className="px-3 py-2">Recent</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100 bg-white">
+                        {classProgress.sections.map((section) => (
+                          <tr key={section.sectionId}>
+                            <td className="px-3 py-3 align-top">
+                              <p className="font-semibold text-gray-900">{section.title}</p>
+                              <p className="text-xs text-gray-500">{section.sectionId}</p>
+                            </td>
+                            <td className="px-3 py-3 align-top text-gray-700">
+                              {section.studentsStarted}
+                            </td>
+                            <td className="px-3 py-3 align-top text-gray-700">
+                              {section.studentsCompleted}
+                            </td>
+                            <td className="px-3 py-3 align-top text-gray-700">
+                              {section.averageCompletion}%
+                            </td>
+                            <td className="px-3 py-3 align-top text-gray-700">
+                              {section.averageAccuracy}%
+                            </td>
+                            <td className="px-3 py-3 align-top text-gray-700">
+                              {section.totalAttempts}
+                            </td>
+                            <td className="px-3 py-3 align-top text-gray-700">
+                              {formatProgressDate(section.mostRecentActivity)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </section>
           </div>
         </>
       )}
+    </div>
+  );
+}
+
+function ProgressStatCard({
+  label,
+  value,
+}: {
+  label: string;
+  value: string | number;
+}) {
+  return (
+    <div className="rounded-xl border border-gray-200 bg-gray-50 p-3">
+      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+        {label}
+      </p>
+      <p className="mt-1 text-2xl font-bold text-gray-900">{value}</p>
     </div>
   );
 }
