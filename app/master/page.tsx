@@ -40,6 +40,11 @@ type SummaryRow = {
   last_active: string | null;
 };
 
+type DashboardLoadError = {
+  title: string;
+  detail: string;
+};
+
 type AttemptRow = {
   id?: string;
   user_id: string;
@@ -73,6 +78,22 @@ function safePercent(value: number) {
   return Math.max(0, Math.min(100, Math.round(value)));
 }
 
+function describeError(error: unknown) {
+  if (!error || typeof error !== 'object') {
+    return 'Unknown Supabase error';
+  }
+
+  const errorRecord = error as Record<string, unknown>;
+  const parts = [
+    errorRecord.message,
+    errorRecord.details,
+    errorRecord.hint,
+    errorRecord.code ? `Code: ${errorRecord.code}` : null,
+  ].filter((part): part is string => typeof part === 'string' && part.trim().length > 0);
+
+  return parts.length > 0 ? parts.join(' — ') : 'Unknown Supabase error';
+}
+
 function studentNameFromSummary(row?: SummaryRow | StudentSummary | null) {
   if (!row) return 'Unknown Student';
 
@@ -90,6 +111,7 @@ export default function MasterPage() {
   const [currentProfile, setCurrentProfile] = useState<Profile | null>(null);
   const [studentSummaries, setStudentSummaries] = useState<StudentSummary[]>([]);
   const [attemptRows, setAttemptRows] = useState<AttemptRow[]>([]);
+  const [loadErrors, setLoadErrors] = useState<DashboardLoadError[]>([]);
 
   useEffect(() => {
     let alive = true;
@@ -97,6 +119,7 @@ export default function MasterPage() {
     async function loadMasterDashboard() {
       setLoading(true);
       setAuthMessage(null);
+      setLoadErrors([]);
 
       try {
         const supabase = getSupabaseBrowserClient();
@@ -152,12 +175,22 @@ export default function MasterPage() {
 
         if (!alive) return;
 
+        const nextLoadErrors: DashboardLoadError[] = [];
+
         if (summaryResult.error) {
           console.error('Master summary fetch error:', summaryResult.error);
+          nextLoadErrors.push({
+            title: 'Could not load student summary rows.',
+            detail: describeError(summaryResult.error),
+          });
         }
 
         if (attemptsResult.error) {
           console.error('Master attempts fetch error:', attemptsResult.error);
+          nextLoadErrors.push({
+            title: 'Could not load recent Regents Algebra 1 attempts.',
+            detail: describeError(attemptsResult.error),
+          });
         }
 
         const summaries: StudentSummary[] = ((summaryResult.data ?? []) as SummaryRow[]).map(
@@ -184,6 +217,7 @@ export default function MasterPage() {
         setCurrentProfile(profile);
         setStudentSummaries(summaries);
         setAttemptRows((attemptsResult.data ?? []) as AttemptRow[]);
+        setLoadErrors(nextLoadErrors);
         setLoading(false);
       } catch (error) {
         console.error('Master dashboard load failed:', error);
@@ -191,6 +225,12 @@ export default function MasterPage() {
         if (!alive) return;
 
         setAuthMessage('Something went wrong loading the Master Dashboard.');
+        setLoadErrors([
+          {
+            title: 'Master dashboard load failed.',
+            detail: describeError(error),
+          },
+        ]);
         setLoading(false);
       }
     }
@@ -291,6 +331,24 @@ export default function MasterPage() {
           </div>
 
           <div className="h-3 bg-gradient-to-r from-red-500 via-yellow-400 via-green-400 via-blue-500 to-purple-600" />
+
+          {loadErrors.length > 0 && (
+            <div className="border-b border-amber-300/20 bg-amber-400/10 p-6 text-amber-50">
+              <p className="text-sm font-black uppercase tracking-[0.2em] text-amber-200">
+                Master dashboard data warning
+              </p>
+              <div className="mt-3 space-y-3">
+                {loadErrors.map((loadError) => (
+                  <div key={`${loadError.title}-${loadError.detail}`}>
+                    <p className="font-black">{loadError.title}</p>
+                    <p className="mt-1 break-words text-sm text-amber-50/85">
+                      {loadError.detail}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="grid gap-4 p-6 md:grid-cols-3 lg:grid-cols-6">
             <StatCard label="Students" value={studentSummaries.length} />
