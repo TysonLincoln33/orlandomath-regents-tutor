@@ -1437,7 +1437,7 @@ function AssignmentRecipientDetailPanel({
         )}
       </div>
 
-      <div className="mt-4 grid gap-2 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <AssignmentCountPill
           label="Recipients"
           value={summary?.recipientCount ?? assignment.recipient_count ?? 0}
@@ -1495,99 +1495,123 @@ function AssignmentRecipientDetailPanel({
       )}
 
       {!loading && !error && detail && detail.recipients.length > 0 && (
-        <div className="mt-4 overflow-x-auto rounded-xl border border-gray-200 bg-white">
-          <table className="min-w-full divide-y divide-gray-200 text-sm">
-            <thead className="bg-gray-50 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-              <tr>
-                <th className="px-3 py-2">Student</th>
-                <th className="px-3 py-2">Status</th>
-                <th className="px-3 py-2">Completion</th>
-                <th className="px-3 py-2">Accuracy</th>
-                <th className="px-3 py-2">Last Activity</th>
-                <th className="px-3 py-2">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {detail.recipients.map((recipient) => {
-                const updating = updatingRecipientUserId === recipient.userId;
+        <div className="mt-4 space-y-3">
+          <div className="rounded-xl border border-blue-100 bg-blue-50 p-3 text-xs text-blue-800">
+            <span className="font-semibold">Note:</span> View Overall Progress
+            switches the Progress panel to that student’s full Regents Algebra 1
+            course progress.
+          </div>
 
-                return (
-                  <tr key={recipient.userId} className="align-top">
-                    <td className="px-3 py-3">
-                      <p className="font-semibold text-gray-900">
+          {detail.recipients.map((recipient) => {
+            const updating = updatingRecipientUserId === recipient.userId;
+
+            return (
+              <div
+                key={recipient.userId}
+                className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
+              >
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="break-words font-semibold text-gray-900">
                         {recipient.fullName?.trim() || "Student"}
                       </p>
-                      {recipient.email && (
-                        <p className="text-xs text-gray-500">
-                          {recipient.email}
-                        </p>
-                      )}
-                    </td>
-                    <td className="px-3 py-3">
                       <RecipientStatusBadge recipient={recipient} />
-                      <p className="mt-1 text-xs text-gray-500">
-                        {recipient.isExcused
-                          ? "Excused"
-                          : recipient.isComplete
-                            ? "Complete"
-                            : "Incomplete"}
+                    </div>
+                    {recipient.email && (
+                      <p className="mt-1 break-all text-xs text-gray-500">
+                        {recipient.email}
                       </p>
-                    </td>
-                    <td className="px-3 py-3 text-gray-700">
-                      {recipient.completionPercent}%
-                    </td>
-                    <td className="px-3 py-3 text-gray-700">
-                      {recipient.accuracyPercent === null
+                    )}
+                    <p className="mt-2 text-xs text-gray-500">
+                      {recipient.isExcused
+                        ? "Excused from this assignment"
+                        : recipient.isComplete
+                          ? "Complete for this assignment"
+                          : "Incomplete for this assignment"}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col gap-2 sm:items-end">
+                    <button
+                      type="button"
+                      onClick={() => onViewStudentProgress(recipient)}
+                      className="rounded-lg border border-blue-300 bg-white px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-50"
+                    >
+                      View Overall Progress
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        onStatusAction(
+                          recipient,
+                          recipient.isExcused ? "unexcuse" : "excuse",
+                        )
+                      }
+                      disabled={updating}
+                      className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-800 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {updating
+                        ? "Saving..."
+                        : recipient.isExcused
+                          ? "Un-excuse"
+                          : "Mark Excused"}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <RecipientDetailMetric
+                    label="Completion"
+                    value={`${recipient.completionPercent}%`}
+                  />
+                  <RecipientDetailMetric
+                    label="Accuracy"
+                    value={
+                      recipient.accuracyPercent === null
                         ? "—"
-                        : `${recipient.accuracyPercent}%`}
-                      <p className="text-xs text-gray-500">
-                        {recipient.questionsCorrect}/
-                        {recipient.questionsAttempted} correct
-                      </p>
-                    </td>
-                    <td className="px-3 py-3 text-gray-700">
-                      {formatProgressDate(recipient.lastActiveAt)}
-                      {recipient.completedAt && (
-                        <p className="text-xs text-gray-500">
-                          Completed {formatProgressDate(recipient.completedAt)}
-                        </p>
-                      )}
-                    </td>
-                    <td className="px-3 py-3">
-                      <div className="flex flex-wrap gap-2">
-                        <button
-                          type="button"
-                          onClick={() => onViewStudentProgress(recipient)}
-                          className="rounded-lg border border-blue-300 bg-white px-2.5 py-1 text-xs font-semibold text-blue-700 hover:bg-blue-50"
-                        >
-                          Student Progress
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            onStatusAction(
-                              recipient,
-                              recipient.isExcused ? "unexcuse" : "excuse",
-                            )
-                          }
-                          disabled={updating}
-                          className="rounded-lg border border-amber-300 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-800 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
-                        >
-                          {updating
-                            ? "Saving..."
-                            : recipient.isExcused
-                              ? "Un-excuse"
-                              : "Mark Excused"}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                        : `${recipient.accuracyPercent}%`
+                    }
+                  />
+                  <RecipientDetailMetric
+                    label="Questions Correct"
+                    value={`${recipient.questionsCorrect}/${recipient.questionsAttempted}`}
+                  />
+                  <RecipientDetailMetric
+                    label="Last Activity"
+                    value={formatProgressDate(recipient.lastActiveAt)}
+                  />
+                </div>
+
+                {recipient.completedAt && (
+                  <p className="mt-3 text-xs text-gray-500">
+                    Completed {formatProgressDate(recipient.completedAt)}
+                  </p>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
+    </div>
+  );
+}
+
+function RecipientDetailMetric({
+  label,
+  value,
+}: {
+  label: string;
+  value: number | string;
+}) {
+  return (
+    <div className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2">
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+        {label}
+      </p>
+      <p className="mt-1 break-words text-sm font-semibold text-gray-900">
+        {value}
+      </p>
     </div>
   );
 }
@@ -1817,7 +1841,7 @@ function AssignmentCountPill({
       <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
         {label}
       </p>
-      <p className="text-lg font-bold text-gray-900">{value}</p>
+      <p className="break-words text-lg font-bold text-gray-900">{value}</p>
     </div>
   );
 }
