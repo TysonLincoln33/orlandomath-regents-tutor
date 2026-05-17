@@ -50,6 +50,13 @@ type PageProps = {
   }>;
 };
 
+type AssignmentProgressContext = {
+  assignment: ClassroomAssignment;
+  recipient: TeacherAssignmentRecipient;
+};
+
+type ProgressPanelMode = "class" | "overall" | "assignment";
+
 function getErrorMessage(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback;
 }
@@ -107,6 +114,8 @@ export default function ClassroomDetailPage({ params }: PageProps) {
   const [studentProgressError, setStudentProgressError] = useState<
     string | null
   >(null);
+  const [assignmentProgressContext, setAssignmentProgressContext] =
+    useState<AssignmentProgressContext | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<"code" | "link" | null>(null);
@@ -191,6 +200,7 @@ export default function ClassroomDetailPage({ params }: PageProps) {
       setSelectedProgressStudentId(null);
       setStudentProgress(null);
       setStudentProgressError(null);
+      setAssignmentProgressContext(null);
       setSelectedRecipientAssignment(null);
       setRecipientDetail(null);
       setRecipientDetailError(null);
@@ -267,6 +277,7 @@ export default function ClassroomDetailPage({ params }: PageProps) {
       setSelectedProgressStudentId(null);
       setStudentProgress(null);
       setStudentProgressError(null);
+      setAssignmentProgressContext(null);
       setSelectedRecipientAssignment(null);
       setRecipientDetail(null);
       setRecipientDetailError(null);
@@ -494,6 +505,7 @@ export default function ClassroomDetailPage({ params }: PageProps) {
 
     try {
       setSelectedProgressStudentId(member.user_id);
+      setAssignmentProgressContext(null);
       setStudentProgress(null);
       setStudentProgressError(null);
       setStudentProgressLoading(true);
@@ -520,7 +532,12 @@ export default function ClassroomDetailPage({ params }: PageProps) {
     setSelectedProgressStudentId(null);
     setStudentProgress(null);
     setStudentProgressError(null);
+    setAssignmentProgressContext(null);
     setStudentProgressLoading(false);
+  };
+
+  const handleBackToOverallProgress = () => {
+    setAssignmentProgressContext(null);
   };
 
   const startEditingAssignment = (assignment: ClassroomAssignment) => {
@@ -637,15 +654,11 @@ export default function ClassroomDetailPage({ params }: PageProps) {
     }
   };
 
-  const handleViewRecipientOverallProgress = async (
+  const buildRosterMemberFromRecipient = (
     recipient: TeacherAssignmentRecipient,
-  ) => {
-    const rosterMember = roster.find(
-      (member) => member.user_id === recipient.userId,
-    );
-
-    await handleViewStudentProgress(
-      rosterMember ?? {
+  ): ClassroomRosterMember => {
+    return (
+      roster.find((member) => member.user_id === recipient.userId) ?? {
         id: recipient.userId,
         classroom_id: classroomId,
         user_id: recipient.userId,
@@ -653,8 +666,45 @@ export default function ClassroomDetailPage({ params }: PageProps) {
         joined_at: "",
         email: recipient.email,
         full_name: recipient.fullName,
-      },
+      }
     );
+  };
+
+  const handleViewRecipientOverallProgress = async (
+    recipient: TeacherAssignmentRecipient,
+  ) => {
+    await handleViewStudentProgress(buildRosterMemberFromRecipient(recipient));
+  };
+
+  const handleViewRecipientAssignmentDetails = async (
+    assignment: ClassroomAssignment,
+    recipient: TeacherAssignmentRecipient,
+  ) => {
+    if (!classroomId) return;
+
+    try {
+      setSelectedProgressStudentId(recipient.userId);
+      setAssignmentProgressContext({ assignment, recipient });
+      setStudentProgress(null);
+      setStudentProgressError(null);
+      setStudentProgressLoading(true);
+
+      const nextStudentProgress = await getTeacherClassroomStudentProgress(
+        classroomId,
+        recipient.userId,
+        buildRosterMemberFromRecipient(recipient),
+      );
+
+      setStudentProgress(nextStudentProgress);
+    } catch (err) {
+      console.error(err);
+      setStudentProgress(null);
+      setStudentProgressError(
+        getErrorMessage(err, "Failed to load assignment progress details."),
+      );
+    } finally {
+      setStudentProgressLoading(false);
+    }
   };
 
   const handleSaveAssignment = async (assignmentId: string) => {
@@ -1254,6 +1304,13 @@ export default function ClassroomDetailPage({ params }: PageProps) {
                     handleUpdateRecipientStatus(recipient, "assigned")
                   }
                   onViewOverallProgress={handleViewRecipientOverallProgress}
+                  onViewAssignmentDetails={(recipient) =>
+                    handleViewRecipientAssignmentDetails(
+                      recipientDetail?.assignment ??
+                        selectedRecipientAssignment,
+                      recipient,
+                    )
+                  }
                 />
               ) : (
                 <>
@@ -1339,36 +1396,38 @@ export default function ClassroomDetailPage({ params }: PageProps) {
             </section>
 
             <section className="xl:col-span-1 bg-white rounded-xl shadow border border-gray-200 p-6">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    Progress
-                  </h3>
-                  <p className="mt-1 text-sm text-gray-600">
-                    {selectedProgressStudentId
-                      ? "Individual Regents Algebra 1 progress for the selected student."
-                      : "Full-class Regents Algebra 1 activity for students on this roster."}
-                  </p>
-                </div>
-
-                {selectedProgressStudentId && (
-                  <button
-                    type="button"
-                    onClick={handleBackToClassProgress}
-                    className="rounded-lg border border-blue-300 bg-white px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-50"
-                  >
-                    Back to Full Class View
-                  </button>
-                )}
-              </div>
+              <ProgressPanelHeader
+                mode={
+                  assignmentProgressContext
+                    ? "assignment"
+                    : selectedProgressStudentId
+                      ? "overall"
+                      : "class"
+                }
+                onBack={
+                  assignmentProgressContext
+                    ? handleBackToOverallProgress
+                    : handleBackToClassProgress
+                }
+              />
 
               {selectedProgressStudentId ? (
-                <IndividualStudentProgressView
-                  progress={studentProgress}
-                  loading={studentProgressLoading}
-                  error={studentProgressError}
-                  formatDate={formatProgressDate}
-                />
+                assignmentProgressContext ? (
+                  <AssignmentStudentProgressView
+                    context={assignmentProgressContext}
+                    progress={studentProgress}
+                    loading={studentProgressLoading}
+                    error={studentProgressError}
+                    formatDate={formatProgressDate}
+                  />
+                ) : (
+                  <IndividualStudentProgressView
+                    progress={studentProgress}
+                    loading={studentProgressLoading}
+                    error={studentProgressError}
+                    formatDate={formatProgressDate}
+                  />
+                )
               ) : (
                 <FullClassProgressView
                   progress={classProgress}
@@ -1397,6 +1456,7 @@ function AssignmentRecipientDetailPanel({
   onMarkExcused,
   onUnexcuse,
   onViewOverallProgress,
+  onViewAssignmentDetails,
 }: {
   assignment: ClassroomAssignment;
   detail: TeacherAssignmentRecipientDetail | null;
@@ -1409,6 +1469,7 @@ function AssignmentRecipientDetailPanel({
   onMarkExcused: (recipient: TeacherAssignmentRecipient) => void;
   onUnexcuse: (recipient: TeacherAssignmentRecipient) => void;
   onViewOverallProgress: (recipient: TeacherAssignmentRecipient) => void;
+  onViewAssignmentDetails: (recipient: TeacherAssignmentRecipient) => void;
 }) {
   const summary = detail?.summary ?? {
     recipientCount: assignment.recipient_count ?? 0,
@@ -1513,8 +1574,9 @@ function AssignmentRecipientDetailPanel({
                       {recipient.email || "No email available"}
                     </p>
                     <p className="mt-2 text-xs text-gray-500">
-                      View Overall Progress switches the separate Progress panel
-                      to this student’s full Regents Algebra 1 course progress.
+                      View Overall Progress shows this student’s full course
+                      progress. Details shows progress for this assignment
+                      section only.
                     </p>
                   </div>
 
@@ -1545,6 +1607,14 @@ function AssignmentRecipientDetailPanel({
                       className="inline-flex w-full items-center justify-center rounded-lg border border-blue-300 bg-white px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-50 sm:w-auto"
                     >
                       View Overall Progress
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => onViewAssignmentDetails(recipient)}
+                      className="inline-flex w-full items-center justify-center rounded-lg border border-purple-300 bg-white px-3 py-2 text-xs font-semibold text-purple-700 hover:bg-purple-50 sm:w-auto"
+                    >
+                      Details
                     </button>
                   </div>
                 </div>
@@ -1804,6 +1874,56 @@ function AssignmentCountPill({
   );
 }
 
+function ProgressPanelHeader({
+  mode,
+  onBack,
+}: {
+  mode: ProgressPanelMode;
+  onBack: () => void;
+}) {
+  const copy = {
+    class: {
+      eyebrow: "Class Progress",
+      description:
+        "Full-class Regents Algebra 1 activity for students on this roster.",
+    },
+    overall: {
+      eyebrow: "Overall Student Progress",
+      description:
+        "Full-course Regents Algebra 1 progress for the selected student.",
+    },
+    assignment: {
+      eyebrow: "Assignment Details",
+      description:
+        "Assignment-specific Regents Algebra 1 progress for the selected student and section.",
+    },
+  }[mode];
+
+  return (
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">
+          {copy.eyebrow}
+        </p>
+        <h3 className="mt-1 text-lg font-semibold text-gray-900">Progress</h3>
+        <p className="mt-1 text-sm text-gray-600">{copy.description}</p>
+      </div>
+
+      {mode !== "class" && (
+        <button
+          type="button"
+          onClick={onBack}
+          className="rounded-lg border border-blue-300 bg-white px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-50"
+        >
+          {mode === "assignment"
+            ? "Back to Overall Progress"
+            : "Back to Full Class View"}
+        </button>
+      )}
+    </div>
+  );
+}
+
 function FullClassProgressView({
   progress,
   loading,
@@ -1949,11 +2069,6 @@ function IndividualStudentProgressView({
         Most recent activity: {formatDate(progress.summary.mostRecentActivity)}
       </div>
 
-      <ProgressSectionTable
-        sections={progress.sections}
-        formatDate={formatDate}
-      />
-
       <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
         <h4 className="text-sm font-semibold text-gray-900">Recent Activity</h4>
         {progress.recentAttempts.length === 0 ? (
@@ -1961,6 +2076,160 @@ function IndividualStudentProgressView({
         ) : (
           <div className="mt-3 space-y-2">
             {progress.recentAttempts.map((attempt, index) => (
+              <div
+                key={`${attempt.sectionId}-${attempt.questionId}-${attempt.attemptedAt}-${index}`}
+                className="rounded-lg border border-gray-200 bg-white p-3 text-sm"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-gray-900">
+                      {attempt.sectionTitle}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {formatDate(attempt.attemptedAt)}
+                    </p>
+                  </div>
+                  <span
+                    className={
+                      attempt.correct
+                        ? "rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-700"
+                        : "rounded-full bg-red-100 px-2 py-1 text-xs font-semibold text-red-700"
+                    }
+                  >
+                    {attempt.correct ? "Correct" : "Incorrect"}
+                  </span>
+                </div>
+                <p className="mt-2 text-xs text-gray-500">
+                  Question: {attempt.questionId ?? "—"}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function AssignmentStudentProgressView({
+  context,
+  progress,
+  loading,
+  error,
+  formatDate,
+}: {
+  context: AssignmentProgressContext;
+  progress: TeacherClassroomStudentProgress | null;
+  loading: boolean;
+  error: string | null;
+  formatDate: (value: string | null) => string;
+}) {
+  if (loading) {
+    return (
+      <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">
+        Loading assignment progress details...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+        {error}
+      </div>
+    );
+  }
+
+  const { assignment, recipient } = context;
+  const assignmentSection = assignment.section_id ?? null;
+  const sectionProgress = progress?.sections.find(
+    (section) => section.sectionId === assignmentSection,
+  );
+  const recentAttempts = (progress?.recentAttempts ?? []).filter(
+    (attempt) => attempt.sectionId === assignmentSection,
+  );
+  const student = progress?.student ?? {
+    userId: recipient.userId,
+    fullName: recipient.fullName,
+    email: recipient.email,
+  };
+  const completionPercent =
+    sectionProgress?.completionPercent ?? recipient.completionPercent;
+  const accuracyPercent =
+    sectionProgress?.accuracyPercent ?? recipient.accuracyPercent;
+  const questionsCorrect =
+    sectionProgress?.questionsCorrect || recipient.questionsCorrect;
+  const questionsAttempted =
+    sectionProgress?.questionsAttempted || recipient.questionsAttempted;
+  const lastActivity =
+    sectionProgress?.mostRecentActivity ?? recipient.lastActivityAt;
+
+  return (
+    <div className="mt-4 space-y-4">
+      <div className="rounded-xl border border-purple-200 bg-purple-50 p-4">
+        <p className="text-xs font-semibold uppercase tracking-wide text-purple-700">
+          Assignment Details Mode
+        </p>
+        <p className="mt-2 text-sm font-semibold text-gray-900">
+          {student.fullName?.trim() || "Student"}
+        </p>
+        {student.email && (
+          <p className="mt-1 break-all text-xs text-gray-600">
+            {student.email}
+          </p>
+        )}
+        <div className="mt-3 space-y-1 text-xs text-gray-600">
+          <p>
+            Assignment{" "}
+            <span className="font-semibold text-gray-800">
+              {assignment.title}
+            </span>
+          </p>
+          <p>
+            Section{" "}
+            <span className="font-semibold text-gray-800">
+              {getSectionLabel(assignmentSection)}
+            </span>
+          </p>
+          <p>
+            Status{" "}
+            <span className="font-semibold capitalize text-gray-800">
+              {recipient.status}
+            </span>
+          </p>
+        </div>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <ProgressStatCard
+          label="Assignment Completion"
+          value={`${completionPercent}%`}
+        />
+        <ProgressStatCard
+          label="Assignment Accuracy"
+          value={`${accuracyPercent}%`}
+        />
+        <ProgressStatCard
+          label="Questions Correct/Attempted"
+          value={`${questionsCorrect}/${questionsAttempted}`}
+        />
+        <ProgressStatCard
+          label="Last Activity"
+          value={formatDate(lastActivity)}
+        />
+      </div>
+
+      <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+        <h4 className="text-sm font-semibold text-gray-900">
+          Recent Activity for This Section
+        </h4>
+        {recentAttempts.length === 0 ? (
+          <p className="mt-2 text-sm text-gray-600">
+            No recent attempts are visible for this assignment section yet.
+          </p>
+        ) : (
+          <div className="mt-3 space-y-2">
+            {recentAttempts.map((attempt, index) => (
               <div
                 key={`${attempt.sectionId}-${attempt.questionId}-${attempt.attemptedAt}-${index}`}
                 className="rounded-lg border border-gray-200 bg-white p-3 text-sm"
