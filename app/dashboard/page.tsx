@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import RainbowBar from "@/components/progress/RainbowBar";
 import ChapterCard from "@/components/course/ChapterCard";
 import { getChapters } from "@/lib/course/algebra1";
@@ -9,6 +10,130 @@ import {
   fetchCourseDashboardProgress,
 } from "@/lib/progress/dashboardProgress";
 import { RT_PROGRESS_UPDATED_EVENT } from "@/lib/progress/events";
+import {
+  getStudentActiveAssignments,
+  type StudentActiveAssignment,
+  type StudentAssignmentStatus,
+} from "@/lib/assignments/getStudentActiveAssignments";
+
+function formatDueDate(value: string | null): string {
+  if (!value) return "No due date";
+
+  const date = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return "No due date";
+
+  return date.toLocaleDateString([], {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function getStatusBadgeClass(status: StudentAssignmentStatus) {
+  if (status === "completed") {
+    return "border-emerald-300/30 bg-emerald-400/10 text-emerald-100";
+  }
+
+  if (status === "excused") {
+    return "border-amber-300/30 bg-amber-400/10 text-amber-100";
+  }
+
+  return "border-cyan-300/30 bg-cyan-400/10 text-cyan-100";
+}
+
+function formatStatus(status: StudentAssignmentStatus) {
+  return status.replace("_", " ");
+}
+
+function ActiveAssignmentsPanel({
+  assignments,
+  loading,
+}: {
+  assignments: StudentActiveAssignment[];
+  loading: boolean;
+}) {
+  return (
+    <section className="mt-10 rounded-[30px] border border-white/20 bg-[rgba(10,12,35,0.58)] p-5 shadow-[0_18px_40px_rgba(0,0,0,0.34),0_0_18px_rgba(108,72,255,0.12)] backdrop-blur-xl md:p-6">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <div className="text-xs font-semibold uppercase tracking-[0.16em] text-cyan-200/90">
+            For you
+          </div>
+          <h2 className="mt-2 text-2xl font-bold tracking-tight text-white">
+            Active Assignments
+          </h2>
+        </div>
+        <div className="text-sm font-medium text-slate-300">
+          {loading ? "Loading..." : `${assignments.length} active`}
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="mt-5 rounded-2xl border border-white/15 bg-white/5 p-5 text-sm text-slate-300">
+          Loading active assignments...
+        </div>
+      ) : assignments.length === 0 ? (
+        <div className="mt-5 rounded-2xl border border-white/15 bg-white/5 p-5 text-sm text-slate-300">
+          No active assignments.
+        </div>
+      ) : (
+        <div className="mt-5 grid gap-4 lg:grid-cols-2">
+          {assignments.map((assignment) => (
+            <article
+              key={assignment.assignmentId}
+              className="rounded-[24px] border border-white/15 bg-[rgba(15,18,50,0.72)] p-5 shadow-[0_12px_30px_rgba(0,0,0,0.28)]"
+            >
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
+                  <h3 className="text-xl font-bold tracking-tight text-white">
+                    {assignment.title}
+                  </h3>
+                  <p className="mt-1 text-sm font-medium text-slate-300">
+                    {assignment.sectionLabel}
+                  </p>
+                </div>
+
+                <span
+                  className={[
+                    "inline-flex w-fit shrink-0 rounded-full border px-3 py-1 text-xs font-bold uppercase tracking-[0.12em]",
+                    getStatusBadgeClass(assignment.status),
+                  ].join(" ")}
+                >
+                  {formatStatus(assignment.status)}
+                </span>
+              </div>
+
+              <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-slate-300">
+                <span>Due {formatDueDate(assignment.dueDate)}</span>
+                <span className="h-1 w-1 rounded-full bg-slate-500" />
+                <span>{assignment.completionPercent}% complete</span>
+              </div>
+
+              {assignment.description ? (
+                <p className="mt-4 text-sm leading-6 text-slate-300">
+                  {assignment.description}
+                </p>
+              ) : null}
+
+              <div className="mt-5">
+                {assignment.sectionId ? (
+                  <Link
+                    href={`/section/${assignment.sectionId}`}
+                    className="inline-flex items-center rounded-2xl border border-cyan-300/30 bg-cyan-400/10 px-4 py-2 text-sm font-bold text-cyan-100 transition hover:border-cyan-200/50 hover:bg-cyan-300/15"
+                  >
+                    Go to Section →
+                  </Link>
+                ) : (
+                  <span className="text-sm text-slate-400">No section link</span>
+                )}
+              </div>
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
 
 export default function DashboardPage() {
   const chapters = React.useMemo(() => getChapters(), []);
@@ -16,6 +141,8 @@ export default function DashboardPage() {
     buildEmptyCourseDashboardProgress("algebra1")
   );
   const [loading, setLoading] = React.useState(true);
+  const [assignments, setAssignments] = React.useState<StudentActiveAssignment[]>([]);
+  const [assignmentsLoading, setAssignmentsLoading] = React.useState(true);
   const [resumeNotice, setResumeNotice] = React.useState<{
     message: string;
     type: "success" | "error" | "info";
@@ -25,6 +152,9 @@ export default function DashboardPage() {
     let cancelled = false;
 
     const refresh = async () => {
+      setLoading(true);
+      setAssignmentsLoading(true);
+
       try {
         const next = await fetchCourseDashboardProgress("algebra1");
         if (!cancelled) {
@@ -38,6 +168,22 @@ export default function DashboardPage() {
       } finally {
         if (!cancelled) {
           setLoading(false);
+        }
+      }
+
+      try {
+        const nextAssignments = await getStudentActiveAssignments();
+        if (!cancelled) {
+          setAssignments(nextAssignments);
+        }
+      } catch (error) {
+        console.error("[DashboardPage] failed to load active assignments:", error);
+        if (!cancelled) {
+          setAssignments([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setAssignmentsLoading(false);
         }
       }
     };
@@ -133,6 +279,11 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
+
+        <ActiveAssignmentsPanel
+          assignments={assignments}
+          loading={assignmentsLoading}
+        />
 
         <div className="mt-10 grid grid-cols-1 gap-6 md:grid-cols-2">
           {chapters.map((chapter) => {
