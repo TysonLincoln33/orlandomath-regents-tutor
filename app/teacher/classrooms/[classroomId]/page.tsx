@@ -1496,10 +1496,10 @@ function AssignmentRecipientDetailPanel({
 
       {!loading && !error && detail && detail.recipients.length > 0 && (
         <div className="mt-4 space-y-3">
-          <div className="rounded-xl border border-blue-100 bg-blue-50 p-3 text-xs text-blue-800">
+          <div className="rounded-xl border border-blue-100 bg-blue-50 p-3 text-xs leading-5 text-blue-800">
             <span className="font-semibold">Note:</span> View Overall Progress
-            switches the Progress panel to that student’s full Regents Algebra 1
-            course progress.
+            intentionally switches the separate Progress panel to that student’s
+            full Regents Algebra 1 course progress.
           </div>
 
           {detail.recipients.map((recipient) => {
@@ -1536,7 +1536,8 @@ function AssignmentRecipientDetailPanel({
                     <button
                       type="button"
                       onClick={() => onViewStudentProgress(recipient)}
-                      className="rounded-lg border border-blue-300 bg-white px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-50"
+                      title="Open this student’s full course progress in the Progress panel"
+                      className="w-full rounded-lg border border-blue-300 bg-white px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-50 sm:w-auto"
                     >
                       View Overall Progress
                     </button>
@@ -1549,7 +1550,7 @@ function AssignmentRecipientDetailPanel({
                         )
                       }
                       disabled={updating}
-                      className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-800 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="w-full rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-800 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                     >
                       {updating
                         ? "Saving..."
