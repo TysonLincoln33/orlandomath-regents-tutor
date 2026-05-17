@@ -29,6 +29,12 @@ import { getClassroomAssignments } from "@/lib/classrooms/getClassroomAssignment
 import { updateClassroomAssignment } from "@/lib/classrooms/updateClassroomAssignment";
 import { archiveClassroomAssignment } from "@/lib/classrooms/archiveClassroomAssignment";
 import {
+  getTeacherAssignmentRecipients,
+  type TeacherAssignmentRecipient,
+  type TeacherAssignmentRecipientDetail,
+} from "@/lib/classrooms/getTeacherAssignmentRecipients";
+import { updateAssignmentRecipientStatus } from "@/lib/classrooms/updateAssignmentRecipientStatus";
+import {
   getTeacherClassroomProgress,
   type TeacherClassroomProgress,
 } from "@/lib/classrooms/getTeacherClassroomProgress";
@@ -145,6 +151,20 @@ export default function ClassroomDetailPage({ params }: PageProps) {
     string | null
   >(null);
   const [showArchivedAssignments, setShowArchivedAssignments] = useState(false);
+  const [selectedRecipientAssignment, setSelectedRecipientAssignment] =
+    useState<ClassroomAssignment | null>(null);
+  const [recipientDetail, setRecipientDetail] =
+    useState<TeacherAssignmentRecipientDetail | null>(null);
+  const [recipientDetailLoading, setRecipientDetailLoading] = useState(false);
+  const [recipientDetailError, setRecipientDetailError] = useState<
+    string | null
+  >(null);
+  const [recipientDetailMessage, setRecipientDetailMessage] = useState<
+    string | null
+  >(null);
+  const [updatingRecipientKey, setUpdatingRecipientKey] = useState<
+    string | null
+  >(null);
 
   useEffect(() => {
     let active = true;
@@ -171,6 +191,10 @@ export default function ClassroomDetailPage({ params }: PageProps) {
       setSelectedProgressStudentId(null);
       setStudentProgress(null);
       setStudentProgressError(null);
+      setSelectedRecipientAssignment(null);
+      setRecipientDetail(null);
+      setRecipientDetailError(null);
+      setRecipientDetailMessage(null);
 
       const supabase = getSupabaseBrowserClient();
       const {
@@ -243,6 +267,10 @@ export default function ClassroomDetailPage({ params }: PageProps) {
       setSelectedProgressStudentId(null);
       setStudentProgress(null);
       setStudentProgressError(null);
+      setSelectedRecipientAssignment(null);
+      setRecipientDetail(null);
+      setRecipientDetailError(null);
+      setRecipientDetailMessage(null);
       setError(getErrorMessage(err, "Failed to load classroom."));
     } finally {
       setLoading(false);
@@ -515,6 +543,117 @@ export default function ClassroomDetailPage({ params }: PageProps) {
       prev.map((assignment) =>
         assignment.id === nextAssignment.id ? nextAssignment : assignment,
       ),
+    );
+  };
+
+  const openAssignmentRecipients = async (assignment: ClassroomAssignment) => {
+    if (!classroomId) return;
+
+    try {
+      setSelectedRecipientAssignment(assignment);
+      setRecipientDetail(null);
+      setRecipientDetailError(null);
+      setRecipientDetailMessage(null);
+      setRecipientDetailLoading(true);
+
+      const detail = await getTeacherAssignmentRecipients(
+        classroomId,
+        assignment.id,
+        assignment,
+      );
+
+      setRecipientDetail(detail);
+      replaceAssignment(detail.assignment);
+    } catch (err) {
+      console.error(err);
+      setRecipientDetail(null);
+      setRecipientDetailError(
+        getErrorMessage(err, "Failed to load assignment recipients."),
+      );
+    } finally {
+      setRecipientDetailLoading(false);
+    }
+  };
+
+  const closeAssignmentRecipients = () => {
+    setSelectedRecipientAssignment(null);
+    setRecipientDetail(null);
+    setRecipientDetailError(null);
+    setRecipientDetailMessage(null);
+    setRecipientDetailLoading(false);
+    setUpdatingRecipientKey(null);
+  };
+
+  const refreshSelectedAssignmentRecipients = async (
+    fallbackAssignment = selectedRecipientAssignment,
+  ) => {
+    if (!classroomId || !fallbackAssignment) return null;
+
+    const detail = await getTeacherAssignmentRecipients(
+      classroomId,
+      fallbackAssignment.id,
+      fallbackAssignment,
+    );
+
+    setRecipientDetail(detail);
+    setSelectedRecipientAssignment(detail.assignment);
+    replaceAssignment(detail.assignment);
+    return detail;
+  };
+
+  const handleUpdateRecipientStatus = async (
+    recipient: TeacherAssignmentRecipient,
+    status: "assigned" | "excused",
+  ) => {
+    if (!classroomId || !selectedRecipientAssignment) return;
+
+    try {
+      setUpdatingRecipientKey(
+        `${selectedRecipientAssignment.id}:${recipient.userId}`,
+      );
+      setRecipientDetailError(null);
+      setRecipientDetailMessage(null);
+
+      await updateAssignmentRecipientStatus({
+        classroomId,
+        assignmentId: selectedRecipientAssignment.id,
+        userId: recipient.userId,
+        status,
+      });
+
+      await refreshSelectedAssignmentRecipients(selectedRecipientAssignment);
+      setRecipientDetailMessage(
+        status === "excused"
+          ? "Recipient marked excused."
+          : "Recipient returned to assigned status.",
+      );
+    } catch (err) {
+      console.error(err);
+      setRecipientDetailError(
+        getErrorMessage(err, "Failed to update recipient status."),
+      );
+    } finally {
+      setUpdatingRecipientKey(null);
+    }
+  };
+
+  const handleViewRecipientOverallProgress = async (
+    recipient: TeacherAssignmentRecipient,
+  ) => {
+    const rosterMember = roster.find(
+      (member) => member.user_id === recipient.userId,
+    );
+
+    await handleViewStudentProgress(
+      rosterMember ?? {
+        id: recipient.userId,
+        classroom_id: classroomId,
+        user_id: recipient.userId,
+        joined_via: null,
+        joined_at: "",
+        email: recipient.email,
+        full_name: recipient.fullName,
+      },
     );
   };
 
@@ -1096,76 +1235,106 @@ export default function ClassroomDetailPage({ params }: PageProps) {
                 </div>
               )}
 
-              <div className="mt-4 space-y-3">
-                {activeAssignments.length === 0 ? (
-                  <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-600">
-                    No active assignments yet.
-                  </div>
-                ) : (
-                  activeAssignments.map((assignment) => (
-                    <AssignmentManagementCard
-                      key={assignment.id}
-                      assignment={assignment}
-                      isEditing={editingAssignmentId === assignment.id}
-                      editTitle={editAssignmentTitle}
-                      editDescription={editAssignmentDescription}
-                      editDueDate={editAssignmentDueDate}
-                      saving={savingAssignmentId === assignment.id}
-                      archiving={archivingAssignmentId === assignment.id}
-                      onEdit={() => startEditingAssignment(assignment)}
-                      onCancelEdit={cancelEditingAssignment}
-                      onSave={() => handleSaveAssignment(assignment.id)}
-                      onArchive={() => handleArchiveAssignment(assignment)}
-                      onEditTitleChange={setEditAssignmentTitle}
-                      onEditDescriptionChange={setEditAssignmentDescription}
-                      onEditDueDateChange={setEditAssignmentDueDate}
-                    />
-                  ))
-                )}
-              </div>
-
-              {archivedAssignments.length > 0 && (
-                <div className="mt-5 rounded-xl border border-gray-200 bg-white p-3">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setShowArchivedAssignments((current) => !current)
-                    }
-                    className="flex w-full items-center justify-between text-left text-sm font-semibold text-gray-800"
-                  >
-                    <span>
-                      Archived assignments ({archivedAssignments.length})
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      {showArchivedAssignments ? "Hide" : "Show"}
-                    </span>
-                  </button>
-
-                  {showArchivedAssignments && (
-                    <div className="mt-3 space-y-3">
-                      {archivedAssignments.map((assignment) => (
+              {selectedRecipientAssignment ? (
+                <AssignmentRecipientDetailPanel
+                  assignment={
+                    recipientDetail?.assignment ?? selectedRecipientAssignment
+                  }
+                  detail={recipientDetail}
+                  loading={recipientDetailLoading}
+                  error={recipientDetailError}
+                  message={recipientDetailMessage}
+                  updatingRecipientKey={updatingRecipientKey}
+                  formatDate={formatProgressDate}
+                  onBack={closeAssignmentRecipients}
+                  onMarkExcused={(recipient) =>
+                    handleUpdateRecipientStatus(recipient, "excused")
+                  }
+                  onUnexcuse={(recipient) =>
+                    handleUpdateRecipientStatus(recipient, "assigned")
+                  }
+                  onViewOverallProgress={handleViewRecipientOverallProgress}
+                />
+              ) : (
+                <>
+                  <div className="mt-4 space-y-3">
+                    {activeAssignments.length === 0 ? (
+                      <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-600">
+                        No active assignments yet.
+                      </div>
+                    ) : (
+                      activeAssignments.map((assignment) => (
                         <AssignmentManagementCard
                           key={assignment.id}
                           assignment={assignment}
-                          isArchived
-                          isEditing={false}
-                          editTitle=""
-                          editDescription=""
-                          editDueDate=""
-                          saving={false}
-                          archiving={false}
-                          onEdit={() => undefined}
-                          onCancelEdit={() => undefined}
-                          onSave={() => undefined}
-                          onArchive={() => undefined}
-                          onEditTitleChange={() => undefined}
-                          onEditDescriptionChange={() => undefined}
-                          onEditDueDateChange={() => undefined}
+                          isEditing={editingAssignmentId === assignment.id}
+                          editTitle={editAssignmentTitle}
+                          editDescription={editAssignmentDescription}
+                          editDueDate={editAssignmentDueDate}
+                          saving={savingAssignmentId === assignment.id}
+                          archiving={archivingAssignmentId === assignment.id}
+                          onViewRecipients={() =>
+                            openAssignmentRecipients(assignment)
+                          }
+                          onEdit={() => startEditingAssignment(assignment)}
+                          onCancelEdit={cancelEditingAssignment}
+                          onSave={() => handleSaveAssignment(assignment.id)}
+                          onArchive={() => handleArchiveAssignment(assignment)}
+                          onEditTitleChange={setEditAssignmentTitle}
+                          onEditDescriptionChange={setEditAssignmentDescription}
+                          onEditDueDateChange={setEditAssignmentDueDate}
                         />
-                      ))}
+                      ))
+                    )}
+                  </div>
+
+                  {archivedAssignments.length > 0 && (
+                    <div className="mt-5 rounded-xl border border-gray-200 bg-white p-3">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setShowArchivedAssignments((current) => !current)
+                        }
+                        className="flex w-full items-center justify-between text-left text-sm font-semibold text-gray-800"
+                      >
+                        <span>
+                          Archived assignments ({archivedAssignments.length})
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {showArchivedAssignments ? "Hide" : "Show"}
+                        </span>
+                      </button>
+
+                      {showArchivedAssignments && (
+                        <div className="mt-3 space-y-3">
+                          {archivedAssignments.map((assignment) => (
+                            <AssignmentManagementCard
+                              key={assignment.id}
+                              assignment={assignment}
+                              isArchived
+                              isEditing={false}
+                              editTitle=""
+                              editDescription=""
+                              editDueDate=""
+                              saving={false}
+                              archiving={false}
+                              onViewRecipients={() =>
+                                openAssignmentRecipients(assignment)
+                              }
+                              onEdit={() => undefined}
+                              onCancelEdit={() => undefined}
+                              onSave={() => undefined}
+                              onArchive={() => undefined}
+                              onEditTitleChange={() => undefined}
+                              onEditDescriptionChange={() => undefined}
+                              onEditDueDateChange={() => undefined}
+                            />
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
-                </div>
+                </>
               )}
             </section>
 
@@ -1216,6 +1385,220 @@ export default function ClassroomDetailPage({ params }: PageProps) {
   );
 }
 
+function AssignmentRecipientDetailPanel({
+  assignment,
+  detail,
+  loading,
+  error,
+  message,
+  updatingRecipientKey,
+  formatDate,
+  onBack,
+  onMarkExcused,
+  onUnexcuse,
+  onViewOverallProgress,
+}: {
+  assignment: ClassroomAssignment;
+  detail: TeacherAssignmentRecipientDetail | null;
+  loading: boolean;
+  error: string | null;
+  message: string | null;
+  updatingRecipientKey: string | null;
+  formatDate: (value: string | null) => string;
+  onBack: () => void;
+  onMarkExcused: (recipient: TeacherAssignmentRecipient) => void;
+  onUnexcuse: (recipient: TeacherAssignmentRecipient) => void;
+  onViewOverallProgress: (recipient: TeacherAssignmentRecipient) => void;
+}) {
+  const summary = detail?.summary ?? {
+    recipientCount: assignment.recipient_count ?? 0,
+    completedCount: assignment.completed_count ?? 0,
+    incompleteCount: assignment.incomplete_count ?? 0,
+    excusedCount: assignment.excused_count ?? 0,
+    averageCompletion: 0,
+    averageAccuracy: 0,
+  };
+
+  return (
+    <div className="mt-4 space-y-4">
+      <button
+        type="button"
+        onClick={onBack}
+        className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100"
+      >
+        ← Back to assignments
+      </button>
+
+      <div className="rounded-xl border border-blue-200 bg-blue-50 p-4">
+        <p className="text-xs font-semibold uppercase tracking-wide text-blue-700">
+          Assignment Recipients
+        </p>
+        <h4 className="mt-1 break-words text-lg font-semibold text-gray-900">
+          {assignment.title}
+        </h4>
+        <div className="mt-3 grid gap-2 text-xs text-gray-600">
+          <p>
+            Section{" "}
+            <span className="font-semibold text-gray-800">
+              {getSectionLabel(assignment.section_id)}
+            </span>
+          </p>
+          <p>Due {formatAssignmentDate(assignment.due_date)}</p>
+          <p>Created {formatAssignmentDate(assignment.created_at)}</p>
+          {assignment.updated_at && (
+            <p>Updated {formatAssignmentDate(assignment.updated_at)}</p>
+          )}
+        </div>
+      </div>
+
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+          {error}
+        </div>
+      )}
+
+      {message && (
+        <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
+          {message}
+        </div>
+      )}
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <AssignmentCountPill
+          label="Recipients"
+          value={summary.recipientCount}
+        />
+        <AssignmentCountPill label="Completed" value={summary.completedCount} />
+        <AssignmentCountPill
+          label="Incomplete"
+          value={summary.incompleteCount}
+        />
+        <AssignmentCountPill label="Excused" value={summary.excusedCount} />
+        <AssignmentCountPill
+          label="Avg Completion"
+          value={`${summary.averageCompletion}%`}
+        />
+        <AssignmentCountPill
+          label="Avg Accuracy"
+          value={`${summary.averageAccuracy}%`}
+        />
+      </div>
+
+      {loading ? (
+        <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-600">
+          Loading assigned students...
+        </div>
+      ) : detail && detail.recipients.length > 0 ? (
+        <div className="space-y-3">
+          {detail.recipients.map((recipient) => {
+            const updating =
+              updatingRecipientKey === `${assignment.id}:${recipient.userId}`;
+
+            return (
+              <div
+                key={recipient.userId}
+                className="overflow-hidden rounded-xl border border-gray-200 bg-gray-50 p-4"
+              >
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="break-words font-semibold text-gray-900">
+                        {recipient.fullName?.trim() || "Student"}
+                      </p>
+                      <span className="rounded-full bg-white px-2 py-0.5 text-xs font-semibold capitalize text-gray-700 ring-1 ring-gray-200">
+                        {recipient.status}
+                      </span>
+                    </div>
+                    <p className="mt-1 break-all text-xs text-gray-600">
+                      {recipient.email || "No email available"}
+                    </p>
+                    <p className="mt-2 text-xs text-gray-500">
+                      View Overall Progress switches the separate Progress panel
+                      to this student’s full Regents Algebra 1 course progress.
+                    </p>
+                  </div>
+
+                  <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:justify-end">
+                    {recipient.status === "excused" ? (
+                      <button
+                        type="button"
+                        onClick={() => onUnexcuse(recipient)}
+                        disabled={updating}
+                        className="inline-flex w-full items-center justify-center rounded-lg border border-amber-300 bg-white px-3 py-2 text-xs font-semibold text-amber-800 hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                      >
+                        {updating ? "Updating..." : "Un-excuse"}
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => onMarkExcused(recipient)}
+                        disabled={updating}
+                        className="inline-flex w-full items-center justify-center rounded-lg border border-amber-300 bg-white px-3 py-2 text-xs font-semibold text-amber-800 hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                      >
+                        {updating ? "Updating..." : "Mark Excused"}
+                      </button>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => onViewOverallProgress(recipient)}
+                      className="inline-flex w-full items-center justify-center rounded-lg border border-blue-300 bg-white px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-50 sm:w-auto"
+                    >
+                      View Overall Progress
+                    </button>
+                  </div>
+                </div>
+
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <RecipientMetric
+                    label="Completion"
+                    value={`${recipient.completionPercent}%`}
+                  />
+                  <RecipientMetric
+                    label="Accuracy"
+                    value={`${recipient.accuracyPercent}%`}
+                  />
+                  <RecipientMetric
+                    label="Questions Correct/Attempted"
+                    value={`${recipient.questionsCorrect}/${recipient.questionsAttempted}`}
+                  />
+                  <RecipientMetric
+                    label="Last Activity"
+                    value={formatDate(recipient.lastActivityAt)}
+                  />
+                  {recipient.completedAt && (
+                    <RecipientMetric
+                      label="Completed"
+                      value={formatDate(recipient.completedAt)}
+                    />
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-600">
+          No assigned students were found for this assignment.
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RecipientMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0 rounded-lg border border-gray-200 bg-white px-3 py-2">
+      <p className="break-words text-[11px] font-semibold uppercase tracking-wide text-gray-500">
+        {label}
+      </p>
+      <p className="mt-1 break-words text-sm font-semibold text-gray-900">
+        {value}
+      </p>
+    </div>
+  );
+}
+
 function AssignmentManagementCard({
   assignment,
   isArchived = false,
@@ -1225,6 +1608,7 @@ function AssignmentManagementCard({
   editDueDate,
   saving,
   archiving,
+  onViewRecipients,
   onEdit,
   onCancelEdit,
   onSave,
@@ -1241,6 +1625,7 @@ function AssignmentManagementCard({
   editDueDate: string;
   saving: boolean;
   archiving: boolean;
+  onViewRecipients: () => void;
   onEdit: () => void;
   onCancelEdit: () => void;
   onSave: () => void;
@@ -1343,25 +1728,34 @@ function AssignmentManagementCard({
               )}
             </div>
 
-            {!isArchived && (
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={onEdit}
-                  className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100"
-                >
-                  Edit
-                </button>
-                <button
-                  type="button"
-                  onClick={onArchive}
-                  disabled={archiving}
-                  className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-800 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {archiving ? "Archiving..." : "Archive"}
-                </button>
-              </div>
-            )}
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={onViewRecipients}
+                className="rounded-lg border border-blue-300 bg-white px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-50"
+              >
+                View Assigned Students
+              </button>
+              {!isArchived && (
+                <>
+                  <button
+                    type="button"
+                    onClick={onEdit}
+                    className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onArchive}
+                    disabled={archiving}
+                    className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-800 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {archiving ? "Archiving..." : "Archive"}
+                  </button>
+                </>
+              )}
+            </div>
           </div>
 
           <div className="mt-3 grid gap-2 text-xs text-gray-500 sm:grid-cols-2">
@@ -1398,7 +1792,7 @@ function AssignmentCountPill({
   value,
 }: {
   label: string;
-  value: number;
+  value: string | number;
 }) {
   return (
     <div className="rounded-lg border border-gray-200 bg-white px-3 py-2">
