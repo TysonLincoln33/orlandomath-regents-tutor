@@ -1894,8 +1894,7 @@ function ProgressPanelHeader({
     },
     assignment: {
       eyebrow: "Assignment Details",
-      description:
-        "Assignment-specific Regents Algebra 1 progress for the selected student and section.",
+      description: null,
     },
   }[mode];
 
@@ -1906,7 +1905,9 @@ function ProgressPanelHeader({
           {copy.eyebrow}
         </p>
         <h3 className="mt-1 text-lg font-semibold text-gray-900">Progress</h3>
-        <p className="mt-1 text-sm text-gray-600">{copy.description}</p>
+        {copy.description ? (
+          <p className="mt-1 text-sm text-gray-600">{copy.description}</p>
+        ) : null}
       </div>
 
       {mode !== "class" && (
