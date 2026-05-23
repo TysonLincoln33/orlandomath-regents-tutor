@@ -42,6 +42,11 @@ import {
   getTeacherClassroomStudentProgress,
   type TeacherClassroomStudentProgress,
 } from "@/lib/classrooms/getTeacherClassroomStudentProgress";
+import {
+  getTeacherStudentAssignments,
+  type TeacherStudentAssignment,
+  type TeacherStudentAssignmentGroups,
+} from "@/lib/classrooms/getTeacherStudentAssignments";
 import type { Classroom } from "@/types/classroom";
 
 type PageProps = {
@@ -172,6 +177,16 @@ export default function ClassroomDetailPage({ params }: PageProps) {
     string | null
   >(null);
   const [updatingRecipientKey, setUpdatingRecipientKey] = useState<
+    string | null
+  >(null);
+  const [expandedStudentAssignmentsId, setExpandedStudentAssignmentsId] =
+    useState<string | null>(null);
+  const [studentAssignmentsByUserId, setStudentAssignmentsByUserId] = useState<
+    Record<string, TeacherStudentAssignmentGroups>
+  >({});
+  const [studentAssignmentsLoadingId, setStudentAssignmentsLoadingId] =
+    useState<string | null>(null);
+  const [studentAssignmentsError, setStudentAssignmentsError] = useState<
     string | null
   >(null);
 
@@ -526,6 +541,93 @@ export default function ClassroomDetailPage({ params }: PageProps) {
     } finally {
       setStudentProgressLoading(false);
     }
+  };
+
+  const handleSelectRosterStudent = async (member: ClassroomRosterMember) => {
+    if (!classroomId) return;
+    const userId = member.user_id;
+    if (expandedStudentAssignmentsId === userId) {
+      setExpandedStudentAssignmentsId(null);
+      return;
+    }
+
+    setExpandedStudentAssignmentsId(userId);
+    setStudentAssignmentsError(null);
+    if (studentAssignmentsByUserId[userId]) return;
+
+    try {
+      setStudentAssignmentsLoadingId(userId);
+      const groupedAssignments = await getTeacherStudentAssignments(
+        classroomId,
+        userId,
+      );
+      setStudentAssignmentsByUserId((prev) => ({ ...prev, [userId]: groupedAssignments }));
+    } catch (err) {
+      console.error(err);
+      setStudentAssignmentsError(
+        getErrorMessage(err, "Failed to load student assignments."),
+      );
+    } finally {
+      setStudentAssignmentsLoadingId(null);
+    }
+  };
+
+  const renderStudentAssignmentRow = (
+    member: ClassroomRosterMember,
+    assignment: TeacherStudentAssignment,
+  ) => {
+    const assignmentRecord = assignments.find(
+      (item) => item.id === assignment.assignmentId,
+    );
+    return (
+    <div key={assignment.assignmentId} className="rounded-lg border border-gray-200 bg-white p-2">
+      <p className="truncate text-xs font-semibold text-gray-900">{assignment.title}</p>
+      <p className="mt-1 text-[11px] text-gray-600 truncate">
+        {getSectionLabel(assignment.sectionId)}
+      </p>
+      <div className="mt-1 grid grid-cols-2 gap-1 text-[11px] text-gray-600">
+        <span>Status: {assignment.status}</span>
+        <span>{assignment.completionPercent}% complete</span>
+      </div>
+      <p className="mt-1 text-[11px] text-gray-600">Due: {formatAssignmentDate(assignment.dueDate)}</p>
+      <div className="mt-2 flex flex-wrap gap-1">
+        <button
+          type="button"
+          disabled={!assignmentRecord}
+          onClick={() =>
+            handleViewRecipientAssignmentDetails(
+              assignmentRecord as ClassroomAssignment,
+              {
+                userId: member.user_id,
+                fullName: member.full_name,
+                email: member.email,
+                status: assignment.status,
+                assignedAt: assignment.assignedAt,
+                completedAt: null,
+                questionsAttempted: 0,
+                questionsCorrect: 0,
+                completionPercent: assignment.completionPercent,
+                accuracyPercent: 0,
+                attemptCount: 0,
+                correctCount: 0,
+                lastActivityAt: null,
+              },
+            )
+          }
+          className="rounded border border-blue-300 px-2 py-1 text-[10px] font-semibold text-blue-700 hover:bg-blue-50"
+        >
+          View Assignment Details
+        </button>
+        <button
+          type="button"
+          onClick={() => handleViewStudentProgress(member)}
+          className="rounded border border-gray-300 px-2 py-1 text-[10px] font-semibold text-gray-700 hover:bg-gray-50"
+        >
+          View Overall Progress
+        </button>
+      </div>
+    </div>
+  );
   };
 
   const handleBackToClassProgress = () => {
@@ -1064,9 +1166,13 @@ export default function ClassroomDetailPage({ params }: PageProps) {
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <p className="font-semibold text-gray-900">
+                          <button
+                            type="button"
+                            onClick={() => handleSelectRosterStudent(member)}
+                            className="font-semibold text-left text-gray-900 hover:text-blue-700"
+                          >
                             {member.full_name?.trim() || "Student"}
-                          </p>
+                          </button>
                           <p className="mt-2 text-xs text-gray-500">
                             Joined{" "}
                             {new Date(member.joined_at).toLocaleDateString()}
@@ -1097,6 +1203,47 @@ export default function ClassroomDetailPage({ params }: PageProps) {
                           </button>
                         </div>
                       </div>
+                      {expandedStudentAssignmentsId === member.user_id && (
+                        <div className="mt-3 space-y-2 rounded-lg border border-blue-100 bg-blue-50/60 p-2">
+                          {studentAssignmentsLoadingId === member.user_id ? (
+                            <p className="text-xs text-blue-700">Loading assignments…</p>
+                          ) : (
+                            <>
+                              {studentAssignmentsError && (
+                                <p className="text-xs text-red-700">{studentAssignmentsError}</p>
+                              )}
+                              <div>
+                                <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-700">
+                                  Current Assignments
+                                </p>
+                                <div className="mt-1 space-y-1">
+                                  {(studentAssignmentsByUserId[member.user_id]?.current ?? []).length === 0 ? (
+                                    <p className="text-[11px] text-gray-600">No current assignments.</p>
+                                  ) : (
+                                    (studentAssignmentsByUserId[member.user_id]?.current ?? []).map((assignment) =>
+                                      renderStudentAssignmentRow(member, assignment),
+                                    )
+                                  )}
+                                </div>
+                              </div>
+                              <div>
+                                <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-700">
+                                  Past Assignments
+                                </p>
+                                <div className="mt-1 space-y-1">
+                                  {(studentAssignmentsByUserId[member.user_id]?.past ?? []).length === 0 ? (
+                                    <p className="text-[11px] text-gray-600">No past assignments.</p>
+                                  ) : (
+                                    (studentAssignmentsByUserId[member.user_id]?.past ?? []).map((assignment) =>
+                                      renderStudentAssignmentRow(member, assignment),
+                                    )
+                                  )}
+                                </div>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
