@@ -1993,10 +1993,43 @@ function FullClassProgressView({
         Most recent activity: {formatDate(progress.summary.mostRecentActivity)}
       </div>
 
-      <ProgressSectionTable
-        sections={progress.sections}
-        formatDate={formatDate}
-      />
+      <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+        <h4 className="text-sm font-semibold text-gray-900">Recent Activity</h4>
+        {progress.rows.length === 0 ? (
+          <p className="mt-2 text-sm text-gray-600">No recent attempts yet.</p>
+        ) : (
+          <div className="mt-3 space-y-2">
+            {progress.rows
+              .slice()
+              .sort((a, b) =>
+                (b.last_attempt_at ?? b.last_active_at ?? "").localeCompare(
+                  a.last_attempt_at ?? a.last_active_at ?? "",
+                ),
+              )
+              .slice(0, 8)
+              .map((row, index) => (
+                <div
+                  key={`${row.user_id}-${row.section_id}-${row.last_attempt_at ?? row.last_active_at}-${index}`}
+                  className="rounded-lg border border-gray-200 bg-white p-3 text-sm"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-semibold text-gray-900">
+                        {row.full_name?.trim() || row.email || "Student"}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {getSectionLabel(row.section_id)}
+                      </p>
+                    </div>
+                    <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-700">
+                      {formatDate(row.last_attempt_at ?? row.last_active_at)}
+                    </span>
+                  </div>
+                </div>
+              ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -2262,72 +2295,6 @@ function AssignmentStudentProgressView({
           </div>
         )}
       </div>
-    </div>
-  );
-}
-
-function ProgressSectionTable({
-  sections,
-  formatDate,
-}: {
-  sections: Array<{
-    sectionId: string;
-    title: string;
-    studentsStarted?: number;
-    studentsCompleted?: number;
-    averageCompletion?: number;
-    averageAccuracy?: number;
-    completionPercent?: number;
-    accuracyPercent?: number;
-    totalAttempts: number;
-    mostRecentActivity: string | null;
-  }>;
-  formatDate: (value: string | null) => string;
-}) {
-  return (
-    <div className="overflow-x-auto rounded-xl border border-gray-200">
-      <table className="min-w-full divide-y divide-gray-200 text-sm">
-        <thead className="bg-gray-50 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-          <tr>
-            <th className="px-3 py-2">Section</th>
-            <th className="px-3 py-2">Started</th>
-            <th className="px-3 py-2">Completed</th>
-            <th className="px-3 py-2">Completion</th>
-            <th className="px-3 py-2">Accuracy</th>
-            <th className="px-3 py-2">Attempts</th>
-            <th className="px-3 py-2">Recent</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-100 bg-white">
-          {sections.map((section) => (
-            <tr key={section.sectionId}>
-              <td className="px-3 py-3 align-top">
-                <p className="font-semibold text-gray-900">{section.title}</p>
-                <p className="text-xs text-gray-500">{section.sectionId}</p>
-              </td>
-              <td className="px-3 py-3 align-top text-gray-700">
-                {section.studentsStarted ?? (section.totalAttempts > 0 ? 1 : 0)}
-              </td>
-              <td className="px-3 py-3 align-top text-gray-700">
-                {section.studentsCompleted ??
-                  ((section.completionPercent ?? 0) >= 100 ? 1 : 0)}
-              </td>
-              <td className="px-3 py-3 align-top text-gray-700">
-                {section.averageCompletion ?? section.completionPercent ?? 0}%
-              </td>
-              <td className="px-3 py-3 align-top text-gray-700">
-                {section.averageAccuracy ?? section.accuracyPercent ?? 0}%
-              </td>
-              <td className="px-3 py-3 align-top text-gray-700">
-                {section.totalAttempts}
-              </td>
-              <td className="px-3 py-3 align-top text-gray-700">
-                {formatDate(section.mostRecentActivity)}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
     </div>
   );
 }
