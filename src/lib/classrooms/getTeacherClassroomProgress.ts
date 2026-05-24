@@ -40,10 +40,23 @@ export type TeacherClassroomProgressSummary = {
   mostRecentActivity: string | null;
 };
 
+export type TeacherClassroomRecentAttempt = {
+  userId: string;
+  fullName: string | null;
+  email: string | null;
+  chapterId: string | null;
+  sectionId: string | null;
+  sectionTitle: string;
+  questionId: string | null;
+  correct: boolean | null;
+  attemptedAt: string | null;
+};
+
 export type TeacherClassroomProgress = {
   summary: TeacherClassroomProgressSummary;
   sections: TeacherClassroomSectionProgress[];
   rows: TeacherClassroomProgressRow[];
+  recentAttempts: TeacherClassroomRecentAttempt[];
 };
 
 function toNumber(value: number | string | null | undefined): number {
@@ -67,9 +80,14 @@ function latestIso(values: Array<string | null | undefined>): string | null {
   return valid.sort((a, b) => b.localeCompare(a))[0] ?? null;
 }
 
+function getSectionTitle(sectionId: string | null | undefined) {
+  return SECTIONS.find((section) => section.id === sectionId)?.title ?? sectionId ?? "Unknown section";
+}
+
 function buildTeacherClassroomProgress(
   rows: TeacherClassroomProgressRow[],
-  rosterStudents: number
+  rosterStudents: number,
+  recentAttempts: TeacherClassroomRecentAttempt[]
 ): TeacherClassroomProgress {
   const rowsBySection = new Map<string, TeacherClassroomProgressRow[]>();
   const rowsByStudent = new Map<string, TeacherClassroomProgressRow[]>();
@@ -140,6 +158,7 @@ function buildTeacherClassroomProgress(
     },
     sections,
     rows,
+    recentAttempts,
   };
 }
 
@@ -154,9 +173,39 @@ export async function getTeacherClassroomProgress(
     ) => Promise<{ data: unknown; error: { message?: string } | null }>;
   };
 
-  const { data, error } = await supabase.rpc("get_teacher_classroom_progress", {
+  const [{ data, error }, recentAttemptsResponse] = await Promise.all([
+    supabase.rpc("get_teacher_classroom_progress", {
     p_classroom_id: classroomId,
-  });
+  }),
+    supabase.rpc("get_teacher_classroom_recent_attempts", {
+      p_classroom_id: classroomId,
+    }),
+  ]);
+
+  if (recentAttemptsResponse.error) {
+    throw new Error(recentAttemptsResponse.error.message || "Failed to load classroom recent attempts.");
+  }
+
+  const recentAttempts = ((Array.isArray(recentAttemptsResponse.data) ? recentAttemptsResponse.data : []) as Array<{
+    user_id: string;
+    full_name: string | null;
+    email: string | null;
+    chapter_id: string | null;
+    section_id: string | null;
+    question_id: string | null;
+    correct: boolean | null;
+    attempted_at: string | null;
+  }>).map((attempt) => ({
+    userId: attempt.user_id,
+    fullName: attempt.full_name,
+    email: attempt.email,
+    chapterId: attempt.chapter_id,
+    sectionId: attempt.section_id,
+    sectionTitle: getSectionTitle(attempt.section_id),
+    questionId: attempt.question_id,
+    correct: attempt.correct,
+    attemptedAt: attempt.attempted_at,
+  }));
 
   if (error) {
     throw new Error(error.message || "Failed to load classroom progress.");
@@ -164,6 +213,7 @@ export async function getTeacherClassroomProgress(
 
   return buildTeacherClassroomProgress(
     (Array.isArray(data) ? data : []) as TeacherClassroomProgressRow[],
-    rosterStudents
+    rosterStudents,
+    recentAttempts
   );
 }
