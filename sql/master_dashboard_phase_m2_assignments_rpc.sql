@@ -67,8 +67,7 @@ begin
   left join public.assignment_recipients ar
     on ar.assignment_id = a.id
    and ar.classroom_id = a.classroom_id
-  where a.app_id = 'regents-algebra'
-    and a.course_id = 'algebra1'
+  where a.section_id ~ '^ch[0-9]+_s[0-9]+$'
   group by a.id, c.id, tp.id
   order by a.created_at desc;
 end;
