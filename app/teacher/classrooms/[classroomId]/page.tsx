@@ -2141,7 +2141,7 @@ function FullClassProgressView({
       </div>
 
       <RecentActivityFeed
-        attempts={progress.rows}
+        attempts={progress.recentAttempts}
         emptyMessage="No recent attempts yet."
         formatDate={formatDate}
       />
@@ -2388,16 +2388,16 @@ function RecentActivityFeed({
   emptyMessage,
   formatDate,
 }: {
-  attempts: Array<
-    | {
-        sectionId: string;
-        sectionTitle: string;
-        questionId: string | null;
-        correct: boolean | null;
-        attemptedAt: string | null;
-      }
-    | TeacherClassroomProgress["rows"][number]
-  >;
+  attempts: Array<{
+    userId?: string;
+    fullName?: string | null;
+    email?: string | null;
+    sectionId: string | null;
+    sectionTitle: string;
+    questionId: string | null;
+    correct: boolean | null;
+    attemptedAt: string | null;
+  }>;
   emptyMessage: string;
   formatDate: (value: string | null) => string;
 }) {
@@ -2409,72 +2409,38 @@ function RecentActivityFeed({
       ) : (
         <div className="mt-3 space-y-2">
           {[...attempts]
-            .sort((a, b) => {
-              const aTime =
-                "section_id" in a
-                  ? a.last_attempt_at ?? a.last_active_at ?? ""
-                  : a.attemptedAt ?? "";
-              const bTime =
-                "section_id" in b
-                  ? b.last_attempt_at ?? b.last_active_at ?? ""
-                  : b.attemptedAt ?? "";
-              return bTime.localeCompare(aTime);
-            })
+            .sort((a, b) => (b.attemptedAt ?? "").localeCompare(a.attemptedAt ?? ""))
             .slice(0, 10)
-            .map((attempt, index) => {
-            const isClassAttempt = "section_id" in attempt;
-            const sectionId = isClassAttempt ? attempt.section_id : attempt.sectionId;
-            const sectionTitle = isClassAttempt
-              ? getSectionLabel(attempt.section_id)
-              : attempt.sectionTitle;
-            const attemptedAt = isClassAttempt
-              ? attempt.last_attempt_at ?? attempt.last_active_at
-              : attempt.attemptedAt;
-            const questionId = isClassAttempt ? null : attempt.questionId;
-            const correct = isClassAttempt ? null : attempt.correct;
-
-            return (
+            .map((attempt, index) => (
               <div
-                key={`${sectionId}-${questionId ?? "none"}-${attemptedAt}-${index}`}
-              className="rounded-lg border border-gray-200 bg-white p-3 text-sm"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="font-semibold text-gray-900">{sectionTitle}</p>
-                  {isClassAttempt && (
+                key={`${attempt.sectionId ?? "unknown"}-${attempt.questionId ?? "none"}-${attempt.attemptedAt}-${index}`}
+                className="rounded-lg border border-gray-200 bg-white p-3 text-sm"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-gray-900">{attempt.sectionTitle}</p>
                     <p className="mt-0.5 text-xs text-gray-500">
-                      {attempt.full_name?.trim() || attempt.email || "Student"}
+                      {attempt.fullName?.trim() || attempt.email || "Student"}
                     </p>
-                  )}
-                  <p className="text-xs text-gray-500">
-                    {formatDate(attemptedAt)}
-                  </p>
+                    <p className="text-xs text-gray-500">{formatDate(attempt.attemptedAt)}</p>
+                  </div>
+                  {typeof attempt.correct === "boolean" ? (
+                    <span
+                      className={
+                        attempt.correct
+                          ? "rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-700"
+                          : "rounded-full bg-red-100 px-2 py-1 text-xs font-semibold text-red-700"
+                      }
+                    >
+                      {attempt.correct ? "Correct" : "Incorrect"}
+                    </span>
+                  ) : null}
                 </div>
-                {typeof correct === "boolean" ? (
-                  <span
-                    className={
-                      correct
-                        ? "rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-700"
-                        : "rounded-full bg-red-100 px-2 py-1 text-xs font-semibold text-red-700"
-                    }
-                  >
-                    {correct ? "Correct" : "Incorrect"}
-                  </span>
-                ) : null}
+                <p className="mt-2 text-xs text-gray-500">
+                  Question: {attempt.questionId ?? "—"}
+                </p>
               </div>
-              {isClassAttempt ? (
-                <p className="mt-2 text-xs text-gray-500">
-                  Attempts: {attempt.attempt_count ?? 0} · Correct:{" "}
-                  {attempt.correct_count ?? 0}
-                </p>
-              ) : (
-                <p className="mt-2 text-xs text-gray-500">
-                  Question: {questionId ?? "—"}
-                </p>
-              )}
-            </div>
-          );
-            })}
+            ))}
         </div>
       )}
     </div>
