@@ -1,6 +1,3 @@
--- Master Dashboard Phase M2 additive RPC
--- Read-only Regents Algebra 1 assignment oversight, master-approved users only.
-
 create or replace function public.get_master_algebra1_assignments()
 returns table (
   assignment_id uuid,
@@ -34,11 +31,12 @@ begin
     raise exception 'Unauthorized';
   end if;
 
-  select role, approval_status into v_role, v_approval
-  from public.profiles
-  where id = v_uid;
+  select p.role, p.approval_status
+  into v_role, v_approval
+  from public.profiles p
+  where p.id = v_uid;
 
-  if v_role <> 'master' or v_approval <> 'approved' then
+  if v_role is distinct from 'master' or v_approval is distinct from 'approved' then
     raise exception 'Forbidden';
   end if;
 
@@ -62,13 +60,14 @@ begin
     count(ar.id) filter (where ar.status = 'assigned')::int as incomplete_count,
     count(ar.id) filter (where ar.status = 'excused')::int as excused_count
   from public.assignments a
-  join public.classrooms c on c.id = a.classroom_id
-  join public.profiles tp on tp.id = c.teacher_id
+  join public.classrooms c
+    on c.id = a.classroom_id
+  join public.profiles tp
+    on tp.id = c.teacher_id
   left join public.assignment_recipients ar
     on ar.assignment_id = a.id
    and ar.classroom_id = a.classroom_id
-  where a.app_id = 'regents-algebra'
-    and a.course_id = 'algebra1'
+  where a.section_id ~ '^ch[0-9]+_s[0-9]+$'
   group by a.id, c.id, tp.id
   order by a.created_at desc;
 end;
