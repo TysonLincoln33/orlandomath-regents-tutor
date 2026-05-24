@@ -2140,8 +2140,9 @@ function FullClassProgressView({
         Most recent activity: {formatDate(progress.summary.mostRecentActivity)}
       </div>
 
-      <ProgressSectionTable
-        sections={progress.sections}
+      <RecentActivityFeed
+        attempts={progress.rows}
+        emptyMessage="No recent attempts yet."
         formatDate={formatDate}
       />
     </div>
@@ -2218,42 +2219,11 @@ function IndividualStudentProgressView({
       </div>
 
       <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-        <h4 className="text-sm font-semibold text-gray-900">Recent Activity</h4>
-        {progress.recentAttempts.length === 0 ? (
-          <p className="mt-2 text-sm text-gray-600">No recent attempts yet.</p>
-        ) : (
-          <div className="mt-3 space-y-2">
-            {progress.recentAttempts.map((attempt, index) => (
-              <div
-                key={`${attempt.sectionId}-${attempt.questionId}-${attempt.attemptedAt}-${index}`}
-                className="rounded-lg border border-gray-200 bg-white p-3 text-sm"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-semibold text-gray-900">
-                      {attempt.sectionTitle}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {formatDate(attempt.attemptedAt)}
-                    </p>
-                  </div>
-                  <span
-                    className={
-                      attempt.correct
-                        ? "rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-700"
-                        : "rounded-full bg-red-100 px-2 py-1 text-xs font-semibold text-red-700"
-                    }
-                  >
-                    {attempt.correct ? "Correct" : "Incorrect"}
-                  </span>
-                </div>
-                <p className="mt-2 text-xs text-gray-500">
-                  Question: {attempt.questionId ?? "—"}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
+        <RecentActivityFeed
+          attempts={progress.recentAttempts}
+          emptyMessage="No recent attempts yet."
+          formatDate={formatDate}
+        />
       </div>
     </div>
   );
@@ -2413,68 +2383,100 @@ function AssignmentStudentProgressView({
   );
 }
 
-function ProgressSectionTable({
-  sections,
+function RecentActivityFeed({
+  attempts,
+  emptyMessage,
   formatDate,
 }: {
-  sections: Array<{
-    sectionId: string;
-    title: string;
-    studentsStarted?: number;
-    studentsCompleted?: number;
-    averageCompletion?: number;
-    averageAccuracy?: number;
-    completionPercent?: number;
-    accuracyPercent?: number;
-    totalAttempts: number;
-    mostRecentActivity: string | null;
-  }>;
+  attempts: Array<
+    | {
+        sectionId: string;
+        sectionTitle: string;
+        questionId: string | null;
+        correct: boolean | null;
+        attemptedAt: string | null;
+      }
+    | TeacherClassroomProgress["rows"][number]
+  >;
+  emptyMessage: string;
   formatDate: (value: string | null) => string;
 }) {
   return (
-    <div className="overflow-x-auto rounded-xl border border-gray-200">
-      <table className="min-w-full divide-y divide-gray-200 text-sm">
-        <thead className="bg-gray-50 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
-          <tr>
-            <th className="px-3 py-2">Section</th>
-            <th className="px-3 py-2">Started</th>
-            <th className="px-3 py-2">Completed</th>
-            <th className="px-3 py-2">Completion</th>
-            <th className="px-3 py-2">Accuracy</th>
-            <th className="px-3 py-2">Attempts</th>
-            <th className="px-3 py-2">Recent</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-100 bg-white">
-          {sections.map((section) => (
-            <tr key={section.sectionId}>
-              <td className="px-3 py-3 align-top">
-                <p className="font-semibold text-gray-900">{section.title}</p>
-                <p className="text-xs text-gray-500">{section.sectionId}</p>
-              </td>
-              <td className="px-3 py-3 align-top text-gray-700">
-                {section.studentsStarted ?? (section.totalAttempts > 0 ? 1 : 0)}
-              </td>
-              <td className="px-3 py-3 align-top text-gray-700">
-                {section.studentsCompleted ??
-                  ((section.completionPercent ?? 0) >= 100 ? 1 : 0)}
-              </td>
-              <td className="px-3 py-3 align-top text-gray-700">
-                {section.averageCompletion ?? section.completionPercent ?? 0}%
-              </td>
-              <td className="px-3 py-3 align-top text-gray-700">
-                {section.averageAccuracy ?? section.accuracyPercent ?? 0}%
-              </td>
-              <td className="px-3 py-3 align-top text-gray-700">
-                {section.totalAttempts}
-              </td>
-              <td className="px-3 py-3 align-top text-gray-700">
-                {formatDate(section.mostRecentActivity)}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+      <h4 className="text-sm font-semibold text-gray-900">Recent Activity</h4>
+      {attempts.length === 0 ? (
+        <p className="mt-2 text-sm text-gray-600">{emptyMessage}</p>
+      ) : (
+        <div className="mt-3 space-y-2">
+          {[...attempts]
+            .sort((a, b) => {
+              const aTime =
+                "section_id" in a
+                  ? a.last_attempt_at ?? a.last_active_at ?? ""
+                  : a.attemptedAt ?? "";
+              const bTime =
+                "section_id" in b
+                  ? b.last_attempt_at ?? b.last_active_at ?? ""
+                  : b.attemptedAt ?? "";
+              return bTime.localeCompare(aTime);
+            })
+            .slice(0, 10)
+            .map((attempt, index) => {
+            const isClassAttempt = "section_id" in attempt;
+            const sectionId = isClassAttempt ? attempt.section_id : attempt.sectionId;
+            const sectionTitle = isClassAttempt
+              ? getSectionLabel(attempt.section_id)
+              : attempt.sectionTitle;
+            const attemptedAt = isClassAttempt
+              ? attempt.last_attempt_at ?? attempt.last_active_at
+              : attempt.attemptedAt;
+            const questionId = isClassAttempt ? null : attempt.questionId;
+            const correct = isClassAttempt ? null : attempt.correct;
+
+            return (
+              <div
+                key={`${sectionId}-${questionId ?? "none"}-${attemptedAt}-${index}`}
+              className="rounded-lg border border-gray-200 bg-white p-3 text-sm"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="font-semibold text-gray-900">{sectionTitle}</p>
+                  {isClassAttempt && (
+                    <p className="mt-0.5 text-xs text-gray-500">
+                      {attempt.full_name?.trim() || attempt.email || "Student"}
+                    </p>
+                  )}
+                  <p className="text-xs text-gray-500">
+                    {formatDate(attemptedAt)}
+                  </p>
+                </div>
+                {typeof correct === "boolean" ? (
+                  <span
+                    className={
+                      correct
+                        ? "rounded-full bg-green-100 px-2 py-1 text-xs font-semibold text-green-700"
+                        : "rounded-full bg-red-100 px-2 py-1 text-xs font-semibold text-red-700"
+                    }
+                  >
+                    {correct ? "Correct" : "Incorrect"}
+                  </span>
+                ) : null}
+              </div>
+              {isClassAttempt ? (
+                <p className="mt-2 text-xs text-gray-500">
+                  Attempts: {attempt.attempt_count ?? 0} · Correct:{" "}
+                  {attempt.correct_count ?? 0}
+                </p>
+              ) : (
+                <p className="mt-2 text-xs text-gray-500">
+                  Question: {questionId ?? "—"}
+                </p>
+              )}
+            </div>
+          );
+            })}
+        </div>
+      )}
     </div>
   );
 }
