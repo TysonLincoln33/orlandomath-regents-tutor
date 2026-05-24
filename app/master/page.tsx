@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
-import { getMasterAlgebra1Overview, getMasterAlgebra1UserProgress, type MasterOverviewUserRow, type MasterRecentAttempt } from '@/lib/master/getMasterAlgebra1Dashboard';
+import { getMasterAlgebra1Assignments, getMasterAlgebra1Overview, getMasterAlgebra1UserProgress, type MasterAlgebra1AssignmentRow, type MasterOverviewUserRow, type MasterRecentAttempt } from '@/lib/master/getMasterAlgebra1Dashboard';
 
 type Profile = { id: string; role: string | null; approval_status: string | null };
 
@@ -13,7 +13,15 @@ const formatDate = (value: string | null) => {
   if (Number.isNaN(d.getTime())) return 'No activity yet';
   return d.toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 };
-const displayName = (u: { full_name: string | null; email: string | null }) => u.full_name?.trim() || u.email?.split('@')[0] || 'Unknown User';
+
+const formatCalendarDate = (value: string | null) => {
+  if (!value) return 'No due date';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return 'No due date';
+  return d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
+};
+
+const displayName = (u: { full_name?: string | null; email?: string | null; teacher_name?: string | null; teacher_email?: string | null }) => u.full_name?.trim() || u.teacher_name?.trim() || u.email?.split('@')[0] || u.teacher_email?.split('@')[0] || 'Unknown User';
 
 export default function MasterPage() {
   const [loading, setLoading] = useState(true);
@@ -24,6 +32,12 @@ export default function MasterPage() {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [selectedAttempts, setSelectedAttempts] = useState<MasterRecentAttempt[]>([]);
   const [selectedUser, setSelectedUser] = useState<MasterOverviewUserRow | null>(null);
+
+  const [assignments, setAssignments] = useState<MasterAlgebra1AssignmentRow[]>([]);
+  const [assignmentError, setAssignmentError] = useState<string | null>(null);
+  const [assignmentSearch, setAssignmentSearch] = useState('');
+  const [teacherFilter, setTeacherFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
 
   useEffect(() => { (async () => {
     setLoading(true); setError(null);
@@ -37,6 +51,13 @@ export default function MasterPage() {
       if (nextProfile.role !== 'master' || nextProfile.approval_status !== 'approved') throw new Error('Master access required.');
       const data = await getMasterAlgebra1Overview();
       setUsers(data.users); setSummary(data.summary); setRecentAttempts(data.recentAttempts);
+      try {
+        const assignmentRows = await getMasterAlgebra1Assignments();
+        setAssignments(assignmentRows);
+        setAssignmentError(null);
+      } catch (assignmentLoadError) {
+        setAssignmentError(assignmentLoadError instanceof Error ? assignmentLoadError.message : 'Assignments panel failed to load.');
+      }
     } catch (e) { setError(e instanceof Error ? e.message : 'Failed to load dashboard.'); }
     finally { setLoading(false); }
   })(); }, []);
@@ -55,6 +76,44 @@ export default function MasterPage() {
     }
   };
 
+  const filteredAssignments = useMemo(() => assignments.filter((assignment) => {
+    if (teacherFilter !== 'all' && assignment.teacher_id !== teacherFilter) return false;
+    if (statusFilter === 'active' && Boolean(assignment.archived_at)) return false;
+    if (statusFilter === 'archived' && !assignment.archived_at) return false;
+    const query = assignmentSearch.trim().toLowerCase();
+    if (!query) return true;
+    return [assignment.title, assignment.classroom_name ?? '', assignment.teacher_name ?? '', assignment.teacher_email ?? '', assignment.section_id ?? ''].join(' ').toLowerCase().includes(query);
+  }), [assignments, teacherFilter, statusFilter, assignmentSearch]);
+
+  const assignmentTeacherOptions = useMemo(() => {
+    const teachers = new Map<string, string>();
+    assignments.forEach((assignment) => { teachers.set(assignment.teacher_id, `${displayName(assignment)} (${assignment.teacher_email ?? 'No email'})`); });
+    return Array.from(teachers.entries());
+  }, [assignments]);
+
+  const assignmentSummary = useMemo(() => assignments.reduce((acc, assignment) => {
+    const recipients = Number(assignment.recipient_count ?? 0);
+    const completed = Number(assignment.completed_count ?? 0);
+    const incomplete = Number(assignment.incomplete_count ?? 0);
+    const excused = Number(assignment.excused_count ?? 0);
+    acc.totalAssignments += 1;
+    if (assignment.archived_at) acc.archivedAssignments += 1;
+    else acc.activeAssignments += 1;
+    acc.totalRecipients += recipients;
+    acc.completedRecipients += completed;
+    acc.incompleteRecipients += incomplete;
+    acc.excusedRecipients += excused;
+    return acc;
+  }, {
+    totalAssignments: 0,
+    activeAssignments: 0,
+    archivedAssignments: 0,
+    totalRecipients: 0,
+    completedRecipients: 0,
+    incompleteRecipients: 0,
+    excusedRecipients: 0,
+  }), [assignments]);
+
   if (loading) return <main className="min-h-screen bg-slate-950 p-8 text-white"><div className="mx-auto max-w-7xl rounded-3xl border border-white/10 bg-white/10 p-8">Loading Master Dashboard...</div></main>;
   if (error) return <main className="min-h-screen bg-slate-950 p-8 text-white"><div className="mx-auto max-w-3xl rounded-3xl border border-white/10 bg-white/10 p-8"><h1 className="text-3xl font-black">Master Dashboard</h1><p className="mt-3 text-white/80">{error}</p><div className="mt-5"><Link href="/dashboard" className="rounded-lg bg-indigo-500 px-4 py-2">Go to Dashboard</Link></div></div></main>;
 
@@ -66,5 +125,59 @@ export default function MasterPage() {
     ].map(([k,v]) => <div key={String(k)} className="rounded-lg border border-white/10 bg-black/20 p-3"><p className="text-xs text-white/60">{k}</p><p className="text-xl font-bold">{v}</p></div>)}</div>
     <div className="mt-6"><h2 className="text-xl font-bold">{selectedUser ? `${displayName(selectedUser)} Progress` : 'Recent Attempts'}</h2>{selectedUser && <p className="mb-3 text-sm text-white/70">{selectedUser.email ?? 'No email'} · Completion {Math.round(Number(selectedUser.completion_percent ?? 0))}% · Accuracy {Math.round(Number(selectedUser.accuracy_percent ?? 0))}% · Attempts {Number(selectedUser.attempts_count ?? 0)} · Correct {Number(selectedUser.correct_count ?? 0)}</p>}
       {panelAttempts.length === 0 ? <p className="text-white/70">No recent attempts available yet.</p> : <ul className="space-y-2">{panelAttempts.map((a, i) => <li key={`${a.user_id}-${a.question_id}-${a.attempted_at ?? i}`} className="rounded-lg border border-white/10 p-3"><p className="font-medium">{displayName(a)} · {a.section_title}</p><p className="text-sm text-white/70">Question: {a.question_id ?? 'Unknown'} · {formatDate(a.attempted_at)}</p><span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs ${a.correct ? 'bg-emerald-500/20 text-emerald-200' : 'bg-rose-500/20 text-rose-200'}`}>{a.correct ? 'Correct' : 'Incorrect'}</span></li>)}</ul>}</div></section>
-  </div></div></main>;
+  </div>
+
+  <section className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4">
+    <h2 className="text-xl font-bold">Master Assignment Oversight</h2>
+    <p className="mb-4 text-sm text-white/70">Read-only assignment oversight for Regents Algebra 1 across all classrooms.</p>
+
+    {assignmentError ? <div className="rounded-lg border border-rose-400/30 bg-rose-500/10 p-3 text-sm text-rose-100">Could not load assignments right now. {assignmentError}</div> : <>
+      <div className="grid gap-3 md:grid-cols-4 lg:grid-cols-7">{[
+        ['Total assignments', assignmentSummary.totalAssignments],
+        ['Active assignments', assignmentSummary.activeAssignments],
+        ['Archived assignments', assignmentSummary.archivedAssignments],
+        ['Total recipients', assignmentSummary.totalRecipients],
+        ['Completed', assignmentSummary.completedRecipients],
+        ['Incomplete', assignmentSummary.incompleteRecipients],
+        ['Excused', assignmentSummary.excusedRecipients],
+      ].map(([k, v]) => <div key={String(k)} className="rounded-lg border border-white/10 bg-black/20 p-3"><p className="text-xs text-white/60">{k}</p><p className="text-xl font-bold">{v}</p></div>)}</div>
+
+      <div className="mt-4 grid gap-3 md:grid-cols-3">
+        <input value={assignmentSearch} onChange={(event) => setAssignmentSearch(event.target.value)} placeholder="Search title, classroom, teacher, or section" className="rounded-lg border border-white/20 bg-black/20 px-3 py-2 text-sm text-white placeholder:text-white/50" />
+        <select value={teacherFilter} onChange={(event) => setTeacherFilter(event.target.value)} className="rounded-lg border border-white/20 bg-black/20 px-3 py-2 text-sm text-white">
+          <option value="all">All teachers</option>
+          {assignmentTeacherOptions.map(([teacherId, label]) => <option key={teacherId} value={teacherId}>{label}</option>)}
+        </select>
+        <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as 'all' | 'active' | 'archived')} className="rounded-lg border border-white/20 bg-black/20 px-3 py-2 text-sm text-white">
+          <option value="all">Active + archived</option>
+          <option value="active">Active only</option>
+          <option value="archived">Archived only</option>
+        </select>
+      </div>
+
+      <div className="mt-4 overflow-x-auto">
+        {filteredAssignments.length === 0 ? <p className="text-white/70">No assignments yet.</p> : <table className="min-w-full border-collapse text-sm">
+          <thead>
+            <tr className="border-b border-white/10 text-left text-white/70">
+              <th className="px-2 py-2">Teacher</th><th className="px-2 py-2">Classroom</th><th className="px-2 py-2">Assignment</th><th className="px-2 py-2">Section</th><th className="px-2 py-2">Due date</th><th className="px-2 py-2">Created</th><th className="px-2 py-2">Updated</th><th className="px-2 py-2">Archived</th><th className="px-2 py-2">Recipients</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredAssignments.map((assignment) => <tr key={assignment.assignment_id} className="border-b border-white/5 align-top">
+              <td className="px-2 py-2"><p>{displayName(assignment)}</p><p className="text-xs text-white/60">{assignment.teacher_email ?? 'No email'}</p></td>
+              <td className="px-2 py-2">{assignment.classroom_name ?? assignment.classroom_id}</td>
+              <td className="px-2 py-2"><p className="font-semibold">{assignment.title}</p><p className="text-xs text-white/60">{assignment.description || 'No description'}</p></td>
+              <td className="px-2 py-2">{assignment.section_id ?? 'N/A'}</td>
+              <td className="px-2 py-2">{formatCalendarDate(assignment.due_date)}</td>
+              <td className="px-2 py-2">{formatDate(assignment.created_at)}</td>
+              <td className="px-2 py-2">{formatDate(assignment.updated_at)}</td>
+              <td className="px-2 py-2">{assignment.archived_at ? 'Archived' : 'Active'}</td>
+              <td className="px-2 py-2">{Number(assignment.recipient_count ?? 0)} total · {Number(assignment.completed_count ?? 0)} complete · {Number(assignment.incomplete_count ?? 0)} incomplete · {Number(assignment.excused_count ?? 0)} excused</td>
+            </tr>)}
+          </tbody>
+        </table>}
+      </div>
+    </>}
+  </section>
+  </div></main>;
 }
