@@ -32,6 +32,26 @@ type MasterRecentAttemptRow = {
   attempted_at: string | null;
 };
 
+export type MasterAlgebra1AssignmentRow = {
+  assignment_id: string;
+  classroom_id: string;
+  classroom_name: string | null;
+  teacher_id: string;
+  teacher_name: string | null;
+  teacher_email: string | null;
+  title: string;
+  description: string | null;
+  section_id: string | null;
+  due_date: string | null;
+  created_at: string;
+  updated_at: string;
+  archived_at: string | null;
+  recipient_count: number | string | null;
+  completed_count: number | string | null;
+  incomplete_count: number | string | null;
+  excused_count: number | string | null;
+};
+
 export type MasterRecentAttempt = MasterRecentAttemptRow & { section_title: string };
 export type MasterOverviewData = { summary: { totalUsersWithActivity: number; activeNow: number; avgCompletionPercent: number; avgAccuracyPercent: number; totalAttempts: number; totalCorrect: number; }; users: MasterOverviewUserRow[]; recentAttempts: MasterRecentAttempt[]; };
 export type MasterUserProgressData = { user: MasterOverviewUserRow | null; recentAttempts: MasterRecentAttempt[]; };
@@ -58,4 +78,17 @@ export async function getMasterAlgebra1UserProgress(userId: string): Promise<Mas
   if (error) throw new Error(error.message || 'Failed to load selected user progress.');
   const payload = ((data as { user?: MasterOverviewUserRow[]; recent_attempts?: MasterRecentAttemptRow[] } | null) ?? {});
   return { user: payload.user?.[0] ?? null, recentAttempts: (payload.recent_attempts ?? []).map(decorateAttempt) };
+}
+
+export async function getMasterAlgebra1Assignments(): Promise<MasterAlgebra1AssignmentRow[]> {
+  const supabase = getSupabaseBrowserClient() as unknown as { rpc: (fn: string, args?: Record<string, unknown>) => Promise<{ data: unknown; error: { message?: string } | null }> };
+  const { data, error } = await supabase.rpc('get_master_algebra1_assignments');
+  if (error) throw new Error(error.message || 'Failed to load master assignments.');
+  return ((data as MasterAlgebra1AssignmentRow[] | null) ?? []).map((row) => ({
+    ...row,
+    recipient_count: toNumber(row.recipient_count),
+    completed_count: toNumber(row.completed_count),
+    incomplete_count: toNumber(row.incomplete_count),
+    excused_count: toNumber(row.excused_count),
+  }));
 }
