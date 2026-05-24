@@ -13,6 +13,18 @@ import {
   type MasterRecentAttempt,
 } from '@/lib/master/getMasterAlgebra1Dashboard';
 
+import {
+  addMasterStudents,
+  createMasterClassroom,
+  createMasterStudent,
+  getMasterClassrooms,
+  moveMasterStudent,
+  removeMasterStudent,
+  searchMasterStudents,
+  type MasterClassroomRow,
+  type SearchStudentResult,
+} from '@/lib/master/classroomManagement';
+
 type Profile = { id: string; role: string | null; approval_status: string | null };
 
 const formatDateTime = (value: string | null) => {
@@ -55,6 +67,16 @@ export default function MasterPage() {
   const [assignmentSearch, setAssignmentSearch] = useState('');
   const [teacherFilter, setTeacherFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
+
+  const [masterClassrooms, setMasterClassrooms] = useState<MasterClassroomRow[]>([]);
+  const [selectedClassroomId, setSelectedClassroomId] = useState<string | null>(null);
+  const [classroomSearch, setClassroomSearch] = useState('');
+  const [classroomSearchResults, setClassroomSearchResults] = useState<SearchStudentResult[]>([]);
+  const [newClassroomName, setNewClassroomName] = useState('');
+  const [newClassroomTerm, setNewClassroomTerm] = useState('');
+  const [newStudentName, setNewStudentName] = useState('');
+  const [newStudentEmail, setNewStudentEmail] = useState('');
+  const [classroomMessage, setClassroomMessage] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -107,6 +129,26 @@ export default function MasterPage() {
       setSelectedAttempts([]);
     }
   };
+
+
+  const loadClassrooms = async () => {
+    try {
+      const rows = await getMasterClassrooms();
+      setMasterClassrooms(rows);
+      setSelectedClassroomId((prev) => prev ?? rows[0]?.id ?? null);
+    } catch (e) {
+      setClassroomMessage(e instanceof Error ? e.message : 'Failed to load classrooms.');
+    }
+  };
+
+  useEffect(() => {
+    void loadClassrooms();
+  }, []);
+
+  const selectedClassroom = useMemo(
+    () => masterClassrooms.find((c) => c.id === selectedClassroomId) ?? null,
+    [masterClassrooms, selectedClassroomId],
+  );
 
   const filteredAssignments = useMemo(
     () =>
@@ -233,6 +275,47 @@ export default function MasterPage() {
             </>
           ) : null}
         </section>
+
+
+        <section className="mt-8 rounded-2xl border-2 border-emerald-400/40 bg-white/5 p-5" aria-label="Master Classroom Management">
+          <h2 className="text-2xl font-black text-emerald-200">Master Classroom Management</h2>
+          <p className="mb-4 text-sm text-white/70">Global classroom and student roster management.</p>
+          {classroomMessage ? <p className="mb-3 text-sm text-amber-200">{classroomMessage}</p> : null}
+          <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
+            <aside className="space-y-2 rounded-xl border border-white/10 p-3">
+              {masterClassrooms.map((c) => (
+                <button key={c.id} onClick={() => setSelectedClassroomId(c.id)} className={`w-full rounded-lg border p-3 text-left ${selectedClassroomId===c.id?'border-emerald-400/70 bg-emerald-500/10':'border-white/10'}`}>
+                  <p className="font-semibold">{c.name}</p>
+                  <p className="text-xs text-white/70">{c.teacher_name ?? 'Unknown teacher'} · {c.teacher_email ?? 'No email'}</p>
+                  <p className="text-xs text-white/60">Term: {c.term ?? 'N/A'} · Roster: {c.roster_count} · Assignments: {c.assignment_count}</p>
+                </button>
+              ))}
+              <div className="mt-3 space-y-2 rounded-lg border border-white/10 p-3">
+                <input value={newClassroomName} onChange={(e)=>setNewClassroomName(e.target.value)} placeholder="New classroom name" className="w-full rounded bg-black/20 px-2 py-1" />
+                <input value={newClassroomTerm} onChange={(e)=>setNewClassroomTerm(e.target.value)} placeholder="Term (optional)" className="w-full rounded bg-black/20 px-2 py-1" />
+                <button onClick={async()=>{const row=await createMasterClassroom({name:newClassroomName,term:newClassroomTerm}); setMasterClassrooms([row,...masterClassrooms]); setNewClassroomName(''); setNewClassroomTerm('');}} className="rounded bg-emerald-600 px-3 py-1 text-sm">Create classroom</button>
+              </div>
+            </aside>
+            <div className="rounded-xl border border-white/10 p-3">
+              {!selectedClassroom ? <p>Select a classroom.</p> : <>
+                <h3 className="text-xl font-bold">{selectedClassroom.name}</h3>
+                <p className="mb-3 text-sm text-white/70">Teacher: {selectedClassroom.teacher_name ?? 'Unknown'} ({selectedClassroom.teacher_email ?? 'No email'})</p>
+                <div className="mb-3 grid gap-2 md:grid-cols-2">
+                  <input value={classroomSearch} onChange={async(e)=>{const v=e.target.value; setClassroomSearch(v); if(v.trim().length>=2){setClassroomSearchResults(await searchMasterStudents(selectedClassroom.id,v));} else setClassroomSearchResults([]);}} placeholder="Search existing students" className="rounded bg-black/20 px-2 py-1" />
+                  <button onClick={async()=>{const ids=classroomSearchResults.filter((s)=>!s.already_in_classroom).map((s)=>s.id); if(ids.length){await addMasterStudents(selectedClassroom.id, ids); await loadClassrooms();}}} className="rounded bg-indigo-600 px-3 py-1 text-sm">Add searched students</button>
+                </div>
+                <div className="mb-3 rounded-lg border border-white/10 p-2 text-sm">{classroomSearchResults.map((s)=><div key={s.id}>{s.full_name ?? s.email} {s.already_in_classroom ? '(already in class)' : ''}</div>)}</div>
+                <div className="mb-4 grid gap-2 md:grid-cols-3">
+                  <input value={newStudentName} onChange={(e)=>setNewStudentName(e.target.value)} placeholder="New student name" className="rounded bg-black/20 px-2 py-1" />
+                  <input value={newStudentEmail} onChange={(e)=>setNewStudentEmail(e.target.value)} placeholder="New student email" className="rounded bg-black/20 px-2 py-1" />
+                  <button onClick={async()=>{await createMasterStudent(selectedClassroom.id,newStudentName,newStudentEmail); setNewStudentName(''); setNewStudentEmail(''); await loadClassrooms();}} className="rounded bg-indigo-600 px-3 py-1 text-sm">Create student + add</button>
+                </div>
+                <ul className="space-y-2">{selectedClassroom.members.map((m)=><li key={m.user_id} className="flex flex-wrap items-center justify-between gap-2 rounded border border-white/10 p-2"><span>{m.full_name ?? m.email} <span className="text-xs text-white/60">({m.email ?? 'No email'})</span></span><span className="flex gap-2"><select onChange={async(e)=>{if(e.target.value){await moveMasterStudent(selectedClassroom.id,m.user_id,e.target.value); await loadClassrooms();}}} defaultValue="" className="rounded bg-black/30 px-1 py-1 text-xs"><option value="">Move to…</option>{masterClassrooms.filter((c)=>c.id!==selectedClassroom.id).map((c)=><option key={c.id} value={c.id}>{c.name}</option>)}</select><button onClick={async()=>{await removeMasterStudent(selectedClassroom.id,m.user_id); await loadClassrooms();}} className="rounded bg-rose-600 px-2 py-1 text-xs">Remove</button></span></li>)}</ul>
+              </>}
+            </div>
+          </div>
+        </section>
+
       </div>
     </main>
   );
