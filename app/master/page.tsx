@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
+import { SECTIONS } from '@/lib/course/algebra1';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import {
   getMasterAlgebra1Assignments,
@@ -30,6 +31,13 @@ const formatCalendarDate = (value: string | null) => {
 
 const displayName = (u: { full_name?: string | null; email?: string | null; teacher_name?: string | null; teacher_email?: string | null }) =>
   u.full_name?.trim() || u.teacher_name?.trim() || u.email?.split('@')[0] || u.teacher_email?.split('@')[0] || 'Unknown User';
+
+const getSectionLabel = (sectionId: string | null) => {
+  if (!sectionId) return 'No section';
+  const section = SECTIONS.find((item) => item.id === sectionId);
+  if (!section) return sectionId;
+  return `Chapter ${section.chapterNumber}, Section ${section.sectionNumber}: ${section.title} (${sectionId})`;
+};
 
 export default function MasterPage() {
   const [loading, setLoading] = useState(true);
@@ -220,7 +228,7 @@ export default function MasterPage() {
               </div>
 
               <div className="mt-4 overflow-x-auto">
-                {filteredAssignments.length === 0 ? <p className="text-white/70">No assignments yet.</p> : <table className="min-w-full border-collapse text-sm"><thead><tr className="border-b border-white/10 text-left text-white/70"><th className="px-2 py-2">Teacher</th><th className="px-2 py-2">Classroom</th><th className="px-2 py-2">Assignment</th><th className="px-2 py-2">Section</th><th className="px-2 py-2">Due date</th><th className="px-2 py-2">Created</th><th className="px-2 py-2">Updated</th><th className="px-2 py-2">Archived</th><th className="px-2 py-2">Recipients</th></tr></thead><tbody>{filteredAssignments.map((assignment) => <tr key={assignment.assignment_id} className="border-b border-white/5 align-top"><td className="px-2 py-2"><p>{displayName(assignment)}</p><p className="text-xs text-white/60">{assignment.teacher_email ?? 'No email'}</p></td><td className="px-2 py-2">{assignment.classroom_name ?? assignment.classroom_id}</td><td className="px-2 py-2"><p className="font-semibold">{assignment.title}</p><p className="text-xs text-white/60">{assignment.description || 'No description'}</p></td><td className="px-2 py-2">{assignment.section_id ?? 'N/A'}</td><td className="px-2 py-2">{formatCalendarDate(assignment.due_date)}</td><td className="px-2 py-2">{formatDateTime(assignment.created_at)}</td><td className="px-2 py-2">{formatDateTime(assignment.updated_at)}</td><td className="px-2 py-2">{assignment.archived_at ? 'Archived' : 'Active'}</td><td className="px-2 py-2">{Number(assignment.recipient_count ?? 0)} total · {Number(assignment.completed_count ?? 0)} complete · {Number(assignment.incomplete_count ?? 0)} incomplete · {Number(assignment.excused_count ?? 0)} excused</td></tr>)}</tbody></table>}
+                {filteredAssignments.length === 0 ? <p className="text-white/70">No assignments yet.</p> : <table className="min-w-full border-collapse text-sm"><thead><tr className="border-b border-white/10 text-left text-white/70"><th className="px-2 py-2">Teacher</th><th className="px-2 py-2">Classroom</th><th className="px-2 py-2">Assignment</th><th className="px-2 py-2">Section</th><th className="px-2 py-2">Due date</th><th className="px-2 py-2">Created</th><th className="px-2 py-2">Updated</th><th className="px-2 py-2">Archived</th><th className="px-2 py-2">Recipients</th></tr></thead><tbody>{filteredAssignments.map((assignment) => <tr key={assignment.assignment_id} className="border-b border-white/5 align-top"><td className="px-2 py-2"><p>{displayName(assignment)}</p><p className="text-xs text-white/60">{assignment.teacher_email ?? 'No email'}</p></td><td className="px-2 py-2">{assignment.classroom_name ?? assignment.classroom_id}</td><td className="px-2 py-2"><p className="font-semibold">{assignment.title}</p><p className="text-xs text-white/60">{assignment.description || 'No description'}</p></td><td className="px-2 py-2">{getSectionLabel(assignment.section_id)}</td><td className="px-2 py-2">{formatCalendarDate(assignment.due_date)}</td><td className="px-2 py-2">{formatDateTime(assignment.created_at)}</td><td className="px-2 py-2">{formatDateTime(assignment.updated_at)}</td><td className="px-2 py-2">{assignment.archived_at ? 'Archived' : 'Active'}</td><td className="px-2 py-2">{Number(assignment.recipient_count ?? 0)} total · {Number(assignment.completed_count ?? 0)} complete · {Number(assignment.incomplete_count ?? 0)} incomplete · {Number(assignment.excused_count ?? 0)} excused</td></tr>)}</tbody></table>}
               </div>
             </>
           ) : null}
