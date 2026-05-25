@@ -1,6 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getMasterAssignmentRouteContext, jsonError, MasterAssignmentApiError } from '../../_utils';
 
+type AssignmentRecipientRow = {
+  assignment_id: string;
+  classroom_id: string;
+  user_id: string;
+  status: string;
+  assigned_at: string;
+  completed_at: string | null;
+};
+
+type ProfileRow = {
+  id: string;
+  full_name: string | null;
+  email: string | null;
+};
+
 export async function GET(req: NextRequest, { params }: { params: Promise<{ assignmentId: string }> }) {
   try {
     const { assignmentId } = await params;
@@ -20,9 +35,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ assi
       throw new MasterAssignmentApiError('Assignment not found.', 404);
     }
 
-    const { data: recipients, error: recipientsError } = await adminClient
+    const { data: recipientRows, error: recipientsError } = await adminClient
       .from('assignment_recipients')
-      .select('user_id,status,profiles!inner(full_name,email)')
+      .select('assignment_id,classroom_id,user_id,status,assigned_at,completed_at')
       .eq('assignment_id', assignmentId)
       .eq('classroom_id', assignment.classroom_id)
       .order('user_id', { ascending: true });
@@ -31,11 +46,29 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ assi
       throw new MasterAssignmentApiError(recipientsError.message || 'Failed to load recipients.', 500);
     }
 
-    const payload = (recipients ?? []).map((recipient) => {
-      const profile = Array.isArray(recipient.profiles) ? recipient.profiles[0] : recipient.profiles;
+    const recipients = (recipientRows ?? []) as AssignmentRecipientRow[];
+    const recipientUserIds = recipients.map((recipient) => recipient.user_id);
+
+    const { data: profileRows, error: profilesError } = recipientUserIds.length
+      ? await adminClient
+          .from('profiles')
+          .select('id,full_name,email')
+          .in('id', recipientUserIds)
+      : { data: [], error: null };
+
+    if (profilesError) {
+      throw new MasterAssignmentApiError(profilesError.message || 'Failed to load recipient profiles.', 500);
+    }
+
+    const profilesById = new Map((profileRows as ProfileRow[]).map((profile) => [profile.id, profile]));
+
+    const payload = recipients.map((recipient) => {
+      const profile = profilesById.get(recipient.user_id);
       return {
         user_id: recipient.user_id,
         status: recipient.status,
+        assigned_at: recipient.assigned_at,
+        completed_at: recipient.completed_at,
         full_name: profile?.full_name ?? null,
         email: profile?.email ?? null,
         completion_percent: 0,
