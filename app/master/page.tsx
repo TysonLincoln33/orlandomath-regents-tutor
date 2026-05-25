@@ -12,32 +12,25 @@ import {
   type MasterOverviewUserRow,
   type MasterRecentAttempt,
 } from '@/lib/master/getMasterAlgebra1Dashboard';
+import {
+  addMasterStudents,
+  createMasterClassroom,
+  createMasterStudent,
+  getMasterClassrooms,
+  moveMasterStudent,
+  removeMasterStudent,
+  searchMasterStudents,
+  type MasterClassroomRow,
+  type SearchStudentResult,
+} from '@/lib/master/classroomManagement';
 
 type Profile = { id: string; role: string | null; approval_status: string | null };
 
-const formatDateTime = (value: string | null) => {
-  if (!value) return 'N/A';
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return 'N/A';
-  return d.toLocaleString([], { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
-};
-
-const formatCalendarDate = (value: string | null) => {
-  if (!value) return 'No due date';
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return 'No due date';
-  return d.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' });
-};
-
-const displayName = (u: { full_name?: string | null; email?: string | null; teacher_name?: string | null; teacher_email?: string | null }) =>
-  u.full_name?.trim() || u.teacher_name?.trim() || u.email?.split('@')[0] || u.teacher_email?.split('@')[0] || 'Unknown User';
-
-const getSectionLabel = (sectionId: string | null) => {
-  if (!sectionId) return 'No section';
-  const section = SECTIONS.find((item) => item.id === sectionId);
-  if (!section) return sectionId;
-  return `Chapter ${section.chapterNumber}, Section ${section.sectionNumber}: ${section.title} (${sectionId})`;
-};
+const formatDateTime = (value: string | null) => !value ? 'N/A' : (Number.isNaN(new Date(value).getTime()) ? 'N/A' : new Date(value).toLocaleString([], { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }));
+const formatCalendarDate = (value: string | null) => !value ? 'No due date' : (Number.isNaN(new Date(value).getTime()) ? 'No due date' : new Date(value).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }));
+const displayName = (u: { full_name?: string | null; email?: string | null; teacher_name?: string | null; teacher_email?: string | null }) => u.full_name?.trim() || u.teacher_name?.trim() || u.email?.split('@')[0] || u.teacher_email?.split('@')[0] || 'Unknown User';
+const getSectionLabel = (sectionId: string | null) => { if (!sectionId) return 'No section'; const section = SECTIONS.find((i) => i.id === sectionId); return section ? `Chapter ${section.chapterNumber}, Section ${section.sectionNumber}: ${section.title} (${sectionId})` : sectionId; };
+const getErrorMessage = (e: unknown, fallback: string) => e instanceof Error ? e.message : fallback;
 
 export default function MasterPage() {
   const [loading, setLoading] = useState(true);
@@ -48,7 +41,6 @@ export default function MasterPage() {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [selectedAttempts, setSelectedAttempts] = useState<MasterRecentAttempt[]>([]);
   const [selectedUser, setSelectedUser] = useState<MasterOverviewUserRow | null>(null);
-
   const [assignmentsLoading, setAssignmentsLoading] = useState(true);
   const [assignments, setAssignments] = useState<MasterAlgebra1AssignmentRow[]>([]);
   const [assignmentError, setAssignmentError] = useState<string | null>(null);
@@ -56,129 +48,100 @@ export default function MasterPage() {
   const [teacherFilter, setTeacherFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
 
-  useEffect(() => {
-    (async () => {
-      setLoading(true);
-      setError(null);
-      setAssignmentsLoading(true);
-      try {
-        const supabase = getSupabaseBrowserClient();
-        const { data: authData, error: authError } = await supabase.auth.getUser();
-        if (authError || !authData.user) throw new Error('Please sign in again to view the Master Dashboard.');
-        const { data: p, error: pErr } = await supabase.from('profiles').select('id,role,approval_status').eq('id', authData.user.id).maybeSingle();
-        if (pErr || !p) throw new Error('Could not load your profile.');
-        const nextProfile = p as Profile;
-        if (nextProfile.role !== 'master' || nextProfile.approval_status !== 'approved') throw new Error('Master access required.');
+  const [masterClassrooms, setMasterClassrooms] = useState<MasterClassroomRow[]>([]);
+  const [selectedClassroomId, setSelectedClassroomId] = useState<string | null>(null);
+  const [classroomSearch, setClassroomSearch] = useState('');
+  const [classroomSearchResults, setClassroomSearchResults] = useState<SearchStudentResult[]>([]);
+  const [selectedSearchStudentIds, setSelectedSearchStudentIds] = useState<string[]>([]);
+  const [newClassroomName, setNewClassroomName] = useState('');
+  const [newClassroomTerm, setNewClassroomTerm] = useState('');
+  const [newStudentName, setNewStudentName] = useState('');
+  const [newStudentEmail, setNewStudentEmail] = useState('');
+  const [classroomMessage, setClassroomMessage] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
-        const data = await getMasterAlgebra1Overview();
-        setUsers(data.users);
-        setSummary(data.summary);
-        setRecentAttempts(data.recentAttempts);
+  useEffect(() => { (async () => {
+    setLoading(true); setError(null); setAssignmentsLoading(true);
+    try {
+      const supabase = getSupabaseBrowserClient();
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError || !authData.user) throw new Error('Please sign in again to view the Master Dashboard.');
+      const { data: p, error: pErr } = await supabase.from('profiles').select('id,role,approval_status').eq('id', authData.user.id).maybeSingle();
+      if (pErr || !p) throw new Error('Could not load your profile.');
+      const nextProfile = p as Profile;
+      if (nextProfile.role !== 'master' || nextProfile.approval_status !== 'approved') throw new Error('Master access required.');
 
-        try {
-          const assignmentRows = await getMasterAlgebra1Assignments();
-          setAssignments(assignmentRows);
-          setAssignmentError(null);
-        } catch (assignmentLoadError) {
-          setAssignments([]);
-          setAssignmentError(assignmentLoadError instanceof Error ? assignmentLoadError.message : 'Assignments panel failed to load.');
-        } finally {
-          setAssignmentsLoading(false);
-        }
-      } catch (e) {
-        setError(e instanceof Error ? e.message : 'Failed to load dashboard.');
-        setAssignmentsLoading(false);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
+      const data = await getMasterAlgebra1Overview();
+      setUsers(data.users); setSummary(data.summary); setRecentAttempts(data.recentAttempts);
+      try { setAssignments(await getMasterAlgebra1Assignments()); setAssignmentError(null); }
+      catch (assignmentLoadError) { setAssignments([]); setAssignmentError(getErrorMessage(assignmentLoadError, 'Assignments panel failed to load.')); }
+      finally { setAssignmentsLoading(false); }
+    } catch (e) { setError(getErrorMessage(e, 'Failed to load dashboard.')); setAssignmentsLoading(false); }
+    finally { setLoading(false); }
+  })(); }, []);
+
+  const loadClassrooms = async () => {
+    try {
+      const rows = await getMasterClassrooms();
+      setMasterClassrooms(rows);
+      setSelectedClassroomId((prev) => (prev && rows.some((r) => r.id === prev) ? prev : rows[0]?.id ?? null));
+    } catch (e) { setClassroomMessage(getErrorMessage(e, 'Failed to load classrooms.')); }
+  };
+  useEffect(() => { void loadClassrooms(); }, []);
 
   const userById = useMemo(() => new Map(users.map((u) => [u.user_id, u])), [users]);
+  const selectedClassroom = useMemo(() => masterClassrooms.find((c) => c.id === selectedClassroomId) ?? null, [masterClassrooms, selectedClassroomId]);
+  const availableSearchResults = classroomSearchResults.filter((s) => !s.already_in_classroom);
 
-  const onSelectUser = async (userId: string) => {
-    setSelectedUserId(userId);
-    setSelectedUser(userById.get(userId) ?? null);
-    try {
-      const data = await getMasterAlgebra1UserProgress(userId);
-      setSelectedUser(data.user ?? userById.get(userId) ?? null);
-      setSelectedAttempts(data.recentAttempts);
-    } catch {
-      setSelectedAttempts([]);
-    }
+  const onSelectUser = async (userId: string) => { setSelectedUserId(userId); setSelectedUser(userById.get(userId) ?? null); try { const data = await getMasterAlgebra1UserProgress(userId); setSelectedUser(data.user ?? userById.get(userId) ?? null); setSelectedAttempts(data.recentAttempts); } catch { setSelectedAttempts([]); } };
+  const onSearchStudents = async (value: string) => {
+    setClassroomSearch(value); setSelectedSearchStudentIds([]);
+    if (!selectedClassroom || value.trim().length < 2) { setClassroomSearchResults([]); return; }
+    try { setClassroomSearchResults(await searchMasterStudents(selectedClassroom.id, value)); }
+    catch (e) { setClassroomMessage(getErrorMessage(e, 'Failed to search students.')); }
   };
 
-  const filteredAssignments = useMemo(
-    () =>
-      assignments.filter((assignment) => {
-        if (teacherFilter !== 'all' && assignment.teacher_id !== teacherFilter) return false;
-        if (statusFilter === 'active' && Boolean(assignment.archived_at)) return false;
-        if (statusFilter === 'archived' && !assignment.archived_at) return false;
-        const query = assignmentSearch.trim().toLowerCase();
-        if (!query) return true;
-        return [assignment.title, assignment.classroom_name ?? '', assignment.teacher_name ?? '', assignment.teacher_email ?? '', assignment.section_id ?? '']
-          .join(' ')
-          .toLowerCase()
-          .includes(query);
-      }),
-    [assignments, teacherFilter, statusFilter, assignmentSearch],
-  );
+  const filteredAssignments = useMemo(() => assignments.filter((assignment) => {
+    if (teacherFilter !== 'all' && assignment.teacher_id !== teacherFilter) return false;
+    if (statusFilter === 'active' && Boolean(assignment.archived_at)) return false;
+    if (statusFilter === 'archived' && !assignment.archived_at) return false;
+    const query = assignmentSearch.trim().toLowerCase();
+    if (!query) return true;
+    return [assignment.title, assignment.classroom_name ?? '', assignment.teacher_name ?? '', assignment.teacher_email ?? '', assignment.section_id ?? ''].join(' ').toLowerCase().includes(query);
+  }), [assignments, teacherFilter, statusFilter, assignmentSearch]);
 
-  const assignmentTeacherOptions = useMemo(() => {
-    const teachers = new Map<string, string>();
-    assignments.forEach((assignment) => {
-      teachers.set(assignment.teacher_id, `${displayName(assignment)} (${assignment.teacher_email ?? 'No email'})`);
-    });
-    return Array.from(teachers.entries());
-  }, [assignments]);
+  const assignmentTeacherOptions = useMemo(() => { const t = new Map<string, string>(); assignments.forEach((a) => t.set(a.teacher_id, `${displayName(a)} (${a.teacher_email ?? 'No email'})`)); return Array.from(t.entries()); }, [assignments]);
+
 
   const assignmentSummary = useMemo(
     () =>
       assignments.reduce(
         (acc, assignment) => {
-          const recipients = Number(assignment.recipient_count ?? 0);
-          const completed = Number(assignment.completed_count ?? 0);
-          const incomplete = Number(assignment.incomplete_count ?? 0);
-          const excused = Number(assignment.excused_count ?? 0);
           acc.totalAssignments += 1;
           if (assignment.archived_at) acc.archivedAssignments += 1;
           else acc.activeAssignments += 1;
-          acc.totalRecipients += recipients;
-          acc.completedRecipients += completed;
-          acc.incompleteRecipients += incomplete;
-          acc.excusedRecipients += excused;
+          acc.totalRecipients += Number(assignment.recipient_count ?? 0);
+          acc.completedRecipients += Number(assignment.completed_count ?? 0);
+          acc.incompleteRecipients += Number(assignment.incomplete_count ?? 0);
+          acc.excusedRecipients += Number(assignment.excused_count ?? 0);
           return acc;
         },
-        {
-          totalAssignments: 0,
-          activeAssignments: 0,
-          archivedAssignments: 0,
-          totalRecipients: 0,
-          completedRecipients: 0,
-          incompleteRecipients: 0,
-          excusedRecipients: 0,
-        },
+        { totalAssignments: 0, activeAssignments: 0, archivedAssignments: 0, totalRecipients: 0, completedRecipients: 0, incompleteRecipients: 0, excusedRecipients: 0 },
       ),
     [assignments],
   );
 
-  if (loading) {
-    return <main className="min-h-screen bg-slate-950 p-8 text-white"><div className="mx-auto max-w-7xl rounded-3xl border border-white/10 bg-white/10 p-8">Loading Master Dashboard...</div></main>;
-  }
-
-  if (error) {
-    return <main className="min-h-screen bg-slate-950 p-8 text-white"><div className="mx-auto max-w-3xl rounded-3xl border border-white/10 bg-white/10 p-8"><h1 className="text-3xl font-black">Master Dashboard</h1><p className="mt-3 text-white/80">{error}</p><div className="mt-5"><Link href="/dashboard" className="rounded-lg bg-indigo-500 px-4 py-2">Go to Dashboard</Link></div></div></main>;
-  }
-
   const panelAttempts = selectedUserId ? selectedAttempts : recentAttempts;
 
-  return (
-    <main className="min-h-screen bg-slate-950 p-6 text-white">
-      <div className="mx-auto max-w-7xl">
-        <h1 className="mb-4 text-3xl font-black">Master Dashboard (Algebra 1)</h1>
-        <p className="mb-6 text-sm text-white/70">Read-only global Regents Algebra 1 overview.</p>
+  if (loading) return <main className="min-h-screen bg-slate-950 p-8 text-white"><div className="mx-auto max-w-7xl rounded-3xl border border-white/10 bg-white/10 p-8">Loading Master Dashboard...</div></main>;
+  if (error) return <main className="min-h-screen bg-slate-950 p-8 text-white"><div className="mx-auto max-w-3xl rounded-3xl border border-white/10 bg-white/10 p-8"><h1 className="text-3xl font-black">Master Dashboard</h1><p className="mt-3 text-white/80">{error}</p><div className="mt-5"><Link href="/dashboard" className="rounded-lg bg-indigo-500 px-4 py-2">Go to Dashboard</Link></div></div></main>;
 
-        <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
+  return <main className="min-h-screen bg-slate-950 p-6 text-white"><div className="mx-auto max-w-7xl">
+    <h1 className="mb-4 text-3xl font-black">Master Dashboard (Algebra 1)</h1>
+    <p className="mb-6 text-sm text-white/70">Global Regents Algebra 1 overview + interactive classroom management.</p>
+
+    {/* existing overview + assignments mostly unchanged */}
+    <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
           <aside className="rounded-2xl border border-white/10 bg-white/5 p-4">
             <h2 className="mb-3 text-xl font-bold">All Users</h2>
             {users.length === 0 ? <p className="text-white/70">No Algebra 1 users found yet.</p> : <ul className="space-y-3">{users.map((u) => <li key={u.user_id} className="rounded-xl border border-white/10 p-3"><p className="font-semibold">{displayName(u)}</p><p className="text-xs text-white/70">{u.email ?? 'No email'}</p><p className="text-xs text-white/60">Last activity: {formatDateTime(u.last_activity_at)}</p><button onClick={() => void onSelectUser(u.user_id)} className="mt-2 rounded-md bg-indigo-500 px-3 py-1 text-sm">View Progress</button></li>)}</ul>}
@@ -233,7 +196,38 @@ export default function MasterPage() {
             </>
           ) : null}
         </section>
+
+    <section className="mt-8 rounded-2xl border-2 border-emerald-400/40 bg-white/5 p-5" aria-label="Master Classroom Management">
+      <h2 className="text-2xl font-black text-emerald-200">Master Classroom Management</h2>
+      <p className="mb-4 text-sm text-white/70">Global classroom and student roster management.</p>
+      {classroomMessage ? <p className="mb-3 rounded border border-white/10 bg-black/20 p-2 text-sm">{classroomMessage}</p> : null}
+      <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
+        <aside className="space-y-2 rounded-xl border border-white/10 p-3">
+          {masterClassrooms.map((c) => <button type="button" key={c.id} onClick={() => { setSelectedClassroomId(c.id); setClassroomSearch(''); setClassroomSearchResults([]); setSelectedSearchStudentIds([]); }} className={`w-full rounded-lg border p-3 text-left ${selectedClassroomId===c.id?'border-emerald-400/70 bg-emerald-500/10':'border-white/10'}`}><p className="font-semibold">{c.name}</p><p className="text-xs text-white/70">{c.teacher_name ?? 'Unknown teacher'} · {c.teacher_email ?? 'No email'}</p><p className="text-xs text-white/60">Term: {c.term ?? 'N/A'} · Roster: {c.roster_count} · Assignments: {c.assignment_count}</p></button>)}
+          <form className="mt-3 space-y-2 rounded-lg border border-white/10 p-3" onSubmit={async (event) => { event.preventDefault(); if (!newClassroomName.trim()) return; setIsSaving(true); setClassroomMessage(null); try { await createMasterClassroom({ name: newClassroomName.trim(), term: newClassroomTerm.trim() || undefined }); setNewClassroomName(''); setNewClassroomTerm(''); await loadClassrooms(); setClassroomMessage('Classroom created.'); } catch (e) { setClassroomMessage(getErrorMessage(e, 'Failed to create classroom.')); } finally { setIsSaving(false); } }}>
+            <input value={newClassroomName} onChange={(e)=>setNewClassroomName(e.target.value)} placeholder="New classroom name" className="w-full rounded bg-black/20 px-2 py-1" />
+            <input value={newClassroomTerm} onChange={(e)=>setNewClassroomTerm(e.target.value)} placeholder="Term (optional)" className="w-full rounded bg-black/20 px-2 py-1" />
+            <button type="submit" disabled={isSaving || !newClassroomName.trim()} className="rounded bg-emerald-600 px-3 py-1 text-sm disabled:opacity-50">Create classroom</button>
+          </form>
+        </aside>
+        <div className="rounded-xl border border-white/10 p-3">
+          {!selectedClassroom ? <p>Select a classroom.</p> : <>
+            <h3 className="text-xl font-bold">{selectedClassroom.name}</h3>
+            <p className="mb-3 text-sm text-white/70">Teacher: {selectedClassroom.teacher_name ?? 'Unknown'} ({selectedClassroom.teacher_email ?? 'No email'})</p>
+            <div className="mb-3 grid gap-2 md:grid-cols-[1fr_auto]">
+              <input value={classroomSearch} onChange={(e)=>void onSearchStudents(e.target.value)} placeholder="Search existing students" className="rounded bg-black/20 px-2 py-1" />
+              <button type="button" disabled={isSaving || selectedSearchStudentIds.length === 0} onClick={async()=>{ setIsSaving(true); setClassroomMessage(null); try { const result = await addMasterStudents(selectedClassroom.id, selectedSearchStudentIds); setClassroomMessage(`Added ${result.added_count} students (${result.already_enrolled_count} already enrolled).`); setSelectedSearchStudentIds([]); await loadClassrooms(); } catch (e) { setClassroomMessage(getErrorMessage(e, 'Failed to add students.')); } finally { setIsSaving(false); } }} className="rounded bg-indigo-600 px-3 py-1 text-sm disabled:opacity-50">Add selected students</button>
+            </div>
+            <div className="mb-3 max-h-40 space-y-1 overflow-y-auto rounded-lg border border-white/10 p-2 text-sm">{availableSearchResults.length === 0 ? <p className="text-white/60">No matching students.</p> : availableSearchResults.map((s) => <label key={s.id} className="flex cursor-pointer items-center gap-2"><input type="checkbox" checked={selectedSearchStudentIds.includes(s.id)} onChange={() => setSelectedSearchStudentIds((prev) => prev.includes(s.id) ? prev.filter((id) => id !== s.id) : [...prev, s.id])} /><span>{s.full_name ?? s.email} <span className="text-xs text-white/60">({s.email ?? 'No email'})</span></span></label>)}</div>
+            <form className="mb-4 grid gap-2 md:grid-cols-3" onSubmit={async (e) => { e.preventDefault(); if (!newStudentName.trim() || !newStudentEmail.trim()) return; setIsSaving(true); setClassroomMessage(null); try { const result = await createMasterStudent(selectedClassroom.id, newStudentName.trim(), newStudentEmail.trim()); setClassroomMessage(`Student ${result.status.replaceAll('_', ' ')}.`); setNewStudentName(''); setNewStudentEmail(''); await loadClassrooms(); } catch (err) { setClassroomMessage(getErrorMessage(err, 'Failed to create student.')); } finally { setIsSaving(false); } }}>
+              <input value={newStudentName} onChange={(e)=>setNewStudentName(e.target.value)} placeholder="New student name" className="rounded bg-black/20 px-2 py-1" />
+              <input value={newStudentEmail} onChange={(e)=>setNewStudentEmail(e.target.value)} placeholder="New student email" className="rounded bg-black/20 px-2 py-1" />
+              <button type="submit" disabled={isSaving || !newStudentName.trim() || !newStudentEmail.trim()} className="rounded bg-indigo-600 px-3 py-1 text-sm disabled:opacity-50">Create student + add</button>
+            </form>
+            <ul className="space-y-2">{selectedClassroom.members.map((m) => <li key={m.user_id} className="flex flex-wrap items-center justify-between gap-2 rounded border border-white/10 p-2"><span>{m.full_name ?? m.email} <span className="text-xs text-white/60">({m.email ?? 'No email'})</span></span><span className="flex gap-2"><select onChange={async(e)=>{const toClassroomId = e.target.value; if(!toClassroomId) return; setIsSaving(true); setClassroomMessage(null); try { await moveMasterStudent(selectedClassroom.id,m.user_id,toClassroomId); setClassroomMessage('Student moved successfully.'); await loadClassrooms(); } catch (err) { setClassroomMessage(getErrorMessage(err, 'Failed to move student.')); } finally { e.currentTarget.value=''; setIsSaving(false); }}} defaultValue="" className="rounded bg-black/30 px-1 py-1 text-xs"><option value="">Move to…</option>{masterClassrooms.filter((c)=>c.id!==selectedClassroom.id).map((c)=><option key={c.id} value={c.id}>{c.name}</option>)}</select><button type="button" onClick={async()=>{ setIsSaving(true); setClassroomMessage(null); try { await removeMasterStudent(selectedClassroom.id,m.user_id); setClassroomMessage('Student removed from classroom.'); await loadClassrooms(); } catch (err) { setClassroomMessage(getErrorMessage(err, 'Failed to remove student.')); } finally { setIsSaving(false); } }} className="rounded bg-rose-600 px-2 py-1 text-xs">Remove</button></span></li>)}</ul>
+          </>}
+        </div>
       </div>
-    </main>
-  );
+    </section>
+  </div></main>;
 }
