@@ -24,6 +24,8 @@ import {
   type SearchStudentResult,
 } from '@/lib/master/classroomManagement';
 
+import { archiveMasterAssignment, createMasterAssignment, getMasterAssignmentRecipients, listMasterAssignments, updateMasterAssignment, updateMasterAssignmentRecipient, type MasterAssignment, type MasterAssignmentRecipient } from '@/lib/master/masterAssignments';
+
 type Profile = { id: string; role: string | null; approval_status: string | null };
 
 const formatDateTime = (value: string | null) => !value ? 'N/A' : (Number.isNaN(new Date(value).getTime()) ? 'N/A' : new Date(value).toLocaleString([], { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }));
@@ -61,6 +63,18 @@ export default function MasterPage() {
   const [classroomMessage, setClassroomMessage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
+  const [mAssignments, setMAssignments] = useState<MasterAssignment[]>([]);
+  const [mTitle, setMTitle] = useState('');
+  const [mDescription, setMDescription] = useState('');
+  const [mDueDate, setMDueDate] = useState('');
+  const [mSectionId, setMSectionId] = useState('');
+  const [mClassroomId, setMClassroomId] = useState('');
+  const [mTarget, setMTarget] = useState<'class'|'students'>('class');
+  const [mSelectedUsers, setMSelectedUsers] = useState<string[]>([]);
+  const [mMsg, setMMsg] = useState<string | null>(null);
+  const [mRecipients, setMRecipients] = useState<MasterAssignmentRecipient[] | null>(null);
+  const [mRecipientAssignmentId, setMRecipientAssignmentId] = useState<string | null>(null);
+
   useEffect(() => { (async () => {
     setLoading(true); setError(null); setAssignmentsLoading(true);
     try {
@@ -79,6 +93,7 @@ export default function MasterPage() {
       finally { setAssignmentsLoading(false); }
     } catch (e) { setError(getErrorMessage(e, 'Failed to load dashboard.')); setAssignmentsLoading(false); }
     finally { setLoading(false); }
+  try { const x = await listMasterAssignments(); setMAssignments(x.assignments || []); } catch {}
   })(); }, []);
 
   const loadClassrooms = async () => {
@@ -197,6 +212,24 @@ export default function MasterPage() {
             </>
           ) : null}
         </section>
+
+
+    <section className="mt-8 rounded-2xl border-2 border-cyan-400/40 bg-white/5 p-5" aria-label="Master Assignment Management">
+      <h2 className="text-2xl font-black text-cyan-200">Master Assignment Management</h2>
+      {mMsg ? <p className="mb-2 text-sm">{mMsg}</p> : null}
+      <div className="grid gap-2 md:grid-cols-3">
+        <input value={mTitle} onChange={(e)=>setMTitle(e.target.value)} placeholder="Assignment title" className="rounded bg-black/20 px-2 py-1" />
+        <input value={mDescription} onChange={(e)=>setMDescription(e.target.value)} placeholder="Description" className="rounded bg-black/20 px-2 py-1" />
+        <input type="date" value={mDueDate} onChange={(e)=>setMDueDate(e.target.value)} className="rounded bg-black/20 px-2 py-1" />
+        <select value={mClassroomId} onChange={(e)=>{setMClassroomId(e.target.value); setMSelectedUsers([]);}} className="rounded bg-black/20 px-2 py-1"><option value="">Select classroom</option>{masterClassrooms.map((c)=><option key={c.id} value={c.id}>{c.name}</option>)}</select>
+        <select value={mSectionId} onChange={(e)=>setMSectionId(e.target.value)} className="rounded bg-black/20 px-2 py-1"><option value="">Select section</option>{SECTIONS.map((s)=><option key={s.id} value={s.id}>{s.id}</option>)}</select>
+        <select value={mTarget} onChange={(e)=>setMTarget(e.target.value as 'class'|'students')} className="rounded bg-black/20 px-2 py-1"><option value="class">Entire class</option><option value="students">Selected students</option></select>
+      </div>
+      {mTarget==='students' && mClassroomId ? <div className="mt-2 max-h-36 overflow-y-auto rounded border border-white/10 p-2">{(masterClassrooms.find((c)=>c.id===mClassroomId)?.members ?? []).map((m)=><label key={m.user_id} className="mr-3 inline-flex items-center gap-1 text-sm"><input type="checkbox" checked={mSelectedUsers.includes(m.user_id)} onChange={()=>setMSelectedUsers((prev)=>prev.includes(m.user_id)?prev.filter((id)=>id!==m.user_id):[...prev,m.user_id])} />{m.full_name ?? m.email}</label>)}</div>:null}
+      <button className="mt-2 rounded bg-cyan-600 px-3 py-1 text-sm" onClick={async()=>{try{const r=await createMasterAssignment({title:mTitle,description:mDescription,due_date:mDueDate,section_id:mSectionId,classroom_id:mClassroomId,target:mTarget,recipient_user_ids:mSelectedUsers}); setMMsg('Assignment created.'); setMAssignments((prev)=>[r.assignment,...prev]);}catch(e){setMMsg(getErrorMessage(e,'Failed'));}}}>Create Assignment</button>
+      <div className="mt-4 space-y-2">{mAssignments.map((a)=><div key={a.id} className="rounded border border-white/10 p-2 text-sm"><div className="flex flex-wrap justify-between gap-2"><div><b>{a.title}</b> · {a.classroom_name ?? a.classroom_id} · {a.section_id} · {formatCalendarDate(a.due_date)} · {a.archived_at?'Archived':'Active'}</div><div className="flex gap-2"><button onClick={async()=>{const title=prompt('Title',a.title); if(!title) return; const x=await updateMasterAssignment(a.id,{title,description:a.description,due_date:a.due_date}); setMAssignments((prev)=>prev.map((p)=>p.id===a.id?{...p,...x.assignment}:p));}} className="rounded bg-indigo-600 px-2">Edit</button><button onClick={async()=>{const x=await archiveMasterAssignment(a.id); setMAssignments((prev)=>prev.map((p)=>p.id===a.id?{...p,...x.assignment}:p));}} className="rounded bg-rose-600 px-2">Archive</button><button onClick={async()=>{const x=await getMasterAssignmentRecipients(a.id); setMRecipients(x.recipients); setMRecipientAssignmentId(a.id);}} className="rounded bg-slate-600 px-2">View Recipients</button></div></div></div>)}</div>
+      {mRecipients && mRecipientAssignmentId ? <div className="mt-3 rounded border border-white/10 p-2">{mRecipients.map((r)=><div key={r.user_id} className="mb-1 flex flex-wrap items-center justify-between gap-2 text-sm"><span>{r.full_name ?? r.email} · {r.email} · {r.status} · completion {Math.round(Number(r.completion_percent ?? 0))}% · accuracy {Math.round(Number(r.accuracy_percent ?? 0))}% · {Number(r.questions_correct ?? 0)}/{Number(r.questions_attempted ?? 0)} · {formatDateTime(r.last_activity_at)}</span><button className="rounded bg-amber-600 px-2" onClick={async()=>{await updateMasterAssignmentRecipient(mRecipientAssignmentId,r.user_id,r.status==='excused'?'assigned':'excused'); const x=await getMasterAssignmentRecipients(mRecipientAssignmentId); setMRecipients(x.recipients);}}>{r.status==='excused'?'Un-excuse':'Mark Excused'}</button></div>)}</div> : null}
+    </section>
 
     <section className="mt-8 rounded-2xl border-2 border-emerald-400/40 bg-white/5 p-5" aria-label="Master Classroom Management">
       <h2 className="text-2xl font-black text-emerald-200">Master Classroom Management</h2>
