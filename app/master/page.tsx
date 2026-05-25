@@ -55,7 +55,8 @@ export default function MasterPage() {
   const [selectedSearchStudentIds, setSelectedSearchStudentIds] = useState<string[]>([]);
   const [newClassroomName, setNewClassroomName] = useState('');
   const [newClassroomTerm, setNewClassroomTerm] = useState('');
-  const [newStudentName, setNewStudentName] = useState('');
+  const [newStudentFirstName, setNewStudentFirstName] = useState('');
+  const [newStudentLastName, setNewStudentLastName] = useState('');
   const [newStudentEmail, setNewStudentEmail] = useState('');
   const [classroomMessage, setClassroomMessage] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -219,10 +220,19 @@ export default function MasterPage() {
               <button type="button" disabled={isSaving || selectedSearchStudentIds.length === 0} onClick={async()=>{ setIsSaving(true); setClassroomMessage(null); try { const result = await addMasterStudents(selectedClassroom.id, selectedSearchStudentIds); setClassroomMessage(`Added ${result.added_count} students (${result.already_enrolled_count} already enrolled).`); setSelectedSearchStudentIds([]); await loadClassrooms(); } catch (e) { setClassroomMessage(getErrorMessage(e, 'Failed to add students.')); } finally { setIsSaving(false); } }} className="rounded bg-indigo-600 px-3 py-1 text-sm disabled:opacity-50">Add selected students</button>
             </div>
             <div className="mb-3 max-h-40 space-y-1 overflow-y-auto rounded-lg border border-white/10 p-2 text-sm">{availableSearchResults.length === 0 ? <p className="text-white/60">No matching students.</p> : availableSearchResults.map((s) => <label key={s.id} className="flex cursor-pointer items-center gap-2"><input type="checkbox" checked={selectedSearchStudentIds.includes(s.id)} onChange={() => setSelectedSearchStudentIds((prev) => prev.includes(s.id) ? prev.filter((id) => id !== s.id) : [...prev, s.id])} /><span>{s.full_name ?? s.email} <span className="text-xs text-white/60">({s.email ?? 'No email'})</span></span></label>)}</div>
-            <form className="mb-4 grid gap-2 md:grid-cols-3" onSubmit={async (e) => { e.preventDefault(); if (!newStudentName.trim() || !newStudentEmail.trim()) return; setIsSaving(true); setClassroomMessage(null); try { const result = await createMasterStudent(selectedClassroom.id, newStudentName.trim(), newStudentEmail.trim()); setClassroomMessage(`Student ${result.status.replaceAll('_', ' ')}.`); setNewStudentName(''); setNewStudentEmail(''); await loadClassrooms(); } catch (err) { setClassroomMessage(getErrorMessage(err, 'Failed to create student.')); } finally { setIsSaving(false); } }}>
-              <input value={newStudentName} onChange={(e)=>setNewStudentName(e.target.value)} placeholder="New student name" className="rounded bg-black/20 px-2 py-1" />
+            <form className="mb-4 grid gap-2 md:grid-cols-4" onSubmit={async (e) => { e.preventDefault(); const firstName = newStudentFirstName.trim(); const lastName = newStudentLastName.trim(); const fullName = [firstName, lastName].filter(Boolean).join(' ').trim(); if (!fullName || !newStudentEmail.trim()) return; setIsSaving(true); setClassroomMessage(null); try { const result = await createMasterStudent(selectedClassroom.id, fullName, newStudentEmail.trim());
+                if (result.status === 'created_and_added') {
+                  setClassroomMessage(`Student created and added. Temporary login: ${result.email} (password setup via invite email).`);
+                } else {
+                  setClassroomMessage(`Student ${result.status.replaceAll('_', ' ')}.`);
+                }
+                setNewStudentFirstName('');
+                setNewStudentLastName('');
+                setNewStudentEmail(''); await loadClassrooms(); } catch (err) { setClassroomMessage(getErrorMessage(err, 'Failed to create student.')); } finally { setIsSaving(false); } }}>
+              <input value={newStudentFirstName} onChange={(e)=>setNewStudentFirstName(e.target.value)} placeholder="Student first name" className="rounded bg-black/20 px-2 py-1" />
+              <input value={newStudentLastName} onChange={(e)=>setNewStudentLastName(e.target.value)} placeholder="Student last name" className="rounded bg-black/20 px-2 py-1" />
               <input value={newStudentEmail} onChange={(e)=>setNewStudentEmail(e.target.value)} placeholder="New student email" className="rounded bg-black/20 px-2 py-1" />
-              <button type="submit" disabled={isSaving || !newStudentName.trim() || !newStudentEmail.trim()} className="rounded bg-indigo-600 px-3 py-1 text-sm disabled:opacity-50">Create student + add</button>
+              <button type="submit" disabled={isSaving || !newStudentFirstName.trim() || !newStudentLastName.trim() || !newStudentEmail.trim()} className="rounded bg-indigo-600 px-3 py-1 text-sm disabled:opacity-50">Create student + add</button>
             </form>
             <ul className="space-y-2">{selectedClassroom.members.map((m) => <li key={m.user_id} className="flex flex-wrap items-center justify-between gap-2 rounded border border-white/10 p-2"><span>{m.full_name ?? m.email} <span className="text-xs text-white/60">({m.email ?? 'No email'})</span></span><span className="flex gap-2"><select onChange={async(e)=>{const toClassroomId = e.target.value; if(!toClassroomId) return; setIsSaving(true); setClassroomMessage(null); try { await moveMasterStudent(selectedClassroom.id,m.user_id,toClassroomId); setClassroomMessage('Student moved successfully.'); await loadClassrooms(); } catch (err) { setClassroomMessage(getErrorMessage(err, 'Failed to move student.')); } finally { e.currentTarget.value=''; setIsSaving(false); }}} defaultValue="" className="rounded bg-black/30 px-1 py-1 text-xs"><option value="">Move to…</option>{masterClassrooms.filter((c)=>c.id!==selectedClassroom.id).map((c)=><option key={c.id} value={c.id}>{c.name}</option>)}</select><button type="button" onClick={async()=>{ setIsSaving(true); setClassroomMessage(null); try { await removeMasterStudent(selectedClassroom.id,m.user_id); setClassroomMessage('Student removed from classroom.'); await loadClassrooms(); } catch (err) { setClassroomMessage(getErrorMessage(err, 'Failed to remove student.')); } finally { setIsSaving(false); } }} className="rounded bg-rose-600 px-2 py-1 text-xs">Remove</button></span></li>)}</ul>
           </>}
