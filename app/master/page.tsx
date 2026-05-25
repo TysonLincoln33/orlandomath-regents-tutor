@@ -74,6 +74,8 @@ export default function MasterPage() {
   const [mMsg, setMMsg] = useState<string | null>(null);
   const [mRecipients, setMRecipients] = useState<MasterAssignmentRecipient[] | null>(null);
   const [mRecipientAssignmentId, setMRecipientAssignmentId] = useState<string | null>(null);
+  const [mRecipientsLoading, setMRecipientsLoading] = useState(false);
+  const [mRecipientError, setMRecipientError] = useState<string | null>(null);
 
   const refreshOversightAssignments = async () => {
     setAssignmentsLoading(true);
@@ -148,6 +150,34 @@ export default function MasterPage() {
 
   const assignmentTeacherOptions = useMemo(() => { const t = new Map<string, string>(); assignments.forEach((a) => t.set(a.teacher_id, `${displayName(a)} (${a.teacher_email ?? 'No email'})`)); return Array.from(t.entries()); }, [assignments]);
 
+
+  const loadMasterRecipients = async (assignmentId: string) => {
+    setMRecipientAssignmentId(assignmentId);
+    setMRecipientsLoading(true);
+    setMRecipientError(null);
+    setMRecipients(null);
+
+    try {
+      const x = await getMasterAssignmentRecipients(assignmentId);
+      setMRecipientAssignmentId((currentAssignmentId) => (currentAssignmentId === assignmentId ? assignmentId : currentAssignmentId));
+      setMRecipients(x.recipients);
+    } catch (e) {
+      setMRecipientError(getErrorMessage(e, 'Failed to load recipients.'));
+    } finally {
+      setMRecipientsLoading(false);
+    }
+  };
+
+  const toggleMasterRecipientExcuse = async (recipient: MasterAssignmentRecipient) => {
+    if (!mRecipientAssignmentId) return;
+    try {
+      const nextStatus = recipient.status === 'excused' ? 'assigned' : 'excused';
+      await updateMasterAssignmentRecipient(mRecipientAssignmentId, recipient.user_id, nextStatus);
+      await Promise.all([loadMasterRecipients(mRecipientAssignmentId), refreshMasterAssignmentPanels()]);
+    } catch (e) {
+      setMRecipientError(getErrorMessage(e, 'Failed to update recipient status.'));
+    }
+  };
 
   const assignmentSummary = useMemo(
     () =>
@@ -247,8 +277,10 @@ export default function MasterPage() {
       </div>
       {mTarget==='students' && mClassroomId ? <div className="mt-2 max-h-36 overflow-y-auto rounded border border-white/10 p-2">{(masterClassrooms.find((c)=>c.id===mClassroomId)?.members ?? []).map((m)=><label key={m.user_id} className="mr-3 inline-flex items-center gap-1 text-sm"><input type="checkbox" checked={mSelectedUsers.includes(m.user_id)} onChange={()=>setMSelectedUsers((prev)=>prev.includes(m.user_id)?prev.filter((id)=>id!==m.user_id):[...prev,m.user_id])} />{m.full_name ?? m.email}</label>)}</div>:null}
       <button className="mt-2 rounded bg-cyan-600 px-3 py-1 text-sm" onClick={async()=>{try{await createMasterAssignment({title:mTitle,description:mDescription,due_date:mDueDate,section_id:mSectionId,classroom_id:mClassroomId,target:mTarget,recipient_user_ids:mSelectedUsers}); await refreshMasterAssignmentPanels(); setMMsg('Assignment created.');}catch(e){setMMsg(getErrorMessage(e,'Failed'));}}}>Create Assignment</button>
-      <div className="mt-4 space-y-2">{mAssignments.map((a)=><div key={a.id} className="rounded border border-white/10 p-2 text-sm"><div className="flex flex-wrap justify-between gap-2"><div><b>{a.title}</b> · {a.classroom_name ?? a.classroom_id} · {a.section_id} · {formatCalendarDate(a.due_date)} · {a.archived_at?'Archived':'Active'}</div><div className="flex gap-2"><button onClick={async()=>{const title=prompt('Title',a.title); if(!title) return; const x=await updateMasterAssignment(a.id,{title,description:a.description,due_date:a.due_date}); setMAssignments((prev)=>prev.map((p)=>p.id===a.id?{...p,...x.assignment}:p));}} className="rounded bg-indigo-600 px-2">Edit</button><button onClick={async()=>{const x=await archiveMasterAssignment(a.id); setMAssignments((prev)=>prev.map((p)=>p.id===a.id?{...p,...x.assignment}:p));}} className="rounded bg-rose-600 px-2">Archive</button><button onClick={async()=>{const x=await getMasterAssignmentRecipients(a.id); setMRecipients(x.recipients); setMRecipientAssignmentId(a.id);}} className="rounded bg-slate-600 px-2">View Recipients</button></div></div></div>)}</div>
-      {mRecipients && mRecipientAssignmentId ? <div className="mt-3 rounded border border-white/10 p-2">{mRecipients.map((r)=><div key={r.user_id} className="mb-1 flex flex-wrap items-center justify-between gap-2 text-sm"><span>{r.full_name ?? r.email} · {r.email} · {r.status} · completion {Math.round(Number(r.completion_percent ?? 0))}% · accuracy {Math.round(Number(r.accuracy_percent ?? 0))}% · {Number(r.questions_correct ?? 0)}/{Number(r.questions_attempted ?? 0)} · {formatDateTime(r.last_activity_at)}</span><button className="rounded bg-amber-600 px-2" onClick={async()=>{await updateMasterAssignmentRecipient(mRecipientAssignmentId,r.user_id,r.status==='excused'?'assigned':'excused'); const x=await getMasterAssignmentRecipients(mRecipientAssignmentId); setMRecipients(x.recipients);}}>{r.status==='excused'?'Un-excuse':'Mark Excused'}</button></div>)}</div> : null}
+      <div className="mt-4 space-y-2">{mAssignments.map((a)=><div key={a.id} className="rounded border border-white/10 p-2 text-sm"><div className="flex flex-wrap justify-between gap-2"><div><b>{a.title}</b> · {a.classroom_name ?? a.classroom_id} · {a.section_id} · {formatCalendarDate(a.due_date)} · {a.archived_at?'Archived':'Active'}</div><div className="flex gap-2"><button onClick={async()=>{const title=prompt('Title',a.title); if(!title) return; const x=await updateMasterAssignment(a.id,{title,description:a.description,due_date:a.due_date}); setMAssignments((prev)=>prev.map((p)=>p.id===a.id?{...p,...x.assignment}:p));}} className="rounded bg-indigo-600 px-2">Edit</button><button onClick={async()=>{const x=await archiveMasterAssignment(a.id); setMAssignments((prev)=>prev.map((p)=>p.id===a.id?{...p,...x.assignment}:p));}} className="rounded bg-rose-600 px-2">Archive</button><button onClick={() => void loadMasterRecipients(a.id)} className="rounded bg-slate-600 px-2">View Recipients</button></div></div></div>)}</div>
+      {mRecipientsLoading ? <p className="mt-3 text-sm text-white/70">Loading recipients…</p> : null}
+      {mRecipientError ? <p className="mt-3 rounded border border-rose-400/30 bg-rose-500/10 p-2 text-sm text-rose-100">{mRecipientError}</p> : null}
+      {mRecipients && mRecipientAssignmentId ? <div className="mt-3 rounded border border-white/10 p-2">{mRecipients.map((r)=><div key={r.user_id} className="mb-1 flex flex-wrap items-center justify-between gap-2 text-sm"><span>{r.full_name ?? r.email} · {r.email} · {r.status} · completion {Math.round(Number(r.completion_percent ?? 0))}% · accuracy {Math.round(Number(r.accuracy_percent ?? 0))}% · {Number(r.questions_correct ?? 0)}/{Number(r.questions_attempted ?? 0)} · {formatDateTime(r.last_activity_at)}</span><button className="rounded bg-amber-600 px-2" onClick={() => void toggleMasterRecipientExcuse(r)}>{r.status==='excused'?'Un-excuse':'Mark Excused'}</button></div>)}</div> : null}
     </section>
 
     <section className="mt-8 rounded-2xl border-2 border-emerald-400/40 bg-white/5 p-5" aria-label="Master Classroom Management">
