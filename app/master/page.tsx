@@ -72,6 +72,10 @@ export default function MasterPage() {
   const [mTarget, setMTarget] = useState<'class'|'students'>('class');
   const [mSelectedUsers, setMSelectedUsers] = useState<string[]>([]);
   const [mMsg, setMMsg] = useState<string | null>(null);
+  const [mEditingAssignmentId, setMEditingAssignmentId] = useState<string | null>(null);
+  const [mEditTitle, setMEditTitle] = useState('');
+  const [mEditDescription, setMEditDescription] = useState('');
+  const [mEditDueDate, setMEditDueDate] = useState('');
   const [mRecipients, setMRecipients] = useState<MasterAssignmentRecipient[] | null>(null);
   const [mRecipientAssignmentId, setMRecipientAssignmentId] = useState<string | null>(null);
   const [mRecipientsLoading, setMRecipientsLoading] = useState(false);
@@ -179,6 +183,21 @@ export default function MasterPage() {
     }
   };
 
+  const beginEditMasterAssignment = (assignment: MasterAssignment) => {
+    setMEditingAssignmentId(assignment.id);
+    setMEditTitle(assignment.title);
+    setMEditDescription(assignment.description ?? '');
+    setMEditDueDate((assignment.due_date ?? '').slice(0, 10));
+    setMMsg(null);
+  };
+
+  const cancelEditMasterAssignment = () => {
+    setMEditingAssignmentId(null);
+    setMEditTitle('');
+    setMEditDescription('');
+    setMEditDueDate('');
+  };
+
   const assignmentSummary = useMemo(
     () =>
       assignments.reduce(
@@ -277,7 +296,7 @@ export default function MasterPage() {
       </div>
       {mTarget==='students' && mClassroomId ? <div className="mt-2 max-h-36 overflow-y-auto rounded border border-white/10 p-2">{(masterClassrooms.find((c)=>c.id===mClassroomId)?.members ?? []).map((m)=><label key={m.user_id} className="mr-3 inline-flex items-center gap-1 text-sm"><input type="checkbox" checked={mSelectedUsers.includes(m.user_id)} onChange={()=>setMSelectedUsers((prev)=>prev.includes(m.user_id)?prev.filter((id)=>id!==m.user_id):[...prev,m.user_id])} />{m.full_name ?? m.email}</label>)}</div>:null}
       <button className="mt-2 rounded bg-cyan-600 px-3 py-1 text-sm" onClick={async()=>{try{await createMasterAssignment({title:mTitle,description:mDescription,due_date:mDueDate,section_id:mSectionId,classroom_id:mClassroomId,target:mTarget,recipient_user_ids:mSelectedUsers}); await refreshMasterAssignmentPanels(); setMMsg('Assignment created.');}catch(e){setMMsg(getErrorMessage(e,'Failed'));}}}>Create Assignment</button>
-      <div className="mt-4 space-y-2">{mAssignments.map((a)=><div key={a.id} className="rounded border border-white/10 p-2 text-sm"><div className="flex flex-wrap justify-between gap-2"><div><b>{a.title}</b> · {a.classroom_name ?? a.classroom_id} · {a.section_id} · {formatCalendarDate(a.due_date)} · {a.archived_at?'Archived':'Active'}</div><div className="flex gap-2"><button onClick={async()=>{const title=prompt('Title',a.title); if(!title) return; const x=await updateMasterAssignment(a.id,{title,description:a.description,due_date:a.due_date}); setMAssignments((prev)=>prev.map((p)=>p.id===a.id?{...p,...x.assignment}:p));}} className="rounded bg-indigo-600 px-2">Edit</button><button onClick={async()=>{const x=await archiveMasterAssignment(a.id); setMAssignments((prev)=>prev.map((p)=>p.id===a.id?{...p,...x.assignment}:p));}} className="rounded bg-rose-600 px-2">Archive</button><button onClick={() => void loadMasterRecipients(a.id)} className="rounded bg-slate-600 px-2">View Recipients</button></div></div></div>)}</div>
+      <div className="mt-4 space-y-2">{mAssignments.map((a)=>{ const isEditing = mEditingAssignmentId === a.id; const isArchived = Boolean(a.archived_at); return <div key={a.id} className="rounded border border-white/10 p-2 text-sm"><div className="flex flex-wrap justify-between gap-2"><div><b>{a.title}</b> · {a.classroom_name ?? a.classroom_id} · {a.section_id} · {formatCalendarDate(a.due_date)} · {isArchived ? 'Archived' : 'Active'}</div><div className="flex gap-2">{isEditing ? <><button onClick={async()=>{ try { if (!mEditTitle.trim()) { setMMsg('Assignment title is required.'); return; } await updateMasterAssignment(a.id,{title:mEditTitle,description:mEditDescription,due_date:mEditDueDate || null}); cancelEditMasterAssignment(); await refreshMasterAssignmentPanels(); setMMsg('Assignment updated.'); } catch (e) { setMMsg(getErrorMessage(e, 'Failed to update assignment.')); } }} className="rounded bg-emerald-600 px-2">Save</button><button onClick={cancelEditMasterAssignment} className="rounded bg-slate-600 px-2">Cancel</button></> : <button onClick={()=>beginEditMasterAssignment(a)} className="rounded bg-indigo-600 px-2">Edit</button>}<button onClick={async()=>{ try { if (isArchived) { setMMsg('Assignment is already archived.'); return; } await archiveMasterAssignment(a.id); await refreshMasterAssignmentPanels(); setMMsg('Assignment archived.'); } catch (e) { setMMsg(getErrorMessage(e, 'Failed to archive assignment.')); } }} className="rounded bg-rose-600 px-2 disabled:opacity-60" disabled={isArchived}>{isArchived ? 'Archived' : 'Archive'}</button><button onClick={() => void loadMasterRecipients(a.id)} className="rounded bg-slate-600 px-2">View Recipients</button></div></div>{isEditing ? <div className="mt-2 grid gap-2 md:grid-cols-3"><input value={mEditTitle} onChange={(e)=>setMEditTitle(e.target.value)} placeholder="Assignment title" className="rounded bg-black/20 px-2 py-1" /><input value={mEditDescription} onChange={(e)=>setMEditDescription(e.target.value)} placeholder="Description" className="rounded bg-black/20 px-2 py-1" /><input type="date" value={mEditDueDate} onChange={(e)=>setMEditDueDate(e.target.value)} className="rounded bg-black/20 px-2 py-1" /></div> : null}</div>;})}</div>
       {mRecipientsLoading ? <p className="mt-3 text-sm text-white/70">Loading recipients…</p> : null}
       {mRecipientError ? <p className="mt-3 rounded border border-rose-400/30 bg-rose-500/10 p-2 text-sm text-rose-100">{mRecipientError}</p> : null}
       {mRecipients && mRecipientAssignmentId ? <div className="mt-3 rounded border border-white/10 p-2">{mRecipients.map((r)=><div key={r.user_id} className="mb-1 flex flex-wrap items-center justify-between gap-2 text-sm"><span>{r.full_name ?? r.email} · {r.email} · {r.status} · completion {Math.round(Number(r.completion_percent ?? 0))}% · accuracy {Math.round(Number(r.accuracy_percent ?? 0))}% · {Number(r.questions_correct ?? 0)}/{Number(r.questions_attempted ?? 0)} · {formatDateTime(r.last_activity_at)}</span><button className="rounded bg-amber-600 px-2" onClick={() => void toggleMasterRecipientExcuse(r)}>{r.status==='excused'?'Un-excuse':'Mark Excused'}</button></div>)}</div> : null}
