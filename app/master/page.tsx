@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import { SECTIONS } from '@/lib/course/algebra1';
+import { CHAPTERS, SECTIONS } from '@/lib/course/algebra1';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import {
   getMasterAlgebra1Assignments,
@@ -67,7 +67,8 @@ export default function MasterPage() {
   const [mTitle, setMTitle] = useState('');
   const [mDescription, setMDescription] = useState('');
   const [mDueDate, setMDueDate] = useState('');
-  const [mSectionId, setMSectionId] = useState('');
+  const [mSelectedSectionIds, setMSelectedSectionIds] = useState<string[]>([]);
+  const [mSelectedChapterIds, setMSelectedChapterIds] = useState<string[]>([]);
   const [mClassroomId, setMClassroomId] = useState('');
   const [mTarget, setMTarget] = useState<'class'|'students'>('class');
   const [mSelectedUsers, setMSelectedUsers] = useState<string[]>([]);
@@ -217,6 +218,8 @@ export default function MasterPage() {
   );
 
   const panelAttempts = selectedUserId ? selectedAttempts : recentAttempts;
+  const mSectionIdsFromSelectedChapters = useMemo(() => SECTIONS.filter((section) => mSelectedChapterIds.includes(section.chapterId)).map((section) => section.id), [mSelectedChapterIds]);
+  const mResolvedSectionIds = useMemo(() => [...new Set([...mSelectedSectionIds, ...mSectionIdsFromSelectedChapters])], [mSelectedSectionIds, mSectionIdsFromSelectedChapters]);
 
   if (loading) return <main className="min-h-screen bg-slate-950 p-8 text-white"><div className="mx-auto max-w-7xl rounded-3xl border border-white/10 bg-white/10 p-8">Loading Master Dashboard...</div></main>;
   if (error) return <main className="min-h-screen bg-slate-950 p-8 text-white"><div className="mx-auto max-w-3xl rounded-3xl border border-white/10 bg-white/10 p-8"><h1 className="text-3xl font-black">Master Dashboard</h1><p className="mt-3 text-white/80">{error}</p><div className="mt-5"><Link href="/dashboard" className="rounded-lg bg-indigo-500 px-4 py-2">Go to Dashboard</Link></div></div></main>;
@@ -291,11 +294,36 @@ export default function MasterPage() {
         <input value={mDescription} onChange={(e)=>setMDescription(e.target.value)} placeholder="Description" className="rounded bg-black/20 px-2 py-1" />
         <input type="date" value={mDueDate} onChange={(e)=>setMDueDate(e.target.value)} className="rounded bg-black/20 px-2 py-1" />
         <select value={mClassroomId} onChange={(e)=>{setMClassroomId(e.target.value); setMSelectedUsers([]);}} className="rounded bg-black/20 px-2 py-1"><option value="">Select classroom</option>{masterClassrooms.map((c)=><option key={c.id} value={c.id}>{c.name}</option>)}</select>
-        <select value={mSectionId} onChange={(e)=>setMSectionId(e.target.value)} className="rounded bg-black/20 px-2 py-1"><option value="">Select section</option>{SECTIONS.map((s)=><option key={s.id} value={s.id}>{s.id}</option>)}</select>
         <select value={mTarget} onChange={(e)=>setMTarget(e.target.value as 'class'|'students')} className="rounded bg-black/20 px-2 py-1"><option value="class">Entire class</option><option value="students">Selected students</option></select>
       </div>
+      <div className="mt-3 rounded border border-white/10 p-3">
+        <p className="text-sm font-semibold">Section targeting</p>
+        <p className="mb-2 text-xs text-white/70">Select any mix of chapters and individual sections. One assignment row will be created per resolved section.</p>
+        <div className="space-y-2">
+          {CHAPTERS.map((chapter) => {
+            const chapterSections = SECTIONS.filter((section) => section.chapterId === chapter.id);
+            const chapterChecked = mSelectedChapterIds.includes(chapter.id);
+            return <details key={chapter.id} className="rounded border border-white/10 p-2">
+              <summary className="cursor-pointer list-none">
+                <label className="inline-flex items-center gap-2 text-sm">
+                  <input type="checkbox" checked={chapterChecked} onChange={() => setMSelectedChapterIds((prev) => prev.includes(chapter.id) ? prev.filter((id) => id !== chapter.id) : [...prev, chapter.id])} />
+                  <span>{`Chapter ${chapter.number}: ${chapter.title}`}</span>
+                </label>
+              </summary>
+              <div className="mt-2 grid gap-1 md:grid-cols-2">
+                {chapterSections.map((section) => <label key={section.id} className="inline-flex items-center gap-2 text-xs text-white/80">
+                  <input type="checkbox" checked={mSelectedSectionIds.includes(section.id)} onChange={() => setMSelectedSectionIds((prev) => prev.includes(section.id) ? prev.filter((id) => id !== section.id) : [...prev, section.id])} />
+                  <span>{`Section ${section.sectionNumber}: ${section.title} (${section.id})`}</span>
+                </label>)}
+              </div>
+            </details>;
+          })}
+        </div>
+        <p className="mt-3 text-xs text-cyan-200">Resolved sections: {mResolvedSectionIds.length}</p>
+        <div className="mt-2 flex flex-wrap gap-1">{mResolvedSectionIds.map((sectionId) => <span key={sectionId} className="rounded-full border border-cyan-300/40 bg-cyan-400/10 px-2 py-0.5 text-xs">{sectionId}</span>)}</div>
+      </div>
       {mTarget==='students' && mClassroomId ? <div className="mt-2 max-h-36 overflow-y-auto rounded border border-white/10 p-2">{(masterClassrooms.find((c)=>c.id===mClassroomId)?.members ?? []).map((m)=><label key={m.user_id} className="mr-3 inline-flex items-center gap-1 text-sm"><input type="checkbox" checked={mSelectedUsers.includes(m.user_id)} onChange={()=>setMSelectedUsers((prev)=>prev.includes(m.user_id)?prev.filter((id)=>id!==m.user_id):[...prev,m.user_id])} />{m.full_name ?? m.email}</label>)}</div>:null}
-      <button className="mt-2 rounded bg-cyan-600 px-3 py-1 text-sm" onClick={async()=>{try{await createMasterAssignment({title:mTitle,description:mDescription,due_date:mDueDate,section_id:mSectionId,classroom_id:mClassroomId,target:mTarget,recipient_user_ids:mSelectedUsers}); await refreshMasterAssignmentPanels(); setMMsg('Assignment created.');}catch(e){setMMsg(getErrorMessage(e,'Failed'));}}}>Create Assignment</button>
+      <button className="mt-2 rounded bg-cyan-600 px-3 py-1 text-sm" onClick={async()=>{try{const result = await createMasterAssignment({title:mTitle,description:mDescription,due_date:mDueDate,section_ids:mSelectedSectionIds,chapter_ids:mSelectedChapterIds,classroom_id:mClassroomId,target:mTarget,recipient_user_ids:mSelectedUsers}); await refreshMasterAssignmentPanels(); setMMsg(`Created ${result.created_count} assignment${result.created_count===1?'':'s'}.`);}catch(e){setMMsg(getErrorMessage(e,'Failed'));}}}>Create Assignment</button>
       <div className="mt-4 space-y-2">{mAssignments.map((a)=>{ const isEditing = mEditingAssignmentId === a.id; const isArchived = Boolean(a.archived_at); return <div key={a.id} className="rounded border border-white/10 p-2 text-sm"><div className="flex flex-wrap justify-between gap-2"><div><b>{a.title}</b> · {a.classroom_name ?? a.classroom_id} · {a.section_id} · {formatCalendarDate(a.due_date)} · {isArchived ? 'Archived' : 'Active'}</div><div className="flex gap-2">{isEditing ? <><button onClick={async()=>{ try { if (!mEditTitle.trim()) { setMMsg('Assignment title is required.'); return; } await updateMasterAssignment(a.id,{title:mEditTitle,description:mEditDescription,due_date:mEditDueDate || null}); cancelEditMasterAssignment(); await refreshMasterAssignmentPanels(); setMMsg('Assignment updated.'); } catch (e) { setMMsg(getErrorMessage(e, 'Failed to update assignment.')); } }} className="rounded bg-emerald-600 px-2">Save</button><button onClick={cancelEditMasterAssignment} className="rounded bg-slate-600 px-2">Cancel</button></> : <button onClick={()=>beginEditMasterAssignment(a)} className="rounded bg-indigo-600 px-2">Edit</button>}<button onClick={async()=>{ try { if (isArchived) { setMMsg('Assignment is already archived.'); return; } await archiveMasterAssignment(a.id); await refreshMasterAssignmentPanels(); setMMsg('Assignment archived.'); } catch (e) { setMMsg(getErrorMessage(e, 'Failed to archive assignment.')); } }} className="rounded bg-rose-600 px-2 disabled:opacity-60" disabled={isArchived}>{isArchived ? 'Archived' : 'Archive'}</button><button onClick={() => void loadMasterRecipients(a.id)} className="rounded bg-slate-600 px-2">View Recipients</button></div></div>{isEditing ? <div className="mt-2 grid gap-2 md:grid-cols-3"><input value={mEditTitle} onChange={(e)=>setMEditTitle(e.target.value)} placeholder="Assignment title" className="rounded bg-black/20 px-2 py-1" /><input value={mEditDescription} onChange={(e)=>setMEditDescription(e.target.value)} placeholder="Description" className="rounded bg-black/20 px-2 py-1" /><input type="date" value={mEditDueDate} onChange={(e)=>setMEditDueDate(e.target.value)} className="rounded bg-black/20 px-2 py-1" /></div> : null}</div>;})}</div>
       {mRecipientsLoading ? <p className="mt-3 text-sm text-white/70">Loading recipients…</p> : null}
       {mRecipientError ? <p className="mt-3 rounded border border-rose-400/30 bg-rose-500/10 p-2 text-sm text-rose-100">{mRecipientError}</p> : null}
