@@ -28,7 +28,7 @@ import { archiveMasterAssignment, createMasterAssignment, getMasterAssignmentRec
 
 type Profile = { id: string; role: string | null; approval_status: string | null };
 
-const formatDateTime = (value: string | null) => !value ? 'N/A' : (Number.isNaN(new Date(value).getTime()) ? 'N/A' : new Date(value).toLocaleString([], { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }));
+const formatDateTime = (value: string | null, emptyLabel = 'N/A') => !value ? emptyLabel : (Number.isNaN(new Date(value).getTime()) ? emptyLabel : new Date(value).toLocaleString([], { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' }));
 const formatCalendarDate = (value: string | null) => !value ? 'No due date' : (Number.isNaN(new Date(value).getTime()) ? 'No due date' : new Date(value).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }));
 const displayName = (u: { full_name?: string | null; email?: string | null; teacher_name?: string | null; teacher_email?: string | null }) => u.full_name?.trim() || u.teacher_name?.trim() || u.email?.split('@')[0] || u.teacher_email?.split('@')[0] || 'Unknown User';
 const getSectionLabel = (sectionId: string | null) => { if (!sectionId) return 'No section'; const section = SECTIONS.find((i) => i.id === sectionId); return section ? `Chapter ${section.chapterNumber}, Section ${section.sectionNumber}: ${section.title} (${sectionId})` : sectionId; };
@@ -229,7 +229,7 @@ export default function MasterPage() {
     <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
           <aside className="rounded-2xl border border-white/10 bg-white/5 p-4">
             <h2 className="mb-3 text-xl font-bold">All Users</h2>
-            {users.length === 0 ? <p className="text-white/70">No Algebra 1 users found yet.</p> : <ul className="space-y-3">{users.map((u) => <li key={u.user_id} className="rounded-xl border border-white/10 p-3"><p className="font-semibold">{displayName(u)}</p><p className="text-xs text-white/70">{u.email ?? 'No email'}</p><p className="text-xs text-white/60">Last activity: {formatDateTime(u.last_activity_at)}</p><button onClick={() => void onSelectUser(u.user_id)} className="mt-2 rounded-md bg-indigo-500 px-3 py-1 text-sm">View Progress</button></li>)}</ul>}
+            {users.length === 0 ? <p className="text-white/70">No Algebra 1 users found yet.</p> : <ul className="space-y-3">{users.map((u) => <li key={u.user_id} className="rounded-xl border border-white/10 p-3"><p className="font-semibold">{displayName(u)}</p><p className="text-xs text-white/70">{u.email ?? 'No email'}</p><p className="text-xs text-white/60">Last activity: {formatDateTime(u.last_activity_at, 'No activity yet')}</p><button onClick={() => void onSelectUser(u.user_id)} className="mt-2 rounded-md bg-indigo-500 px-3 py-1 text-sm">View Progress</button></li>)}</ul>}
           </aside>
 
           <section className="rounded-2xl border border-white/10 bg-white/5 p-4">
@@ -239,7 +239,7 @@ export default function MasterPage() {
 
             <div className="mt-6">
               <h2 className="text-xl font-bold">{selectedUser ? `${displayName(selectedUser)} Progress` : 'Recent Attempts'}</h2>
-              {selectedUser && <p className="mb-3 text-sm text-white/70">{selectedUser.email ?? 'No email'} · Completion {Math.round(Number(selectedUser.completion_percent ?? 0))}% · Accuracy {Math.round(Number(selectedUser.accuracy_percent ?? 0))}% · Attempts {Number(selectedUser.attempts_count ?? 0)} · Correct {Number(selectedUser.correct_count ?? 0)}</p>}
+              {selectedUser && <p className="mb-3 text-sm text-white/70">{selectedUser.email ?? 'No email'} · Completion {Math.round(Number(selectedUser.completion_percent ?? 0))}% · Accuracy {selectedUser.accuracy_percent == null ? '—' : `${Math.round(Number(selectedUser.accuracy_percent))}%`} · Attempts {Number(selectedUser.attempts_count ?? 0)} · Correct {Number(selectedUser.correct_count ?? 0)}</p>}
               {panelAttempts.length === 0 ? <p className="text-white/70">No recent attempts available yet.</p> : <ul className="space-y-2">{panelAttempts.map((a, i) => <li key={`${a.user_id}-${a.question_id}-${a.attempted_at ?? i}`} className="rounded-lg border border-white/10 p-3"><p className="font-medium">{displayName(a)} · {a.section_title}</p><p className="text-sm text-white/70">Question: {a.question_id ?? 'Unknown'} · {formatDateTime(a.attempted_at)}</p><span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs ${a.correct ? 'bg-emerald-500/20 text-emerald-200' : 'bg-rose-500/20 text-rose-200'}`}>{a.correct ? 'Correct' : 'Incorrect'}</span></li>)}</ul>}
             </div>
           </section>
