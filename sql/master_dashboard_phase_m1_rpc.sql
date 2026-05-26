@@ -147,16 +147,19 @@ as $$
     group by qa.user_id
   ),
   users as (
-    select user_id from progress_summary
-    union
-    select user_id from attempt_summary
+    select p.id as user_id
+    from public.profiles p
+    where p.role = 'student'
   )
   select u.user_id, p.full_name, p.email, p.role,
     coalesce(ps.completion_percent, 0) as completion_percent,
-    case when coalesce(a.attempts_count, 0) > 0 then round((a.correct_count::numeric / a.attempts_count) * 100)::int else 0 end as accuracy_percent,
+    case when coalesce(a.attempts_count, 0) > 0 then round((a.correct_count::numeric / a.attempts_count) * 100)::int else null end as accuracy_percent,
     coalesce(a.attempts_count, 0) as attempts_count,
     coalesce(a.correct_count, 0) as correct_count,
-    greatest(coalesce(ps.progress_last_active, to_timestamp(0)), coalesce(a.attempt_last_active, to_timestamp(0))) as last_activity_at
+    (
+      select max(last_activity)
+      from (values (ps.progress_last_active), (a.attempt_last_active)) as activity(last_activity)
+    ) as last_activity_at
   from users u
   join public.profiles p on p.id = u.user_id
   left join progress_summary ps on ps.user_id = u.user_id
