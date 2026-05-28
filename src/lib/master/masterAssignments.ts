@@ -17,7 +17,7 @@ async function authedFetch<T>(url: string, init?: RequestInit): Promise<T> {
 }
 
 export const listMasterAssignments = () => authedFetch<{ assignments: MasterAssignment[] }>('/api/master/assignments');
-export const createMasterAssignment = (body: Record<string, unknown>) => authedFetch<{ assignment: MasterAssignment }>('/api/master/assignments', { method: 'POST', body: JSON.stringify(body) });
+export const createMasterAssignment = (body: Record<string, unknown>) => authedFetch<{ assignments: MasterAssignment[]; created_count: number }>('/api/master/assignments', { method: 'POST', body: JSON.stringify(body) });
 export const updateMasterAssignment = (assignmentId: string, body: Record<string, unknown>) => authedFetch<{ assignment: MasterAssignment }>(`/api/master/assignments/${assignmentId}`, { method: 'PATCH', body: JSON.stringify(body) });
 export const archiveMasterAssignment = (assignmentId: string) => updateMasterAssignment(assignmentId, { archived: true });
 export const getMasterAssignmentRecipients = (assignmentId: string) => authedFetch<{ assignment: MasterAssignment; recipients: MasterAssignmentRecipient[] }>(`/api/master/assignments/${assignmentId}/recipients`);
