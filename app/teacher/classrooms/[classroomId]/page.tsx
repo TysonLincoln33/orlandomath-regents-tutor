@@ -4,7 +4,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import { SECTIONS } from "@/lib/course/algebra1";
+import { CHAPTERS, SECTIONS } from "@/lib/course/algebra1";
 import { isTeacherLikeRole } from "@/lib/auth/roles";
 import { getTeacherClassroomById } from "@/lib/classrooms/getTeacherClassroomById";
 import {
@@ -140,7 +140,11 @@ export default function ClassroomDetailPage({ params }: PageProps) {
   const [assignmentTitle, setAssignmentTitle] = useState("");
   const [assignmentDescription, setAssignmentDescription] = useState("");
   const [assignmentDueDate, setAssignmentDueDate] = useState("");
-  const [assignmentSectionId, setAssignmentSectionId] = useState("");
+  const [assignmentSelectedChapterIds, setAssignmentSelectedChapterIds] =
+    useState<string[]>([]);
+  const [assignmentSelectedSectionIds, setAssignmentSelectedSectionIds] =
+    useState<string[]>([]);
+  const [assignmentSelectorOpen, setAssignmentSelectorOpen] = useState(false);
   const [assignmentTarget, setAssignmentTarget] = useState<
     "class" | "students"
   >("class");
@@ -870,6 +874,26 @@ export default function ClassroomDetailPage({ params }: PageProps) {
     }
   };
 
+  const assignmentSectionsByChapter = useMemo(
+    () =>
+      CHAPTERS.map((chapter) => ({
+        chapter,
+        sections: SECTIONS.filter((section) => section.chapterId === chapter.id),
+      })),
+    [],
+  );
+  const selectedChapterLabels = useMemo(
+    () =>
+      CHAPTERS.filter((chapter) => assignmentSelectedChapterIds.includes(chapter.id)).map(
+        (chapter) => `Chapter ${chapter.number}: ${chapter.title}`,
+      ),
+    [assignmentSelectedChapterIds],
+  );
+  const selectedSectionLabels = useMemo(
+    () => assignmentSelectedSectionIds.map((sectionId) => getSectionLabel(sectionId)),
+    [assignmentSelectedSectionIds],
+  );
+
   const handleCreateAssignment = async () => {
     if (!classroomId) return;
 
@@ -882,22 +906,27 @@ export default function ClassroomDetailPage({ params }: PageProps) {
         title: assignmentTitle,
         description: assignmentDescription,
         dueDate: assignmentDueDate,
-        sectionId: assignmentSectionId,
+        sectionIds: assignmentSelectedSectionIds,
+        chapterIds: assignmentSelectedChapterIds,
         target: assignmentTarget,
         recipientUserIds:
           assignmentTarget === "students" ? assignmentRecipientIds : undefined,
       });
 
-      setAssignments((prev) => [result.assignment, ...prev]);
+      setAssignments((prev) => [...result.assignments, ...prev]);
       setShowArchivedAssignments(false);
       setAssignmentTitle("");
       setAssignmentDescription("");
       setAssignmentDueDate("");
-      setAssignmentSectionId("");
+      setAssignmentSelectedChapterIds([]);
+      setAssignmentSelectedSectionIds([]);
+      setAssignmentSelectorOpen(false);
       setAssignmentTarget("class");
       setAssignmentRecipientIds([]);
       setAssignmentMessage(
-        `Assignment created for ${result.recipient_count} student${
+        `Created ${result.created_count} assignment${
+          result.created_count === 1 ? "" : "s"
+        } for ${result.recipient_count} student${
           result.recipient_count === 1 ? "" : "s"
         }.`,
       );
@@ -1282,22 +1311,91 @@ export default function ClassroomDetailPage({ params }: PageProps) {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-semibold mb-1 text-gray-800">
-                    Section
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-800">
+                    Section Targeting
                   </label>
-                  <select
-                    value={assignmentSectionId}
-                    onChange={(e) => setAssignmentSectionId(e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  <button
+                    type="button"
+                    onClick={() => setAssignmentSelectorOpen((prev) => !prev)}
+                    className="flex w-full items-center justify-between rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900"
                   >
-                    <option value="">Choose an Algebra 1 section</option>
-                    {SECTIONS.map((section) => (
-                      <option key={section.id} value={section.id}>
-                        {getSectionLabel(section.id)}
-                      </option>
+                    <span>
+                      {assignmentSelectedChapterIds.length} chapters,{" "}
+                      {assignmentSelectedSectionIds.length} sections selected
+                    </span>
+                    <span>{assignmentSelectorOpen ? "▲" : "▼"}</span>
+                  </button>
+                  {assignmentSelectorOpen && (
+                    <div className="max-h-72 space-y-2 overflow-y-auto rounded-lg border border-gray-200 bg-white p-2">
+                      {assignmentSectionsByChapter.map(({ chapter, sections }) => {
+                        const chapterChecked = assignmentSelectedChapterIds.includes(
+                          chapter.id,
+                        );
+                        return (
+                          <details key={chapter.id} className="rounded border border-gray-200 p-2">
+                            <summary className="list-none">
+                              <label className="inline-flex items-center gap-2 text-sm text-gray-800">
+                                <input
+                                  type="checkbox"
+                                  checked={chapterChecked}
+                                  onChange={() =>
+                                    setAssignmentSelectedChapterIds((prev) =>
+                                      prev.includes(chapter.id)
+                                        ? prev.filter((id) => id !== chapter.id)
+                                        : [...prev, chapter.id],
+                                    )
+                                  }
+                                />
+                                <span>{`Chapter ${chapter.number}: ${chapter.title}`}</span>
+                              </label>
+                            </summary>
+                            <div className="mt-2 grid gap-1 sm:grid-cols-2">
+                              {sections.map((section) => (
+                                <label
+                                  key={section.id}
+                                  className="inline-flex items-center gap-2 text-xs text-gray-700"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={assignmentSelectedSectionIds.includes(
+                                      section.id,
+                                    )}
+                                    onChange={() =>
+                                      setAssignmentSelectedSectionIds((prev) =>
+                                        prev.includes(section.id)
+                                          ? prev.filter((id) => id !== section.id)
+                                          : [...prev, section.id],
+                                      )
+                                    }
+                                  />
+                                  <span>{`Section ${section.sectionNumber}: ${section.title}`}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </details>
+                        );
+                      })}
+                    </div>
+                  )}
+                  <div className="flex flex-wrap gap-1">
+                    {selectedChapterLabels.map((label) => (
+                      <span
+                        key={label}
+                        className="rounded-full border border-indigo-300 bg-indigo-50 px-2 py-0.5 text-xs text-indigo-700"
+                      >
+                        {label}
+                      </span>
                     ))}
-                  </select>
+                    {selectedSectionLabels.map((label) => (
+                      <span
+                        key={label}
+                        className="rounded-full border border-cyan-300 bg-cyan-50 px-2 py-0.5 text-xs text-cyan-700"
+                      >
+                        {label}
+                      </span>
+                    ))}
+                  </div>
                 </div>
 
                 <div>
@@ -1417,6 +1515,8 @@ export default function ClassroomDetailPage({ params }: PageProps) {
                   onClick={handleCreateAssignment}
                   disabled={
                     creatingAssignment ||
+                    (assignmentSelectedChapterIds.length === 0 &&
+                      assignmentSelectedSectionIds.length === 0) ||
                     (assignmentTarget === "students" &&
                       assignmentRecipientIds.length === 0)
                   }

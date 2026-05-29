@@ -25,13 +25,15 @@ export type CreateAssignmentInput = {
   title: string;
   description?: string;
   dueDate?: string;
-  sectionId?: string;
+  sectionIds?: string[];
+  chapterIds?: string[];
   target: AssignmentTarget;
   recipientUserIds?: string[];
 };
 
 export type CreateClassroomAssignmentResult = {
-  assignment: ClassroomAssignment;
+  assignments: ClassroomAssignment[];
+  created_count: number;
   recipient_count: number;
 };
 
@@ -43,7 +45,12 @@ export async function createClassroomAssignment(
   const title = input.title.trim();
   const description = input.description?.trim() || null;
   const dueDate = input.dueDate?.trim() || null;
-  const sectionId = input.sectionId?.trim() || null;
+  const sectionIds = [
+    ...new Set((input.sectionIds ?? []).map((item) => item.trim()).filter(Boolean)),
+  ];
+  const chapterIds = [
+    ...new Set((input.chapterIds ?? []).map((item) => item.trim()).filter(Boolean)),
+  ];
   const recipientUserIds = [
     ...new Set(input.recipientUserIds?.filter(Boolean) ?? []),
   ];
@@ -52,8 +59,8 @@ export async function createClassroomAssignment(
     throw new Error("Assignment title is required.");
   }
 
-  if (!sectionId) {
-    throw new Error("Please select a section.");
+  if (sectionIds.length === 0 && chapterIds.length === 0) {
+    throw new Error("Please select at least one section or chapter.");
   }
 
   if (input.target === "students" && recipientUserIds.length === 0) {
@@ -87,7 +94,8 @@ export async function createClassroomAssignment(
         title,
         description,
         due_date: dueDate,
-        section_id: sectionId,
+        section_ids: sectionIds,
+        chapter_ids: chapterIds,
         target: input.target,
         recipient_user_ids: recipientUserIds,
       }),
