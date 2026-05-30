@@ -69,6 +69,8 @@ export default function MasterPage() {
   const [mDueDate, setMDueDate] = useState('');
   const [mSelectedSectionIds, setMSelectedSectionIds] = useState<string[]>([]);
   const [mSelectedChapterIds, setMSelectedChapterIds] = useState<string[]>([]);
+  const [mSelectorOpen, setMSelectorOpen] = useState(false);
+  const [mExpandedChapterIds, setMExpandedChapterIds] = useState<string[]>([]);
   const [mClassroomId, setMClassroomId] = useState('');
   const [mTarget, setMTarget] = useState<'class'|'students'>('class');
   const [mSelectedUsers, setMSelectedUsers] = useState<string[]>([]);
@@ -221,7 +223,31 @@ export default function MasterPage() {
   const mSectionIdsFromSelectedChapters = useMemo(() => SECTIONS.filter((section) => mSelectedChapterIds.includes(section.chapterId)).map((section) => section.id), [mSelectedChapterIds]);
   const mResolvedSectionIds = useMemo(() => [...new Set([...mSelectedSectionIds, ...mSectionIdsFromSelectedChapters])], [mSelectedSectionIds, mSectionIdsFromSelectedChapters]);
   const mSelectedChapterLabels = useMemo(() => CHAPTERS.filter((chapter) => mSelectedChapterIds.includes(chapter.id)).map((chapter) => `Chapter ${chapter.number}: ${chapter.title}`), [mSelectedChapterIds]);
-  const mResolvedSectionLabels = useMemo(() => mResolvedSectionIds.map((sectionId) => getSectionLabel(sectionId)), [mResolvedSectionIds]);
+  const mSelectedSectionLabels = useMemo(() => mSelectedSectionIds.map((sectionId) => getSectionLabel(sectionId)), [mSelectedSectionIds]);
+
+  const toggleMSelectedChapter = (chapterId: string) => {
+    setMSelectedChapterIds((prev) => prev.includes(chapterId) ? prev.filter((id) => id !== chapterId) : [...prev, chapterId]);
+  };
+
+  const toggleMSelectedSection = (sectionId: string) => {
+    setMSelectedSectionIds((prev) => prev.includes(sectionId) ? prev.filter((id) => id !== sectionId) : [...prev, sectionId]);
+  };
+
+  const toggleMExpandedChapter = (chapterId: string) => {
+    setMExpandedChapterIds((prev) => prev.includes(chapterId) ? prev.filter((id) => id !== chapterId) : [...prev, chapterId]);
+  };
+
+  const resetMasterAssignmentForm = () => {
+    setMTitle('');
+    setMDescription('');
+    setMDueDate('');
+    setMTarget('class');
+    setMSelectedUsers([]);
+    setMSelectedChapterIds([]);
+    setMSelectedSectionIds([]);
+    setMSelectorOpen(false);
+    setMExpandedChapterIds([]);
+  };
 
   if (loading) return <main className="min-h-screen bg-slate-950 p-8 text-white"><div className="mx-auto max-w-7xl rounded-3xl border border-white/10 bg-white/10 p-8">Loading Master Dashboard...</div></main>;
   if (error) return <main className="min-h-screen bg-slate-950 p-8 text-white"><div className="mx-auto max-w-3xl rounded-3xl border border-white/10 bg-white/10 p-8"><h1 className="text-3xl font-black">Master Dashboard</h1><p className="mt-3 text-white/80">{error}</p><div className="mt-5"><Link href="/dashboard" className="rounded-lg bg-indigo-500 px-4 py-2">Go to Dashboard</Link></div></div></main>;
@@ -299,42 +325,41 @@ export default function MasterPage() {
         <select value={mTarget} onChange={(e)=>setMTarget(e.target.value as 'class'|'students')} className="rounded bg-black/20 px-2 py-1"><option value="class">Entire class</option><option value="students">Selected students</option></select>
       </div>
       <div className="mt-3 rounded border border-white/10 p-3">
-        <p className="text-sm font-semibold">Section targeting</p>
-        <p className="mb-2 text-xs text-white/70">Select any mix of chapters and individual sections. One assignment row will be created per resolved section.</p>
-        <div className="space-y-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <p className="text-sm font-semibold">Section targeting</p>
+            <p className="text-xs text-white/70">Select any mix of chapters and individual sections. One assignment row will be created per resolved section.</p>
+          </div>
+          <button type="button" className="rounded bg-cyan-600 px-3 py-1 text-sm" onClick={() => setMSelectorOpen((open) => !open)} aria-expanded={mSelectorOpen}>Choose chapters/sections</button>
+        </div>
+        {mSelectorOpen ? <div className="mt-3 max-h-96 space-y-2 overflow-y-auto rounded border border-white/10 bg-black/20 p-3">
           {CHAPTERS.map((chapter) => {
             const chapterSections = SECTIONS.filter((section) => section.chapterId === chapter.id);
             const chapterChecked = mSelectedChapterIds.includes(chapter.id);
-            return <details key={chapter.id} className="rounded border border-white/10 p-2">
-              <summary className="cursor-pointer list-none">
+            const chapterExpanded = mExpandedChapterIds.includes(chapter.id);
+            return <div key={chapter.id} className="rounded border border-white/10 p-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <label className="inline-flex items-center gap-2 text-sm">
-                  <input type="checkbox" checked={chapterChecked} onChange={() => {
-                    setMSelectedChapterIds((prev) => prev.includes(chapter.id) ? prev.filter((id) => id !== chapter.id) : [...prev, chapter.id]);
-                    setMSelectedSectionIds((prev) => {
-                      const next = new Set(prev);
-                      if (chapterChecked) chapterSections.forEach((section) => next.delete(section.id));
-                      else chapterSections.forEach((section) => next.add(section.id));
-                      return [...next];
-                    });
-                  }} />
+                  <input type="checkbox" checked={chapterChecked} onChange={() => toggleMSelectedChapter(chapter.id)} />
                   <span>{`Chapter ${chapter.number}: ${chapter.title}`}</span>
                 </label>
-              </summary>
-              <div className="mt-2 grid gap-1 md:grid-cols-2">
+                <button type="button" className="rounded bg-slate-700 px-2 py-0.5 text-xs" onClick={() => toggleMExpandedChapter(chapter.id)} aria-expanded={chapterExpanded}>{chapterExpanded ? 'Hide sections' : 'Show sections'}</button>
+              </div>
+              {chapterExpanded ? <div className="mt-2 grid gap-1 md:grid-cols-2">
                 {chapterSections.map((section) => <label key={section.id} className="inline-flex items-center gap-2 text-xs text-white/80">
-                  <input type="checkbox" checked={mSelectedSectionIds.includes(section.id)} onChange={() => setMSelectedSectionIds((prev) => prev.includes(section.id) ? prev.filter((id) => id !== section.id) : [...prev, section.id])} />
+                  <input type="checkbox" checked={mSelectedSectionIds.includes(section.id)} onChange={() => toggleMSelectedSection(section.id)} />
                   <span>{`Section ${section.sectionNumber}: ${section.title} (${section.id})`}</span>
                 </label>)}
-              </div>
-            </details>;
+              </div> : null}
+            </div>;
           })}
-        </div>
+        </div> : null}
         <p className="mt-3 text-xs text-cyan-200">Selected chapters: {mSelectedChapterIds.length} · Resolved sections: {mResolvedSectionIds.length}</p>
         <div className="mt-2 flex flex-wrap gap-1">{mSelectedChapterLabels.map((label) => <span key={label} className="rounded-full border border-indigo-300/40 bg-indigo-400/10 px-2 py-0.5 text-xs">{label}</span>)}</div>
-        <div className="mt-2 flex flex-wrap gap-1">{mResolvedSectionLabels.map((label) => <span key={label} className="rounded-full border border-cyan-300/40 bg-cyan-400/10 px-2 py-0.5 text-xs">{label}</span>)}</div>
+        <div className="mt-2 flex flex-wrap gap-1">{mSelectedSectionLabels.map((label) => <span key={label} className="rounded-full border border-cyan-300/40 bg-cyan-400/10 px-2 py-0.5 text-xs">{label}</span>)}</div>
       </div>
       {mTarget==='students' && mClassroomId ? <div className="mt-2 max-h-36 overflow-y-auto rounded border border-white/10 p-2">{(masterClassrooms.find((c)=>c.id===mClassroomId)?.members ?? []).map((m)=><label key={m.user_id} className="mr-3 inline-flex items-center gap-1 text-sm"><input type="checkbox" checked={mSelectedUsers.includes(m.user_id)} onChange={()=>setMSelectedUsers((prev)=>prev.includes(m.user_id)?prev.filter((id)=>id!==m.user_id):[...prev,m.user_id])} />{m.full_name ?? m.email}</label>)}</div>:null}
-      <button className="mt-2 rounded bg-cyan-600 px-3 py-1 text-sm" onClick={async()=>{try{const result = await createMasterAssignment({title:mTitle,description:mDescription,due_date:mDueDate,section_ids:mSelectedSectionIds,chapter_ids:mSelectedChapterIds,classroom_id:mClassroomId,target:mTarget,recipient_user_ids:mSelectedUsers}); await refreshMasterAssignmentPanels(); setMMsg(`Created ${result.created_count} assignment${result.created_count===1?'':'s'}.`);}catch(e){setMMsg(getErrorMessage(e,'Failed'));}}}>Create Assignment</button>
+      <button className="mt-2 rounded bg-cyan-600 px-3 py-1 text-sm" onClick={async()=>{try{const result = await createMasterAssignment({title:mTitle,description:mDescription,due_date:mDueDate,section_ids:mSelectedSectionIds,chapter_ids:mSelectedChapterIds,classroom_id:mClassroomId,target:mTarget,recipient_user_ids:mSelectedUsers}); await refreshMasterAssignmentPanels(); resetMasterAssignmentForm(); setMMsg(`Created ${result.created_count} assignment${result.created_count===1?'':'s'}.`);}catch(e){setMMsg(getErrorMessage(e,'Failed'));}}}>Create Assignment</button>
       <div className="mt-4 space-y-2">{mAssignments.map((a)=>{ const isEditing = mEditingAssignmentId === a.id; const isArchived = Boolean(a.archived_at); return <div key={a.id} className="rounded border border-white/10 p-2 text-sm"><div className="flex flex-wrap justify-between gap-2"><div><b>{a.title}</b> · {a.classroom_name ?? a.classroom_id} · {a.section_id} · {formatCalendarDate(a.due_date)} · {isArchived ? 'Archived' : 'Active'}</div><div className="flex gap-2">{isEditing ? <><button onClick={async()=>{ try { if (!mEditTitle.trim()) { setMMsg('Assignment title is required.'); return; } await updateMasterAssignment(a.id,{title:mEditTitle,description:mEditDescription,due_date:mEditDueDate || null}); cancelEditMasterAssignment(); await refreshMasterAssignmentPanels(); setMMsg('Assignment updated.'); } catch (e) { setMMsg(getErrorMessage(e, 'Failed to update assignment.')); } }} className="rounded bg-emerald-600 px-2">Save</button><button onClick={cancelEditMasterAssignment} className="rounded bg-slate-600 px-2">Cancel</button></> : <button onClick={()=>beginEditMasterAssignment(a)} className="rounded bg-indigo-600 px-2">Edit</button>}<button onClick={async()=>{ try { if (isArchived) { setMMsg('Assignment is already archived.'); return; } await archiveMasterAssignment(a.id); await refreshMasterAssignmentPanels(); setMMsg('Assignment archived.'); } catch (e) { setMMsg(getErrorMessage(e, 'Failed to archive assignment.')); } }} className="rounded bg-rose-600 px-2 disabled:opacity-60" disabled={isArchived}>{isArchived ? 'Archived' : 'Archive'}</button><button onClick={() => void loadMasterRecipients(a.id)} className="rounded bg-slate-600 px-2">View Recipients</button></div></div>{isEditing ? <div className="mt-2 grid gap-2 md:grid-cols-3"><input value={mEditTitle} onChange={(e)=>setMEditTitle(e.target.value)} placeholder="Assignment title" className="rounded bg-black/20 px-2 py-1" /><input value={mEditDescription} onChange={(e)=>setMEditDescription(e.target.value)} placeholder="Description" className="rounded bg-black/20 px-2 py-1" /><input type="date" value={mEditDueDate} onChange={(e)=>setMEditDueDate(e.target.value)} className="rounded bg-black/20 px-2 py-1" /></div> : null}</div>;})}</div>
       {mRecipientsLoading ? <p className="mt-3 text-sm text-white/70">Loading recipients…</p> : null}
       {mRecipientError ? <p className="mt-3 rounded border border-rose-400/30 bg-rose-500/10 p-2 text-sm text-rose-100">{mRecipientError}</p> : null}
