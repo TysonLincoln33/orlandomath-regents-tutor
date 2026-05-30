@@ -84,9 +84,6 @@ export default function TopNav() {
     };
   }, []);
 
-  useEffect(() => {
-    setMenuOpen(false);
-  }, [pathname]);
 
   const welcomeName = useMemo(() => {
     if (profile?.username?.trim()) return profile.username.trim();
@@ -152,9 +149,15 @@ export default function TopNav() {
                 </Link>
 
                 {isAuthenticated && !isTeacher && (
-                  <Link href="/join-class" className="om-navlink">
-                    Join Classroom
-                  </Link>
+                  <>
+                    <Link href="/my-classes" className="om-navlink">
+                      My Classes
+                    </Link>
+
+                    <Link href="/join-class" className="om-navlink">
+                      Join Classroom
+                    </Link>
+                  </>
                 )}
 
                 {isAuthenticated && isTeacher && (
@@ -254,13 +257,23 @@ export default function TopNav() {
               </Link>
 
               {isAuthenticated && !isTeacher && (
-                <Link
-                  href="/join-class"
-                  onClick={closeMenu}
-                  className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-900 hover:bg-slate-50"
-                >
-                  Join Classroom
-                </Link>
+                <>
+                  <Link
+                    href="/my-classes"
+                    onClick={closeMenu}
+                    className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-900 hover:bg-slate-50"
+                  >
+                    My Classes
+                  </Link>
+
+                  <Link
+                    href="/join-class"
+                    onClick={closeMenu}
+                    className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-900 hover:bg-slate-50"
+                  >
+                    Join Classroom
+                  </Link>
+                </>
               )}
 
               {isAuthenticated && isTeacher && (
