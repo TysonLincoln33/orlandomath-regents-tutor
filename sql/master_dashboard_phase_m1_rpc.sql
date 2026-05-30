@@ -146,10 +146,29 @@ as $$
     where qa.app_id = 'regents-algebra' and qa.course_id = 'algebra1'
     group by qa.user_id
   ),
+  algebra1_assignment_classrooms as (
+    select distinct assignment.classroom_id
+    from public.assignments assignment
+    where assignment.section_id ~ '^ch[0-9]+_s[0-9]+$'
+  ),
   users as (
-    select p.id as user_id
-    from public.profiles p
-    where p.role = 'student'
+    select ps.user_id
+    from progress_summary ps
+    union
+    select a.user_id
+    from attempt_summary a
+    union
+    select ar.user_id
+    from public.assignment_recipients ar
+    join public.assignments assignment
+      on assignment.id = ar.assignment_id
+     and assignment.classroom_id = ar.classroom_id
+    where assignment.section_id ~ '^ch[0-9]+_s[0-9]+$'
+    union
+    select cm.user_id
+    from public.classroom_members cm
+    join algebra1_assignment_classrooms a1c
+      on a1c.classroom_id = cm.classroom_id
   )
   select u.user_id, p.full_name, p.email, p.role,
     coalesce(ps.completion_percent, 0) as completion_percent,
@@ -163,5 +182,6 @@ as $$
   from users u
   join public.profiles p on p.id = u.user_id
   left join progress_summary ps on ps.user_id = u.user_id
-  left join attempt_summary a on a.user_id = u.user_id;
+  left join attempt_summary a on a.user_id = u.user_id
+  where p.role = 'student';
 $$;
