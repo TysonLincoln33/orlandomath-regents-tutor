@@ -233,21 +233,52 @@ CREATE OR REPLACE FUNCTION "public"."get_master_algebra1_user_progress_rows"() R
     where qa.app_id = 'regents-algebra' and qa.course_id = 'algebra1'
     group by qa.user_id
   ),
+  assignment_users as (
+    select distinct ar.user_id
+    from public.assignment_recipients ar
+    join public.assignments a
+      on a.id = ar.assignment_id
+     and a.classroom_id = ar.classroom_id
+    where a.app_id = 'regents-algebra'
+      and a.course_id = 'algebra1'
+  ),
+  classroom_users as (
+    select distinct cm.user_id
+    from public.classroom_members cm
+    join public.classrooms c on c.id = cm.classroom_id
+    where c.subject ilike 'Algebra 1'
+       or c.subject ilike 'Regents Algebra 1'
+       or exists (
+         select 1
+         from public.assignments a
+         where a.classroom_id = cm.classroom_id
+           and a.app_id = 'regents-algebra'
+           and a.course_id = 'algebra1'
+       )
+  ),
   users as (
     select user_id from progress_summary
     union
     select user_id from attempt_summary
+    union
+    select user_id from assignment_users
+    union
+    select user_id from classroom_users
   )
   select u.user_id, p.full_name, p.email, p.role,
     coalesce(ps.completion_percent, 0) as completion_percent,
     case when coalesce(a.attempts_count, 0) > 0 then round((a.correct_count::numeric / a.attempts_count) * 100)::int else 0 end as accuracy_percent,
     coalesce(a.attempts_count, 0) as attempts_count,
     coalesce(a.correct_count, 0) as correct_count,
-    greatest(coalesce(ps.progress_last_active, to_timestamp(0)), coalesce(a.attempt_last_active, to_timestamp(0))) as last_activity_at
+    (
+      select max(last_activity)
+      from (values (ps.progress_last_active), (a.attempt_last_active)) as activity(last_activity)
+    ) as last_activity_at
   from users u
   join public.profiles p on p.id = u.user_id
   left join progress_summary ps on ps.user_id = u.user_id
-  left join attempt_summary a on a.user_id = u.user_id;
+  left join attempt_summary a on a.user_id = u.user_id
+  where p.role = 'student';
 $$;
 
 
