@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import {
   getAdminOrgDashboard,
   type AdminDashboardAccessError,
+  type AdminDashboardActivity,
   type AdminDashboardAssignment,
   type AdminDashboardClassroom,
   type AdminDashboardStudent,
@@ -140,17 +141,81 @@ function AssignmentsTable({ assignments }: { assignments: AdminDashboardAssignme
   );
 }
 
+function getActivityClassName(activity: AdminDashboardActivity) {
+  if (activity.type === "attempt") {
+    return activity.correct
+      ? "border-emerald-200 bg-emerald-50 text-emerald-950"
+      : "border-rose-200 bg-rose-50 text-rose-950";
+  }
+
+  if (activity.type === "progress") {
+    return "border-blue-200 bg-blue-50 text-blue-950";
+  }
+
+  return "border-slate-200 bg-slate-50 text-slate-950";
+}
+
+function ActivityList({ activities, showStudent = false }: { activities: AdminDashboardActivity[]; showStudent?: boolean }) {
+  if (activities.length === 0) {
+    return <p className="mt-2 text-sm text-slate-600">No recent activity found.</p>;
+  }
+
+  return (
+    <ul className="mt-3 max-h-[28rem] space-y-2 overflow-y-auto pr-2 text-sm">
+      {activities.map((activity, index) => (
+        <li key={`${activity.type}-${activity.studentId ?? "student"}-${activity.label}-${activity.occurredAt ?? index}`} className={`rounded-xl border p-3 ${getActivityClassName(activity)}`}>
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div>
+              {showStudent ? <p className="text-xs font-bold uppercase tracking-wide opacity-70">{activity.studentName || activity.studentEmail || "Student"}</p> : null}
+              <p className="font-semibold">{activity.label}</p>
+            </div>
+            <span className="rounded-full bg-white/70 px-2 py-0.5 text-xs font-bold uppercase tracking-wide">{activity.type}</span>
+          </div>
+          <p className="mt-1">{activity.detail}</p>
+          <p className="mt-1 text-xs opacity-70">{formatDateTime(activity.occurredAt)}</p>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function AttemptsList({ attempts }: { attempts: AdminDashboardStudentDetail["recentQuestionAttempts"] }) {
+  if (attempts.length === 0) {
+    return <p className="mt-2 text-sm text-slate-600">No recent attempts found.</p>;
+  }
+
+  return (
+    <ul className="mt-3 max-h-80 space-y-2 overflow-y-auto pr-2 text-sm text-slate-700">
+      {attempts.map((attempt, index) => (
+        <li key={`${attempt.questionId ?? "question"}-${attempt.attemptedAt ?? index}`} className={`rounded-xl border p-3 ${attempt.correct ? "border-emerald-200 bg-emerald-50" : "border-rose-200 bg-rose-50"}`}>
+          <p className={`font-semibold ${attempt.correct ? "text-emerald-950" : "text-rose-950"}`}>{attempt.correct ? "Correct" : "Incorrect"} · {attempt.sectionTitle}</p>
+          <p className="text-xs text-slate-500">{attempt.questionId ? `Question ${attempt.questionId} · ` : ""}{formatDateTime(attempt.attemptedAt)}</p>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function WholeSchoolActivityPanel({ activities }: { activities: AdminDashboardActivity[] }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <p className="text-sm font-bold uppercase tracking-wide text-blue-700">Whole-school activity</p>
+      <h3 className="mt-1 text-2xl font-extrabold text-slate-950">Recent Regents Algebra 1 activity</h3>
+      <p className="mt-2 text-sm text-slate-600">Select a student Details button to view a single-student read-only detail panel.</p>
+      <ActivityList activities={activities} showStudent />
+    </div>
+  );
+}
+
 function StudentDetailPanel({ detail }: { detail: AdminDashboardStudentDetail | null }) {
-  if (!detail) return <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-5 text-sm text-slate-600">Select a student to view read-only classroom, assignment, progress, and recent attempt details.</div>;
+  if (!detail) return null;
   return (
     <div className="space-y-5 rounded-2xl border border-blue-100 bg-blue-50/60 p-5">
       <div><p className="text-sm font-bold uppercase tracking-wide text-blue-700">Student detail</p><h3 className="mt-1 text-2xl font-extrabold text-slate-950">{displayName({ fullName: detail.fullName, email: detail.email })}</h3><p className="text-sm text-slate-600">{detail.email ?? "No email"}</p></div>
-      <div className="grid gap-3 md:grid-cols-4"><DashboardCard label="Assigned work" value={detail.assignedWorkCount} /><DashboardCard label="Completion" value={formatPercent(detail.overallCompletion)} /><DashboardCard label="Accuracy" value={formatPercent(detail.overallAccuracy)} /><DashboardCard label="Attempts" value={detail.totalQuestionAttempts} help={`${detail.correctAttempts} correct · ${detail.incorrectAttempts} incorrect`} /></div>
-      <div className="grid gap-5 lg:grid-cols-2">
-        <div className="rounded-2xl bg-white p-4 shadow-sm"><h4 className="font-bold text-slate-950">Classrooms</h4>{detail.classrooms.length === 0 ? <p className="mt-2 text-sm text-slate-600">No classrooms found.</p> : <ul className="mt-3 space-y-2 text-sm text-slate-700">{detail.classrooms.map((classroom) => <li key={classroom.id} className="rounded-xl border border-slate-200 p-3"><p className="font-semibold text-slate-950">{classroom.name}</p><p className="text-xs text-slate-500">{classroom.teacherName || classroom.teacherEmail || "Unknown teacher"}</p></li>)}</ul>}</div>
-        <div className="rounded-2xl bg-white p-4 shadow-sm"><h4 className="font-bold text-slate-950">Recent question attempts</h4>{detail.recentQuestionAttempts.length === 0 ? <p className="mt-2 text-sm text-slate-600">No recent attempts found.</p> : <ul className="mt-3 space-y-2 text-sm text-slate-700">{detail.recentQuestionAttempts.map((attempt, index) => <li key={`${attempt.questionId ?? "question"}-${attempt.attemptedAt ?? index}`} className="rounded-xl border border-slate-200 p-3"><p className="font-semibold text-slate-950">{attempt.correct ? "Correct" : "Incorrect"} · {attempt.sectionTitle}</p><p className="text-xs text-slate-500">{attempt.questionId ? `Question ${attempt.questionId} · ` : ""}{formatDateTime(attempt.attemptedAt)}</p></li>)}</ul>}</div>
-      </div>
-      <div className="rounded-2xl bg-white p-4 shadow-sm"><h4 className="font-bold text-slate-950">Recent activity</h4>{detail.recentActivity.length === 0 ? <p className="mt-2 text-sm text-slate-600">No recent activity found.</p> : <ul className="mt-3 space-y-2 text-sm text-slate-700">{detail.recentActivity.map((activity, index) => <li key={`${activity.type}-${activity.label}-${activity.occurredAt ?? index}`} className="rounded-xl border border-slate-200 p-3"><p className="font-semibold text-slate-950">{activity.label}</p><p className="text-xs uppercase tracking-wide text-slate-500">{activity.type}</p><p className="text-sm text-slate-700">{activity.detail}</p><p className="text-xs text-slate-500">{formatDateTime(activity.occurredAt)}</p></li>)}</ul>}</div>
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4"><DashboardCard label="Assigned work" value={detail.assignedWorkCount} /><DashboardCard label="Completion" value={formatPercent(detail.overallCompletion)} /><DashboardCard label="Accuracy" value={formatPercent(detail.overallAccuracy)} /><DashboardCard label="Attempts" value={detail.totalQuestionAttempts} help={`${detail.correctAttempts} correct · ${detail.incorrectAttempts} incorrect`} /></div>
+      <div className="rounded-2xl bg-white p-4 shadow-sm"><h4 className="font-bold text-slate-950">Classrooms</h4>{detail.classrooms.length === 0 ? <p className="mt-2 text-sm text-slate-600">No classrooms found.</p> : <ul className="mt-3 max-h-52 space-y-2 overflow-y-auto pr-2 text-sm text-slate-700">{detail.classrooms.map((classroom) => <li key={classroom.id} className="rounded-xl border border-slate-200 p-3"><p className="font-semibold text-slate-950">{classroom.name}</p><p className="text-xs text-slate-500">{classroom.teacherName || classroom.teacherEmail || "Unknown teacher"}</p></li>)}</ul>}</div>
+      <div className="rounded-2xl bg-white p-4 shadow-sm"><h4 className="font-bold text-slate-950">Recent Attempts</h4><AttemptsList attempts={detail.recentQuestionAttempts} /></div>
+      <div className="rounded-2xl bg-white p-4 shadow-sm"><h4 className="font-bold text-slate-950">Recent Activity</h4><ActivityList activities={detail.recentActivity} /></div>
     </div>
   );
 }
@@ -190,8 +255,8 @@ export default function AdminDashboardPage() {
   return (
     <main className="mx-auto min-h-[70vh] max-w-7xl px-4 py-10">
       <div className="rounded-3xl border border-blue-100 bg-white p-8 shadow-sm"><p className="text-sm font-semibold uppercase tracking-wide text-blue-700">Administrator Dashboard</p><h1 className="mt-2 text-4xl font-extrabold text-slate-950">Organization overview</h1><p className="mt-4 max-w-3xl text-slate-700">{dashboard.scope.label}. This read-only dashboard summarizes Regents Algebra 1 teachers, students, classrooms, assignments, and progress available in your administrator scope.</p></div>
-      <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4"><DashboardCard label="Organization" value={dashboard.scope.domain ?? "Global"} help={dashboard.scope.type === "master_global" ? "Master global admin view" : "Email-domain scoped"} /><DashboardCard label="Total teachers" value={dashboard.summary.totalTeachers} /><DashboardCard label="Total students" value={dashboard.summary.totalStudents} /><DashboardCard label="Total classrooms" value={dashboard.summary.totalClassrooms} /><DashboardCard label="Active grouped assignments" value={dashboard.summary.activeAssignments} /><DashboardCard label="Average completion" value={formatPercent(dashboard.summary.averageCompletion)} help="From Algebra 1 progress" /><DashboardCard label="Average accuracy" value={formatPercent(dashboard.summary.averageAccuracy)} help="From question attempts where available" /></div>
-      <div className="mt-8 space-y-8"><DashboardSection title="Teachers"><TeachersTable teachers={dashboard.teachers} /></DashboardSection><DashboardSection title="Students"><StudentsTable students={dashboard.students} selectedStudentId={selectedStudentId} onSelectStudent={setSelectedStudentId} /><div className="mt-5"><StudentDetailPanel detail={selectedStudentDetail} /></div></DashboardSection><DashboardSection title="Classrooms"><ClassroomsTable classrooms={dashboard.classrooms} /></DashboardSection><DashboardSection title="Assignments"><AssignmentsTable assignments={dashboard.assignments} /></DashboardSection></div>
+      <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4"><DashboardCard label="Organization" value={dashboard.scope.domain ?? "Global"} help={dashboard.scope.type === "master_global" ? "Master global admin view" : "Email-domain scoped"} /><DashboardCard label="Total teachers" value={dashboard.summary.totalTeachers} /><DashboardCard label="Total students" value={dashboard.summary.totalStudents} /><DashboardCard label="Total classrooms" value={dashboard.summary.totalClassrooms} /><DashboardCard label="Grouped assignments" value={dashboard.summary.totalGroupedAssignments} help={`${dashboard.summary.activeAssignments} active · ${dashboard.summary.archivedAssignments} archived`} /><DashboardCard label="Average completion" value={formatPercent(dashboard.summary.averageCompletion)} help="From Algebra 1 progress" /><DashboardCard label="Average accuracy" value={formatPercent(dashboard.summary.averageAccuracy)} help="From question attempts where available" /></div>
+      <div className="mt-8 space-y-8"><DashboardSection title="Teachers"><TeachersTable teachers={dashboard.teachers} /></DashboardSection><DashboardSection title="Students"><div className="grid gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(24rem,0.8fr)]"><div><StudentsTable students={dashboard.students} selectedStudentId={selectedStudentId} onSelectStudent={setSelectedStudentId} /></div><div>{selectedStudentDetail ? <StudentDetailPanel detail={selectedStudentDetail} /> : <WholeSchoolActivityPanel activities={dashboard.recentActivity} />}</div></div></DashboardSection><DashboardSection title="Classrooms"><ClassroomsTable classrooms={dashboard.classrooms} /></DashboardSection><DashboardSection title="Assignments"><AssignmentsTable assignments={dashboard.assignments} /></DashboardSection></div>
     </main>
   );
 }

@@ -12,6 +12,8 @@ export type AdminDashboardSummary = {
   totalStudents: number;
   totalClassrooms: number;
   activeAssignments: number;
+  archivedAssignments: number;
+  totalGroupedAssignments: number;
   averageCompletion: number | null;
   averageAccuracy: number | null;
 };
@@ -84,6 +86,10 @@ export type AdminDashboardActivity = {
   label: string;
   detail: string;
   occurredAt: string | null;
+  studentId?: string;
+  studentName?: string | null;
+  studentEmail?: string | null;
+  correct?: boolean | null;
 };
 
 export type AdminDashboardStudentDetail = {
@@ -109,6 +115,7 @@ export type AdminOrgDashboard = {
   classrooms: AdminDashboardClassroom[];
   assignments: AdminDashboardAssignment[];
   studentDetails: Record<string, AdminDashboardStudentDetail>;
+  recentActivity: AdminDashboardActivity[];
 };
 
 export type AdminDashboardAccessErrorCode =
