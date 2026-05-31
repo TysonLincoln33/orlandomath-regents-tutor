@@ -11,7 +11,9 @@ export default function SignupForm() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [accountType, setAccountType] = useState<"student" | "teacher">("student");
+  const [accountType, setAccountType] = useState<
+    "student" | "teacher" | "admin"
+  >("student");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -59,6 +61,10 @@ export default function SignupForm() {
         if (accountType === "teacher") {
           setSuccess(
             "Teacher signup submitted. Your account is pending approval. Redirecting to login..."
+          );
+        } else if (accountType === "admin") {
+          setSuccess(
+            "Administrator signup submitted. Your account is pending approval. Redirecting to login..."
           );
         } else {
           setSuccess("Account created successfully. Redirecting to login...");
@@ -150,7 +156,7 @@ export default function SignupForm() {
           Account Type
         </label>
 
-        <div className="flex gap-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
           <label className="flex items-center gap-2 text-sm text-black">
             <input
               type="radio"
@@ -171,6 +177,17 @@ export default function SignupForm() {
               onChange={() => setAccountType("teacher")}
             />
             Teacher (requires approval)
+          </label>
+
+          <label className="flex items-center gap-2 text-sm text-black">
+            <input
+              type="radio"
+              name="accountType"
+              value="admin"
+              checked={accountType === "admin"}
+              onChange={() => setAccountType("admin")}
+            />
+            Administrator (requires approval)
           </label>
         </div>
       </div>

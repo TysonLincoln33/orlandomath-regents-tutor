@@ -6,13 +6,20 @@ import { useEffect, useMemo, useState } from 'react';
 import BookTutoringCTA from '@/components/BookTutoringCTA';
 import SaveProgressModal from '@/components/SaveProgressModal';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
-import { isTeacherLikeRole, isMasterRole } from '@/lib/auth/roles';
+import {
+  canAccessAdminRoute,
+  isAdminRole,
+  isMasterRole,
+  isTeacherLikeRole,
+} from '@/lib/auth/roles';
 
 type NavProfile = {
   username: string | null;
   full_name: string | null;
   email: string | null;
   role: string | null;
+  requested_role: string | null;
+  approval_status: string | null;
 };
 
 export default function TopNav() {
@@ -28,6 +35,11 @@ export default function TopNav() {
   const showSave = pathname !== '/resume' && !pathname.startsWith('/resume/');
   const isTeacher = isTeacherLikeRole(profile?.role);
   const isMaster = isMasterRole(profile?.role);
+  const isAdmin = isAdminRole(profile?.role);
+  const canAccessAdmin = canAccessAdminRoute(
+    profile?.role,
+    profile?.approval_status,
+  );
 
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
@@ -49,7 +61,9 @@ export default function TopNav() {
 
         const { data } = await supabase
           .from('profiles')
-          .select('username, full_name, email, role')
+          .select(
+            'username, full_name, email, role, requested_role, approval_status',
+          )
           .eq('id', user.id)
           .maybeSingle();
 
@@ -63,6 +77,8 @@ export default function TopNav() {
             null,
           email: profileData?.email ?? user.email ?? null,
           role: profileData?.role ?? null,
+          requested_role: profileData?.requested_role ?? null,
+          approval_status: profileData?.approval_status ?? null,
         });
       } catch (err) {
         console.warn('No active auth session in TopNav:', err);
@@ -148,7 +164,7 @@ export default function TopNav() {
                   Dashboard
                 </Link>
 
-                {isAuthenticated && !isTeacher && (
+                {isAuthenticated && !isTeacher && !isAdmin && (
                   <>
                     <Link href="/my-classes" className="om-navlink">
                       My Classes
@@ -169,6 +185,12 @@ export default function TopNav() {
                 {isAuthenticated && isMaster && (
                   <Link href="/master" className="om-navlink">
                     Master Dashboard
+                  </Link>
+                )}
+
+                {isAuthenticated && canAccessAdmin && (
+                  <Link href="/admin" className="om-navlink">
+                    Administrator
                   </Link>
                 )}
 
@@ -256,7 +278,7 @@ export default function TopNav() {
                 Dashboard
               </Link>
 
-              {isAuthenticated && !isTeacher && (
+              {isAuthenticated && !isTeacher && !isAdmin && (
                 <>
                   <Link
                     href="/my-classes"
@@ -293,6 +315,16 @@ export default function TopNav() {
                   className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-900 hover:bg-slate-50"
                 >
                   Master Dashboard
+                </Link>
+              )}
+
+              {isAuthenticated && canAccessAdmin && (
+                <Link
+                  href="/admin"
+                  onClick={closeMenu}
+                  className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-900 hover:bg-slate-50"
+                >
+                  Administrator
                 </Link>
               )}
 
