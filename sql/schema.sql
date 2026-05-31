@@ -594,14 +594,50 @@ $$;
 ALTER FUNCTION "public"."get_teacher_classroom_student_progress"("p_classroom_id" "uuid", "p_student_user_id" "uuid") OWNER TO "postgres";
 
 
+CREATE OR REPLACE FUNCTION "public"."normalize_profile_signup_role"() RETURNS "trigger"
+    LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
+    AS $$
+begin
+  if tg_op = 'INSERT' then
+    if new.email is not null and position('@' in new.email) > 0 then
+      new.email_domain := nullif(lower(split_part(new.email, '@', 2)), '');
+    end if;
+  elsif new.email_domain is null or new.email is distinct from old.email then
+    if new.email is not null and position('@' in new.email) > 0 then
+      new.email_domain := nullif(lower(split_part(new.email, '@', 2)), '');
+    else
+      new.email_domain := null;
+    end if;
+  end if;
+
+  if tg_op = 'INSERT' and new.requested_role in ('teacher', 'admin') then
+    new.role := 'student';
+    new.approval_status := 'pending';
+  end if;
+
+  return new;
+end;
+$$;
+
+
+ALTER FUNCTION "public"."normalize_profile_signup_role"() OWNER TO "postgres";
+
+
 CREATE OR REPLACE FUNCTION "public"."handle_new_user"() RETURNS "trigger"
     LANGUAGE "plpgsql" SECURITY DEFINER
+    SET "search_path" TO 'public'
     AS $$
 declare
   requested_role_value text;
   email_domain_value text;
 begin
   requested_role_value := coalesce(new.raw_user_meta_data->>'requested_role', 'student');
+
+  if requested_role_value not in ('student', 'teacher', 'admin') then
+    requested_role_value := 'student';
+  end if;
+
   email_domain_value := lower(split_part(new.email, '@', 2));
 
   insert into public.profiles (
@@ -1338,6 +1374,14 @@ CREATE INDEX "progress_saves_email_idx" ON "public"."progress_saves" USING "btre
 
 
 
+CREATE OR REPLACE TRIGGER "on_auth_user_created" AFTER INSERT ON "auth"."users" FOR EACH ROW EXECUTE FUNCTION "public"."handle_new_user"();
+
+
+
+CREATE OR REPLACE TRIGGER "trg_profiles_normalize_signup_role" BEFORE INSERT OR UPDATE OF "email", "requested_role", "role", "approval_status" ON "public"."profiles" FOR EACH ROW EXECUTE FUNCTION "public"."normalize_profile_signup_role"();
+
+
+
 CREATE OR REPLACE TRIGGER "trg_classrooms_set_updated_at" BEFORE UPDATE ON "public"."classrooms" FOR EACH ROW EXECUTE FUNCTION "public"."set_updated_at"();
 
 
@@ -1824,6 +1868,11 @@ GRANT ALL ON FUNCTION "public"."handle_new_user"() TO "authenticated";
 GRANT ALL ON FUNCTION "public"."handle_new_user"() TO "service_role";
 
 
+GRANT ALL ON FUNCTION "public"."normalize_profile_signup_role"() TO "anon";
+GRANT ALL ON FUNCTION "public"."normalize_profile_signup_role"() TO "authenticated";
+GRANT ALL ON FUNCTION "public"."normalize_profile_signup_role"() TO "service_role";
+
+
 
 GRANT ALL ON FUNCTION "public"."join_classroom_by_code"("p_class_code" "text") TO "anon";
 GRANT ALL ON FUNCTION "public"."join_classroom_by_code"("p_class_code" "text") TO "authenticated";
@@ -1897,6 +1946,8 @@ GRANT ALL ON TABLE "public"."daily_lessons" TO "service_role";
 GRANT ALL ON TABLE "public"."profiles" TO "anon";
 GRANT ALL ON TABLE "public"."profiles" TO "authenticated";
 GRANT ALL ON TABLE "public"."profiles" TO "service_role";
+REVOKE UPDATE ON TABLE "public"."profiles" FROM "anon", "authenticated";
+GRANT UPDATE("username", "full_name", "is_independent") ON TABLE "public"."profiles" TO "authenticated";
 
 
 
