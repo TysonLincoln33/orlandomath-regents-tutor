@@ -52,19 +52,53 @@ export type AdminDashboardClassroom = {
 
 export type AdminDashboardAssignment = {
   id: string;
+  assignmentIds: string[];
   title: string;
+  description: string | null;
   teacherId: string;
   teacherName: string | null;
   teacherEmail: string | null;
   classroomId: string;
   classroomName: string | null;
   dueDate: string | null;
+  sectionIds: (string | null)[];
+  sectionCount: number;
   recipientCount: number;
   completedCount: number;
   incompleteCount: number;
   excusedCount: number;
   averageProgress: number | null;
   archivedAt: string | null;
+};
+
+export type AdminDashboardRecentAttempt = {
+  questionId: string | null;
+  sectionId: string | null;
+  sectionTitle: string;
+  correct: boolean | null;
+  attemptedAt: string | null;
+};
+
+export type AdminDashboardActivity = {
+  type: "assignment" | "progress" | "attempt";
+  label: string;
+  detail: string;
+  occurredAt: string | null;
+};
+
+export type AdminDashboardStudentDetail = {
+  studentId: string;
+  fullName: string | null;
+  email: string | null;
+  classrooms: Array<{ id: string; name: string; teacherName: string | null; teacherEmail: string | null }>;
+  assignedWorkCount: number;
+  overallCompletion: number | null;
+  overallAccuracy: number | null;
+  totalQuestionAttempts: number;
+  correctAttempts: number;
+  incorrectAttempts: number;
+  recentActivity: AdminDashboardActivity[];
+  recentQuestionAttempts: AdminDashboardRecentAttempt[];
 };
 
 export type AdminOrgDashboard = {
@@ -74,6 +108,7 @@ export type AdminOrgDashboard = {
   students: AdminDashboardStudent[];
   classrooms: AdminDashboardClassroom[];
   assignments: AdminDashboardAssignment[];
+  studentDetails: Record<string, AdminDashboardStudentDetail>;
 };
 
 export type AdminDashboardAccessErrorCode =
