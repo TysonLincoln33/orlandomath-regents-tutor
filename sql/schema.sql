@@ -599,8 +599,10 @@ CREATE OR REPLACE FUNCTION "public"."handle_new_user"() RETURNS "trigger"
     AS $$
 declare
   requested_role_value text;
+  email_domain_value text;
 begin
   requested_role_value := coalesce(new.raw_user_meta_data->>'requested_role', 'student');
+  email_domain_value := lower(split_part(new.email, '@', 2));
 
   insert into public.profiles (
     id,
@@ -609,6 +611,7 @@ begin
     role,
     requested_role,
     approval_status,
+    email_domain,
     is_independent
   )
   values (
@@ -616,14 +619,15 @@ begin
     new.email,
     coalesce(new.raw_user_meta_data->>'full_name', ''),
     case
-      when requested_role_value = 'teacher' then 'student'
+      when requested_role_value in ('teacher', 'admin') then 'student'
       else requested_role_value
     end,
     requested_role_value,
     case
-      when requested_role_value = 'teacher' then 'pending'
+      when requested_role_value in ('teacher', 'admin') then 'pending'
       else 'approved'
     end,
+    nullif(email_domain_value, ''),
     true
   )
   on conflict (id) do nothing;
@@ -968,6 +972,7 @@ CREATE TABLE IF NOT EXISTS "public"."profiles" (
     "updated_at" timestamp with time zone DEFAULT "now"() NOT NULL,
     "requested_role" "text" DEFAULT 'student'::"text" NOT NULL,
     "approval_status" "text" DEFAULT 'approved'::"text" NOT NULL,
+    "email_domain" "text",
     CONSTRAINT "profiles_approval_status_check" CHECK (("approval_status" = ANY (ARRAY['pending'::"text", 'approved'::"text", 'denied'::"text"]))),
     CONSTRAINT "profiles_requested_role_check" CHECK (("requested_role" = ANY (ARRAY['student'::"text", 'teacher'::"text", 'admin'::"text"]))),
     CONSTRAINT "profiles_role_check" CHECK (("role" = ANY (ARRAY['student'::"text", 'teacher'::"text", 'admin'::"text", 'master'::"text"])))

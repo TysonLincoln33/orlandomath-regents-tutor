@@ -36,9 +36,8 @@ export async function proxy(req: NextRequest) {
 
   const path = req.nextUrl.pathname
 
-  // Temporary test fix:
-  // Remove '/teacher' from protectedRoutes so teacher pages are not
-  // blocked by the server-side session check while we confirm the auth mismatch.
+  // Keep coarse session protection here; page-level role checks handle
+  // administrator approval and authorization for /admin.
   const protectedRoutes = ['/student', '/admin']
 
   const isProtected = protectedRoutes.some((route) => path.startsWith(route))
