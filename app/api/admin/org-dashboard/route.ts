@@ -504,7 +504,6 @@ function buildDashboard({
         averageAccuracy: averageForStudents(classroomStudentIds, "accuracy"),
       };
     })
-    .filter((classroom) => classroom.studentCount > 0 || classroom.assignmentCount > 0)
     .sort((a, b) => a.name.localeCompare(b.name));
 
   const assignmentGroups = new Map<string, AssignmentRow[]>();

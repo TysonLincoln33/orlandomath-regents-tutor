@@ -93,13 +93,13 @@ function StudentsTable({ students, selectedStudentId, onSelectStudent }: { stude
     <div className="overflow-x-auto">
       <table className="min-w-full divide-y divide-slate-200 text-sm">
         <thead className="bg-slate-50 text-left text-xs font-bold uppercase tracking-wide text-slate-500">
-          <tr><th className="px-4 py-3">Student</th><th className="px-4 py-3">Classrooms</th><th className="px-4 py-3">Assigned work</th><th className="px-4 py-3">Completion</th><th className="px-4 py-3">Accuracy</th><th className="px-4 py-3">Last activity</th></tr>
+          <tr><th className="px-4 py-3">Student</th><th className="px-4 py-3">Classrooms</th><th className="px-4 py-3">Assigned work</th><th className="px-4 py-3">Completion</th><th className="px-4 py-3">Accuracy</th><th className="px-4 py-3">Last activity</th><th className="px-4 py-3">Details</th></tr>
         </thead>
         <tbody className="divide-y divide-slate-100 bg-white text-slate-700">
           {students.map((student) => (
             <tr key={student.id} className={selectedStudentId === student.id ? "bg-blue-50" : undefined}>
-              <td className="px-4 py-3"><button type="button" onClick={() => onSelectStudent(student.id)} className="text-left font-semibold text-blue-700 underline-offset-2 hover:underline">{displayName(student)}</button><p className="text-xs text-slate-500">{student.email ?? "No email"}</p></td>
-              <td className="px-4 py-3">{student.classroomCount}</td><td className="px-4 py-3">{student.assignedWorkCount}</td><td className="px-4 py-3">{formatPercent(student.completionPercent)}</td><td className="px-4 py-3">{formatPercent(student.accuracyPercent)}</td><td className="px-4 py-3">{formatDateTime(student.lastActivityAt)}</td>
+              <td className="px-4 py-3"><p className="font-semibold text-slate-950">{displayName(student)}</p><p className="text-xs text-slate-500">{student.email ?? "No email"}</p></td>
+              <td className="px-4 py-3">{student.classroomCount}</td><td className="px-4 py-3">{student.assignedWorkCount}</td><td className="px-4 py-3">{formatPercent(student.completionPercent)}</td><td className="px-4 py-3">{formatPercent(student.accuracyPercent)}</td><td className="px-4 py-3">{formatDateTime(student.lastActivityAt)}</td><td className="px-4 py-3"><button type="button" onClick={() => onSelectStudent(student.id)} className="rounded-full bg-blue-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-blue-700">Details</button></td>
             </tr>
           ))}
         </tbody>
