@@ -36,9 +36,11 @@ export async function proxy(req: NextRequest) {
 
   const path = req.nextUrl.pathname
 
-  // Keep coarse session protection here; page-level role checks handle
-  // administrator approval and authorization for /admin.
-  const protectedRoutes = ['/student', '/admin']
+  // Keep coarse session protection here for cookie-backed areas. The /admin
+  // dashboard uses the browser Supabase session and bearer-authenticated API
+  // checks, so protecting it here would redirect valid localStorage-backed
+  // sessions before the page can verify admin access.
+  const protectedRoutes = ['/student']
 
   const isProtected = protectedRoutes.some((route) => path.startsWith(route))
 
@@ -57,7 +59,6 @@ export const config = {
   matcher: [
     '/student/:path*',
     '/teacher/:path*',
-    '/admin/:path*',
     '/login',
     '/signup',
   ],
