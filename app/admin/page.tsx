@@ -88,26 +88,43 @@ function TeachersTable({ teachers }: { teachers: AdminDashboardTeacher[] }) {
   );
 }
 
-function StudentsTable({ students, selectedStudentId, onSelectStudent }: { students: AdminDashboardStudent[]; selectedStudentId: string | null; onSelectStudent: (studentId: string) => void }) {
+function StudentsList({ students, selectedStudentId, onSelectStudent }: { students: AdminDashboardStudent[]; selectedStudentId: string | null; onSelectStudent: (studentId: string) => void }) {
   if (students.length === 0) return <EmptyTableMessage>No Regents Algebra 1 students found for this administrator scope.</EmptyTableMessage>;
+
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-slate-200 text-sm">
-        <thead className="bg-slate-50 text-left text-xs font-bold uppercase tracking-wide text-slate-500">
-          <tr><th className="px-4 py-3">Student</th><th className="px-4 py-3">Classrooms</th><th className="px-4 py-3">Assigned work</th><th className="px-4 py-3">Completion</th><th className="px-4 py-3">Accuracy</th><th className="px-4 py-3">Last activity</th><th className="px-4 py-3">Details</th></tr>
-        </thead>
-        <tbody className="divide-y divide-slate-100 bg-white text-slate-700">
-          {students.map((student) => (
-            <tr key={student.id} className={selectedStudentId === student.id ? "bg-blue-50" : undefined}>
-              <td className="px-4 py-3"><p className="font-semibold text-slate-950">{displayName(student)}</p><p className="text-xs text-slate-500">{student.email ?? "No email"}</p></td>
-              <td className="px-4 py-3">{student.classroomCount}</td><td className="px-4 py-3">{student.assignedWorkCount}</td><td className="px-4 py-3">{formatPercent(student.completionPercent)}</td><td className="px-4 py-3">{formatPercent(student.accuracyPercent)}</td><td className="px-4 py-3">{formatDateTime(student.lastActivityAt)}</td><td className="px-4 py-3"><button type="button" onClick={() => onSelectStudent(student.id)} className="rounded-full bg-blue-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-blue-700">Details</button></td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="max-h-[42rem] space-y-3 overflow-y-auto pr-2">
+      {students.map((student) => {
+        const selected = selectedStudentId === student.id;
+
+        return (
+          <article key={student.id} className={`rounded-2xl border p-4 shadow-sm ${selected ? "border-blue-300 bg-blue-50" : "border-slate-200 bg-white"}`}>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h3 className="truncate font-bold text-slate-950">{displayName(student)}</h3>
+                <p className="truncate text-xs text-slate-500">{student.email ?? "No email"}</p>
+              </div>
+              <button type="button" onClick={() => onSelectStudent(student.id)} className="shrink-0 rounded-full bg-blue-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-blue-700">Details</button>
+            </div>
+
+            <dl className="mt-3 grid grid-cols-2 gap-2 text-xs text-slate-600">
+              <div className="rounded-xl bg-slate-50 p-2">
+                <dt className="font-semibold text-slate-500">Completion</dt>
+                <dd className="mt-1 font-bold text-slate-950">{formatPercent(student.completionPercent)}</dd>
+              </div>
+              <div className="rounded-xl bg-slate-50 p-2">
+                <dt className="font-semibold text-slate-500">Accuracy</dt>
+                <dd className="mt-1 font-bold text-slate-950">{formatPercent(student.accuracyPercent)}</dd>
+              </div>
+            </dl>
+
+            <p className="mt-3 text-xs text-slate-500">Last activity: {formatDateTime(student.lastActivityAt)}</p>
+          </article>
+        );
+      })}
     </div>
   );
 }
+
 
 function ClassroomsTable({ classrooms }: { classrooms: AdminDashboardClassroom[] }) {
   if (classrooms.length === 0) return <EmptyTableMessage>No Regents Algebra 1 classrooms found for this administrator scope.</EmptyTableMessage>;
@@ -256,7 +273,7 @@ export default function AdminDashboardPage() {
     <main className="mx-auto min-h-[70vh] max-w-7xl px-4 py-10">
       <div className="rounded-3xl border border-blue-100 bg-white p-8 shadow-sm"><p className="text-sm font-semibold uppercase tracking-wide text-blue-700">Administrator Dashboard</p><h1 className="mt-2 text-4xl font-extrabold text-slate-950">Organization overview</h1><p className="mt-4 max-w-3xl text-slate-700">{dashboard.scope.label}. This read-only dashboard summarizes Regents Algebra 1 teachers, students, classrooms, assignments, and progress available in your administrator scope.</p></div>
       <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4"><DashboardCard label="Organization" value={dashboard.scope.domain ?? "Global"} help={dashboard.scope.type === "master_global" ? "Master global admin view" : "Email-domain scoped"} /><DashboardCard label="Total teachers" value={dashboard.summary.totalTeachers} /><DashboardCard label="Total students" value={dashboard.summary.totalStudents} /><DashboardCard label="Total classrooms" value={dashboard.summary.totalClassrooms} /><DashboardCard label="Grouped assignments" value={dashboard.summary.totalGroupedAssignments} help={`${dashboard.summary.activeAssignments} active · ${dashboard.summary.archivedAssignments} archived`} /><DashboardCard label="Average completion" value={formatPercent(dashboard.summary.averageCompletion)} help="From Algebra 1 progress" /><DashboardCard label="Average accuracy" value={formatPercent(dashboard.summary.averageAccuracy)} help="From question attempts where available" /></div>
-      <div className="mt-8 space-y-8"><DashboardSection title="Teachers"><TeachersTable teachers={dashboard.teachers} /></DashboardSection><DashboardSection title="Students"><div className="grid gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(24rem,0.8fr)]"><div><StudentsTable students={dashboard.students} selectedStudentId={selectedStudentId} onSelectStudent={setSelectedStudentId} /></div><div>{selectedStudentDetail ? <StudentDetailPanel detail={selectedStudentDetail} /> : <WholeSchoolActivityPanel activities={dashboard.recentActivity} />}</div></div></DashboardSection><DashboardSection title="Classrooms"><ClassroomsTable classrooms={dashboard.classrooms} /></DashboardSection><DashboardSection title="Assignments"><AssignmentsTable assignments={dashboard.assignments} /></DashboardSection></div>
+      <div className="mt-8 space-y-8"><DashboardSection title="Teachers"><TeachersTable teachers={dashboard.teachers} /></DashboardSection><DashboardSection title="Students"><div className="grid gap-5 xl:grid-cols-[minmax(17rem,22rem)_minmax(0,1fr)]"><div><StudentsList students={dashboard.students} selectedStudentId={selectedStudentId} onSelectStudent={setSelectedStudentId} /></div><div>{selectedStudentDetail ? <StudentDetailPanel detail={selectedStudentDetail} /> : <WholeSchoolActivityPanel activities={dashboard.recentActivity} />}</div></div></DashboardSection><DashboardSection title="Classrooms"><ClassroomsTable classrooms={dashboard.classrooms} /></DashboardSection><DashboardSection title="Assignments"><AssignmentsTable assignments={dashboard.assignments} /></DashboardSection></div>
     </main>
   );
 }
