@@ -304,36 +304,58 @@ function buildDashboard({
   progressRows: ProgressRow[];
   attemptRows: AttemptRow[];
 }): AdminOrgDashboard {
-  const classroomMap = new Map(classrooms.map((classroom) => [classroom.id, classroom]));
   const domainStudentIds = new Set(students.map((student) => student.id));
-  const assignmentIds = new Set(assignments.map((assignment) => assignment.id));
-  const classroomIds = new Set(classrooms.map((classroom) => classroom.id));
+  const scopedClassroomIds = new Set(classrooms.map((classroom) => classroom.id));
+  const scopedAssignmentIds = new Set(assignments.map((assignment) => assignment.id));
 
   const orgMemberships = memberships.filter(
     (membership) =>
-      domainStudentIds.has(membership.user_id) && classroomIds.has(membership.classroom_id),
+      domainStudentIds.has(membership.user_id) && scopedClassroomIds.has(membership.classroom_id),
   );
   const orgRecipients = recipients.filter(
     (recipient) =>
-      domainStudentIds.has(recipient.user_id) && assignmentIds.has(recipient.assignment_id),
+      domainStudentIds.has(recipient.user_id) && scopedAssignmentIds.has(recipient.assignment_id),
   );
   const orgProgressRows = progressRows.filter((row) => domainStudentIds.has(row.user_id));
   const orgAttemptRows = attemptRows.filter((row) => domainStudentIds.has(row.user_id));
 
-  const regentsStudentIds = new Set<string>();
-  orgMemberships.forEach((membership) => regentsStudentIds.add(membership.user_id));
-  orgRecipients.forEach((recipient) => regentsStudentIds.add(recipient.user_id));
-  orgProgressRows.forEach((row) => regentsStudentIds.add(row.user_id));
-  orgAttemptRows.forEach((row) => regentsStudentIds.add(row.user_id));
+  const studentsWithDirectRegentsActivity = new Set<string>();
+  orgRecipients.forEach((recipient) => studentsWithDirectRegentsActivity.add(recipient.user_id));
+  orgProgressRows.forEach((row) => studentsWithDirectRegentsActivity.add(row.user_id));
+  orgAttemptRows.forEach((row) => studentsWithDirectRegentsActivity.add(row.user_id));
+
+  const regentsClassroomIds = new Set<string>();
+  assignments.forEach((assignment) => regentsClassroomIds.add(assignment.classroom_id));
+  orgRecipients.forEach((recipient) => regentsClassroomIds.add(recipient.classroom_id));
+
+  const regentsStudentIds = new Set(studentsWithDirectRegentsActivity);
+  orgMemberships.forEach((membership) => {
+    if (regentsClassroomIds.has(membership.classroom_id)) {
+      regentsStudentIds.add(membership.user_id);
+    }
+  });
 
   const regentsStudents = students.filter((student) => regentsStudentIds.has(student.id));
   const studentIds = new Set(regentsStudents.map((student) => student.id));
-  const filteredMemberships = orgMemberships.filter((membership) => studentIds.has(membership.user_id));
-  const filteredRecipients = orgRecipients.filter((recipient) => studentIds.has(recipient.user_id));
+  const regentsClassrooms = classrooms.filter((classroom) => regentsClassroomIds.has(classroom.id));
+  const classroomMap = new Map(regentsClassrooms.map((classroom) => [classroom.id, classroom]));
+  const filteredAssignments = assignments.filter((assignment) =>
+    regentsClassroomIds.has(assignment.classroom_id),
+  );
+  const filteredMemberships = orgMemberships.filter(
+    (membership) =>
+      studentIds.has(membership.user_id) && regentsClassroomIds.has(membership.classroom_id),
+  );
+  const filteredRecipients = orgRecipients.filter(
+    (recipient) =>
+      studentIds.has(recipient.user_id) && regentsClassroomIds.has(recipient.classroom_id),
+  );
   const filteredProgressRows = orgProgressRows.filter((row) => studentIds.has(row.user_id));
   const filteredAttemptRows = orgAttemptRows.filter((row) => studentIds.has(row.user_id));
 
-  const regentsTeachers = teachers;
+  const regentsTeachers = teachers.filter((teacher) =>
+    regentsClassrooms.some((classroom) => classroom.teacher_id === teacher.id),
+  );
   const teacherMap = new Map(regentsTeachers.map((teacher) => [teacher.id, teacher]));
 
   const membershipsByClassroom = new Map<string, ClassroomMemberRow[]>();
@@ -345,7 +367,7 @@ function buildDashboard({
   const recipientsByAssignment = new Map<string, AssignmentRecipientRow[]>();
   const studentsByTeacher = new Map<string, Set<string>>();
 
-  for (const classroom of classrooms) {
+  for (const classroom of regentsClassrooms) {
     classroomsByTeacher.set(classroom.teacher_id, [
       ...(classroomsByTeacher.get(classroom.teacher_id) ?? []),
       classroom,
@@ -370,7 +392,7 @@ function buildDashboard({
     }
   }
 
-  for (const assignment of assignments) {
+  for (const assignment of filteredAssignments) {
     const classroom = classroomMap.get(assignment.classroom_id);
     assignmentsByClassroom.set(assignment.classroom_id, [
       ...(assignmentsByClassroom.get(assignment.classroom_id) ?? []),
@@ -485,7 +507,7 @@ function buildDashboard({
     })
     .sort((a, b) => (a.fullName ?? a.email ?? "").localeCompare(b.fullName ?? b.email ?? ""));
 
-  const classroomsPayload = classrooms
+  const classroomsPayload = regentsClassrooms
     .map((classroom) => {
       const classroomMemberships = membershipsByClassroom.get(classroom.id) ?? [];
       const classroomStudentIds = classroomMemberships.map((membership) => membership.user_id);
@@ -506,7 +528,7 @@ function buildDashboard({
     .sort((a, b) => a.name.localeCompare(b.name));
 
   const assignmentGroups = new Map<string, AssignmentRow[]>();
-  for (const assignment of assignments) {
+  for (const assignment of filteredAssignments) {
     const key = getAssignmentGroupKey(assignment);
     assignmentGroups.set(key, [...(assignmentGroups.get(key) ?? []), assignment]);
   }
@@ -593,7 +615,7 @@ function buildDashboard({
           attemptedAt: attempt.attempted_at,
         }));
       const assignmentActivity = studentRecipients.map((recipient) => {
-        const assignment = assignments.find((item) => item.id === recipient.assignment_id);
+        const assignment = filteredAssignments.find((item) => item.id === recipient.assignment_id);
         return {
           type: "assignment" as const,
           label: assignment?.title ?? "Assignment",
