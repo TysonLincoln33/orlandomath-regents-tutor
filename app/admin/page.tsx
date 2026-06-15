@@ -2,7 +2,12 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import {
+  type AdminApprovalRequest,
+  getAdminApprovalRequests,
+  updateAdminApprovalRequest,
+} from "@/lib/admin/approvalRequests";
 import {
   getAdminOrgDashboard,
   type AdminDashboardAccessError,
@@ -20,6 +25,11 @@ type DashboardState =
   | { status: "allowed"; dashboard: AdminOrgDashboard }
   | { status: "pending"; profile: NonNullable<AdminDashboardAccessError["profile"]> }
   | { status: "denied"; message: string };
+
+type ApprovalCenterState =
+  | { status: "idle" | "loading" | "hidden" }
+  | { status: "allowed"; requests: AdminApprovalRequest[] }
+  | { status: "error"; message: string };
 
 function formatPercent(value: number | null | undefined) {
   return typeof value === "number" ? `${value}%` : "No data";
@@ -49,6 +59,10 @@ function displayName(entity: { fullName?: string | null; email?: string | null }
   return entity.fullName?.trim() || entity.email?.trim() || "Unnamed user";
 }
 
+function displayApprovalRequestName(request: AdminApprovalRequest) {
+  return request.full_name?.trim() || request.email?.trim() || "Unnamed requester";
+}
+
 function DashboardCard({ label, value, help }: { label: string; value: string | number; help?: string }) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -68,6 +82,67 @@ function DashboardSection({ title, children }: { title: string; children: React.
     <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
       <h2 className="text-xl font-extrabold text-slate-950">{title}</h2>
       <div className="mt-4">{children}</div>
+    </section>
+  );
+}
+
+function ApprovalCenter({
+  state,
+  updatingRequestId,
+  onRefresh,
+  onUpdate,
+}: {
+  state: ApprovalCenterState;
+  updatingRequestId: string | null;
+  onRefresh: () => void;
+  onUpdate: (requestId: string, action: "approve" | "deny") => void;
+}) {
+  if (state.status === "idle" || state.status === "hidden") return null;
+
+  return (
+    <section className="mt-8 rounded-3xl border border-indigo-100 bg-indigo-50/70 p-6 shadow-sm">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-wide text-indigo-700">Master only</p>
+          <h2 className="mt-1 text-2xl font-extrabold text-slate-950">Administrator Approval Center</h2>
+          <p className="mt-2 max-w-3xl text-sm text-slate-700">Review pending administrator requests. Approved administrators do not have access to this center or its APIs.</p>
+        </div>
+        <button type="button" onClick={onRefresh} className="rounded-full bg-white px-4 py-2 text-sm font-bold text-indigo-700 shadow-sm ring-1 ring-indigo-100 hover:bg-indigo-50">Refresh</button>
+      </div>
+
+      {state.status === "loading" ? <p className="mt-5 rounded-xl bg-white p-4 text-sm text-slate-600 shadow-sm">Loading pending administrator requests...</p> : null}
+      {state.status === "error" ? <p className="mt-5 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm font-semibold text-rose-700">{state.message}</p> : null}
+      {state.status === "allowed" && state.requests.length === 0 ? <p className="mt-5 rounded-xl bg-white p-4 text-sm text-slate-600 shadow-sm">No pending administrator requests.</p> : null}
+      {state.status === "allowed" && state.requests.length > 0 ? (
+        <div className="mt-5 overflow-x-auto rounded-2xl border border-indigo-100 bg-white shadow-sm">
+          <table className="min-w-full divide-y divide-slate-200 text-sm">
+            <thead className="bg-slate-50 text-left text-xs font-bold uppercase tracking-wide text-slate-500">
+              <tr><th className="px-4 py-3">Requester</th><th className="px-4 py-3">Current role</th><th className="px-4 py-3">Requested role</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">Requested</th><th className="px-4 py-3">Actions</th></tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 text-slate-700">
+              {state.requests.map((request) => {
+                const disabled = updatingRequestId === request.id;
+
+                return (
+                  <tr key={request.id}>
+                    <td className="px-4 py-3"><p className="font-semibold text-slate-950">{displayApprovalRequestName(request)}</p><p className="text-xs text-slate-500">{request.email ?? "No email"}</p>{request.email_domain ? <p className="text-xs text-slate-500">{request.email_domain}</p> : null}</td>
+                    <td className="px-4 py-3">{request.role}</td>
+                    <td className="px-4 py-3">{request.requested_role}</td>
+                    <td className="px-4 py-3">{request.approval_status}</td>
+                    <td className="px-4 py-3">{formatDateTime(request.created_at)}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-wrap gap-2">
+                        <button type="button" disabled={disabled} onClick={() => onUpdate(request.id, "approve")} className="rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50">Approve</button>
+                        <button type="button" disabled={disabled} onClick={() => onUpdate(request.id, "deny")} className="rounded-full bg-rose-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50">Deny</button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
     </section>
   );
 }
@@ -240,14 +315,53 @@ function StudentDetailPanel({ detail }: { detail: AdminDashboardStudentDetail | 
 export default function AdminDashboardPage() {
   const router = useRouter();
   const [dashboardState, setDashboardState] = useState<DashboardState>({ status: "loading" });
+  const [approvalCenterState, setApprovalCenterState] = useState<ApprovalCenterState>({ status: "idle" });
+  const [updatingApprovalRequestId, setUpdatingApprovalRequestId] = useState<string | null>(null);
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
+
+  const loadApprovalCenter = useCallback(async () => {
+    setApprovalCenterState({ status: "loading" });
+    try {
+      const response = await getAdminApprovalRequests();
+      setApprovalCenterState({ status: "allowed", requests: response.requests });
+    } catch (error) {
+      const typedError = error as Error & { status?: number };
+      if (typedError.status === 403) {
+        setApprovalCenterState({ status: "hidden" });
+        return;
+      }
+
+      if (typedError.status === 401) {
+        router.push("/login");
+        return;
+      }
+
+      setApprovalCenterState({ status: "error", message: typedError.message || "Failed to load approval requests." });
+    }
+  }, [router]);
+
+  const handleApprovalRequestUpdate = useCallback(async (requestId: string, action: "approve" | "deny") => {
+    setUpdatingApprovalRequestId(requestId);
+    try {
+      await updateAdminApprovalRequest(requestId, action);
+      await loadApprovalCenter();
+    } catch (error) {
+      const typedError = error as Error & { status?: number };
+      setApprovalCenterState({ status: "error", message: typedError.message || "Failed to update approval request." });
+    } finally {
+      setUpdatingApprovalRequestId(null);
+    }
+  }, [loadApprovalCenter]);
 
   useEffect(() => {
     let active = true;
     async function loadDashboard() {
       try {
         const dashboard = await getAdminOrgDashboard();
-        if (active) setDashboardState({ status: "allowed", dashboard });
+        if (active) {
+          setDashboardState({ status: "allowed", dashboard });
+          void loadApprovalCenter();
+        }
       } catch (error) {
         if (!active) return;
         const typedError = error as Error & { code?: string; payload?: AdminDashboardAccessError | null };
@@ -258,7 +372,7 @@ export default function AdminDashboardPage() {
     }
     void loadDashboard();
     return () => { active = false; };
-  }, [router]);
+  }, [loadApprovalCenter, router]);
 
   if (dashboardState.status === "loading") return <main className="mx-auto flex min-h-[70vh] max-w-4xl items-center justify-center px-4 py-12"><div className="w-full rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm"><p className="text-sm font-semibold uppercase tracking-wide text-blue-700">Administrator</p><h1 className="mt-2 text-3xl font-bold text-slate-950">Loading organization dashboard...</h1></div></main>;
 
@@ -272,6 +386,7 @@ export default function AdminDashboardPage() {
   return (
     <main className="mx-auto min-h-[70vh] max-w-7xl px-4 py-10">
       <div className="rounded-3xl border border-blue-100 bg-white p-8 shadow-sm"><p className="text-sm font-semibold uppercase tracking-wide text-blue-700">Administrator Dashboard</p><h1 className="mt-2 text-4xl font-extrabold text-slate-950">Organization overview</h1><p className="mt-4 max-w-3xl text-slate-700">{dashboard.scope.label}. This read-only dashboard summarizes Regents Algebra 1 teachers, students, classrooms, assignments, and progress available in your administrator scope.</p></div>
+      <ApprovalCenter state={approvalCenterState} updatingRequestId={updatingApprovalRequestId} onRefresh={() => void loadApprovalCenter()} onUpdate={(requestId, action) => void handleApprovalRequestUpdate(requestId, action)} />
       <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4"><DashboardCard label="Organization" value={dashboard.scope.domain ?? "Global"} help={dashboard.scope.type === "master_global" ? "Master global admin view" : "Email-domain scoped"} /><DashboardCard label="Total teachers" value={dashboard.summary.totalTeachers} /><DashboardCard label="Total students" value={dashboard.summary.totalStudents} /><DashboardCard label="Total classrooms" value={dashboard.summary.totalClassrooms} /><DashboardCard label="Grouped assignments" value={dashboard.summary.totalGroupedAssignments} help={`${dashboard.summary.activeAssignments} active · ${dashboard.summary.archivedAssignments} archived`} /><DashboardCard label="Average completion" value={formatPercent(dashboard.summary.averageCompletion)} help="From Algebra 1 progress" /><DashboardCard label="Average accuracy" value={formatPercent(dashboard.summary.averageAccuracy)} help="From question attempts where available" /></div>
       <div className="mt-8 space-y-8"><DashboardSection title="Teachers"><TeachersTable teachers={dashboard.teachers} /></DashboardSection><DashboardSection title="Students"><div className="grid gap-5 xl:grid-cols-[minmax(17rem,22rem)_minmax(0,1fr)]"><div><StudentsList students={dashboard.students} selectedStudentId={selectedStudentId} onSelectStudent={setSelectedStudentId} /></div><div>{selectedStudentDetail ? <StudentDetailPanel detail={selectedStudentDetail} /> : <WholeSchoolActivityPanel activities={dashboard.recentActivity} />}</div></div></DashboardSection><DashboardSection title="Classrooms"><ClassroomsTable classrooms={dashboard.classrooms} /></DashboardSection><DashboardSection title="Assignments"><AssignmentsTable assignments={dashboard.assignments} /></DashboardSection></div>
     </main>
