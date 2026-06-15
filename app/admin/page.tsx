@@ -14,6 +14,12 @@ import {
   type AdminDashboardTeacher,
   type AdminOrgDashboard,
 } from "@/lib/admin/orgDashboard";
+import {
+  approveAdminRequest,
+  denyAdminRequest,
+  getPendingAdminApprovals,
+  type AdminApprovalRequest,
+} from "@/lib/admin/approvals";
 
 type DashboardState =
   | { status: "loading" }
@@ -45,6 +51,12 @@ function formatDateTime(value: string | null | undefined) {
   }).format(date);
 }
 
+function getApprovalActionErrorMessage(error: unknown) {
+  return error instanceof Error
+    ? error.message
+    : "Failed to update administrator request.";
+}
+
 function displayName(entity: { fullName?: string | null; email?: string | null }) {
   return entity.fullName?.trim() || entity.email?.trim() || "Unnamed user";
 }
@@ -69,6 +81,134 @@ function DashboardSection({ title, children }: { title: string; children: React.
       <h2 className="text-xl font-extrabold text-slate-950">{title}</h2>
       <div className="mt-4">{children}</div>
     </section>
+  );
+}
+
+function AdministratorApprovalCenter() {
+  const [requests, setRequests] = useState<AdminApprovalRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [processingId, setProcessingId] = useState<string | null>(null);
+
+  async function loadRequests() {
+    setLoading(true);
+    setError(null);
+    try {
+      const payload = await getPendingAdminApprovals();
+      setRequests(payload.requests);
+    } catch (loadError) {
+      setError(getApprovalActionErrorMessage(loadError));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    void loadRequests();
+  }, []);
+
+  async function handleAction(
+    profileId: string,
+    action: "approve" | "deny",
+  ) {
+    setProcessingId(profileId);
+    setError(null);
+    setMessage(null);
+
+    try {
+      const payload =
+        action === "approve"
+          ? await approveAdminRequest(profileId)
+          : await denyAdminRequest(profileId);
+      setMessage(payload.message);
+      await loadRequests();
+    } catch (actionError) {
+      setError(getApprovalActionErrorMessage(actionError));
+    } finally {
+      setProcessingId(null);
+    }
+  }
+
+  return (
+    <DashboardSection title="Administrator Approval Center">
+      <div className="space-y-4">
+        <p className="text-sm text-slate-600">
+          Review pending Administrator requests. Only approved Master users can approve or deny these requests.
+        </p>
+
+        {message ? (
+          <p className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-semibold text-emerald-800">
+            {message}
+          </p>
+        ) : null}
+        {error ? (
+          <p className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm font-semibold text-rose-800">
+            {error}
+          </p>
+        ) : null}
+
+        {loading ? (
+          <EmptyTableMessage>Loading pending administrator requests...</EmptyTableMessage>
+        ) : requests.length === 0 ? (
+          <EmptyTableMessage>No pending administrator requests.</EmptyTableMessage>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-slate-200 text-sm">
+              <thead className="bg-slate-50 text-left text-xs font-bold uppercase tracking-wide text-slate-500">
+                <tr>
+                  <th className="px-4 py-3">Name</th>
+                  <th className="px-4 py-3">Email</th>
+                  <th className="px-4 py-3">Email domain</th>
+                  <th className="px-4 py-3">Requested role</th>
+                  <th className="px-4 py-3">Approval status</th>
+                  <th className="px-4 py-3">Requested date</th>
+                  <th className="px-4 py-3">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 bg-white text-slate-700">
+                {requests.map((request) => {
+                  const isProcessing = processingId === request.id;
+
+                  return (
+                    <tr key={request.id}>
+                      <td className="px-4 py-3 font-semibold text-slate-950">
+                        {request.fullName?.trim() || "Unnamed user"}
+                      </td>
+                      <td className="px-4 py-3">{request.email ?? "No email"}</td>
+                      <td className="px-4 py-3">{request.emailDomain ?? "No domain"}</td>
+                      <td className="px-4 py-3">{request.requestedRole}</td>
+                      <td className="px-4 py-3">{request.approvalStatus}</td>
+                      <td className="px-4 py-3">{formatDate(request.createdAt)}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            disabled={Boolean(processingId)}
+                            onClick={() => void handleAction(request.id, "approve")}
+                            className="rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+                          >
+                            {isProcessing ? "Working..." : "Approve"}
+                          </button>
+                          <button
+                            type="button"
+                            disabled={Boolean(processingId)}
+                            onClick={() => void handleAction(request.id, "deny")}
+                            className="rounded-full bg-rose-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-rose-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+                          >
+                            {isProcessing ? "Working..." : "Deny"}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </DashboardSection>
   );
 }
 
@@ -273,7 +413,7 @@ export default function AdminDashboardPage() {
     <main className="mx-auto min-h-[70vh] max-w-7xl px-4 py-10">
       <div className="rounded-3xl border border-blue-100 bg-white p-8 shadow-sm"><p className="text-sm font-semibold uppercase tracking-wide text-blue-700">Administrator Dashboard</p><h1 className="mt-2 text-4xl font-extrabold text-slate-950">Organization overview</h1><p className="mt-4 max-w-3xl text-slate-700">{dashboard.scope.label}. This read-only dashboard summarizes Regents Algebra 1 teachers, students, classrooms, assignments, and progress available in your administrator scope.</p></div>
       <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4"><DashboardCard label="Organization" value={dashboard.scope.domain ?? "Global"} help={dashboard.scope.type === "master_global" ? "Master global admin view" : "Email-domain scoped"} /><DashboardCard label="Total teachers" value={dashboard.summary.totalTeachers} /><DashboardCard label="Total students" value={dashboard.summary.totalStudents} /><DashboardCard label="Total classrooms" value={dashboard.summary.totalClassrooms} /><DashboardCard label="Grouped assignments" value={dashboard.summary.totalGroupedAssignments} help={`${dashboard.summary.activeAssignments} active · ${dashboard.summary.archivedAssignments} archived`} /><DashboardCard label="Average completion" value={formatPercent(dashboard.summary.averageCompletion)} help="From Algebra 1 progress" /><DashboardCard label="Average accuracy" value={formatPercent(dashboard.summary.averageAccuracy)} help="From question attempts where available" /></div>
-      <div className="mt-8 space-y-8"><DashboardSection title="Teachers"><TeachersTable teachers={dashboard.teachers} /></DashboardSection><DashboardSection title="Students"><div className="grid gap-5 xl:grid-cols-[minmax(17rem,22rem)_minmax(0,1fr)]"><div><StudentsList students={dashboard.students} selectedStudentId={selectedStudentId} onSelectStudent={setSelectedStudentId} /></div><div>{selectedStudentDetail ? <StudentDetailPanel detail={selectedStudentDetail} /> : <WholeSchoolActivityPanel activities={dashboard.recentActivity} />}</div></div></DashboardSection><DashboardSection title="Classrooms"><ClassroomsTable classrooms={dashboard.classrooms} /></DashboardSection><DashboardSection title="Assignments"><AssignmentsTable assignments={dashboard.assignments} /></DashboardSection></div>
+      <div className="mt-8 space-y-8">{dashboard.permissions.canManageAdminApprovals ? <AdministratorApprovalCenter /> : null}<DashboardSection title="Teachers"><TeachersTable teachers={dashboard.teachers} /></DashboardSection><DashboardSection title="Students"><div className="grid gap-5 xl:grid-cols-[minmax(17rem,22rem)_minmax(0,1fr)]"><div><StudentsList students={dashboard.students} selectedStudentId={selectedStudentId} onSelectStudent={setSelectedStudentId} /></div><div>{selectedStudentDetail ? <StudentDetailPanel detail={selectedStudentDetail} /> : <WholeSchoolActivityPanel activities={dashboard.recentActivity} />}</div></div></DashboardSection><DashboardSection title="Classrooms"><ClassroomsTable classrooms={dashboard.classrooms} /></DashboardSection><DashboardSection title="Assignments"><AssignmentsTable assignments={dashboard.assignments} /></DashboardSection></div>
     </main>
   );
 }

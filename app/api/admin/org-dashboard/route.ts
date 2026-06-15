@@ -678,6 +678,9 @@ function buildDashboard({
       label: summary.organizationLabel,
     },
     summary,
+    permissions: {
+      canManageAdminApprovals: isMaster,
+    },
     teachers: teachersPayload,
     students: studentsPayload,
     classrooms: classroomsPayload,

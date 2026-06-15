@@ -107,8 +107,13 @@ export type AdminDashboardStudentDetail = {
   recentQuestionAttempts: AdminDashboardRecentAttempt[];
 };
 
+export type AdminDashboardPermissions = {
+  canManageAdminApprovals: boolean;
+};
+
 export type AdminOrgDashboard = {
   scope: AdminDashboardScope;
+  permissions: AdminDashboardPermissions;
   summary: AdminDashboardSummary;
   teachers: AdminDashboardTeacher[];
   students: AdminDashboardStudent[];
