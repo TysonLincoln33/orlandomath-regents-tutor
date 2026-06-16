@@ -9,6 +9,13 @@ import {
   updateAdminApprovalRequest,
 } from "@/lib/admin/approvalRequests";
 import {
+  getAdminClassroomManagement,
+  type AdminClassroomManagement,
+  type AdminEligibleStudent,
+  type AdminManagedClassroom,
+  type AdminClassroomRosterMember,
+} from "@/lib/admin/classroomManagement";
+import {
   getAdminOrgDashboard,
   type AdminDashboardAccessError,
   type AdminDashboardActivity,
@@ -45,6 +52,11 @@ type UserDirectoryState =
   | { status: "idle" }
   | { status: "loading" }
   | { status: "allowed"; directory: AdminUserDirectory }
+  | { status: "error"; message: string };
+
+type ClassroomManagementState =
+  | { status: "idle" | "loading" }
+  | { status: "allowed"; data: AdminClassroomManagement }
   | { status: "error"; message: string };
 
 type UserDirectoryRoleFilter = "all" | "student" | "teacher" | "admin";
@@ -679,6 +691,335 @@ function StudentsList({
   );
 }
 
+
+function ClassroomManagement({
+  state,
+  selectedClassroomId,
+  studentSearchTerm,
+  onSelectClassroom,
+  onStudentSearchTermChange,
+  onRefresh,
+}: {
+  state: ClassroomManagementState;
+  selectedClassroomId: string | null;
+  studentSearchTerm: string;
+  onSelectClassroom: (classroomId: string) => void;
+  onStudentSearchTermChange: (value: string) => void;
+  onRefresh: () => void;
+}) {
+  if (state.status === "error") {
+    return (
+      <section className="rounded-3xl border border-rose-200 bg-rose-50 p-6 shadow-sm">
+        <p className="text-sm font-semibold uppercase tracking-wide text-rose-700">
+          Read-only
+        </p>
+        <h2 className="mt-1 text-2xl font-extrabold text-slate-950">
+          Classroom Management
+        </h2>
+        <p className="mt-4 rounded-xl bg-white p-4 text-sm font-semibold text-rose-700">
+          {state.message}
+        </p>
+      </section>
+    );
+  }
+
+  if (state.status !== "allowed") {
+    return (
+      <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">
+          Read-only
+        </p>
+        <h2 className="mt-1 text-2xl font-extrabold text-slate-950">
+          Classroom Management
+        </h2>
+        <p className="mt-4 rounded-xl bg-slate-50 p-4 text-sm text-slate-600">
+          Loading classroom rosters...
+        </p>
+      </section>
+    );
+  }
+
+  const data = state.data;
+  const selectedClassroom =
+    data.classrooms.find((classroom) => classroom.id === selectedClassroomId) ??
+    data.classrooms[0] ??
+    null;
+
+  return (
+    <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">
+            A3.4a read-only
+          </p>
+          <h2 className="mt-1 text-2xl font-extrabold text-slate-950">
+            Classroom Management
+          </h2>
+          <p className="mt-2 max-w-3xl text-sm text-slate-700">
+            {data.scope.label}. View classroom ownership, rosters, roster counts,
+            and eligible active student search before membership changes are enabled.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onRefresh}
+          className="rounded-full bg-white px-4 py-2 text-sm font-bold text-blue-700 shadow-sm ring-1 ring-blue-100 hover:bg-blue-50"
+        >
+          Refresh
+        </button>
+      </div>
+
+      {data.classrooms.length === 0 ? (
+        <p className="mt-5 rounded-xl bg-slate-50 p-4 text-sm text-slate-600">
+          No classrooms are available in this administrator scope.
+        </p>
+      ) : (
+        <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(17rem,24rem)_minmax(0,1fr)]">
+          <div className="space-y-3">
+            <div className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-600">
+              <span className="font-bold text-slate-950">
+                {data.classrooms.length}
+              </span>{" "}
+              classrooms visible ·{" "}
+              <span className="font-bold text-slate-950">
+                {data.classrooms.reduce(
+                  (sum, classroom) => sum + classroom.rosterCount,
+                  0,
+                )}
+              </span>{" "}
+              roster memberships
+            </div>
+            <div className="max-h-[38rem] space-y-3 overflow-y-auto pr-2">
+              {data.classrooms.map((classroom) => (
+                <ClassroomSelectorCard
+                  key={classroom.id}
+                  classroom={classroom}
+                  selected={selectedClassroom?.id === classroom.id}
+                  onSelect={() => onSelectClassroom(classroom.id)}
+                />
+              ))}
+            </div>
+          </div>
+          <ClassroomRosterPanel
+            classroom={selectedClassroom}
+            studentSearchTerm={studentSearchTerm}
+            eligibleStudents={data.eligibleStudents}
+            onStudentSearchTermChange={onStudentSearchTermChange}
+          />
+        </div>
+      )}
+    </section>
+  );
+}
+
+function ClassroomSelectorCard({
+  classroom,
+  selected,
+  onSelect,
+}: {
+  classroom: AdminManagedClassroom;
+  selected: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <article
+      className={`rounded-2xl border p-4 shadow-sm ${selected ? "border-blue-300 bg-blue-50" : "border-slate-200 bg-white"}`}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h3 className="truncate font-bold text-slate-950">
+            {classroom.name}
+          </h3>
+          <p className="truncate text-xs text-slate-500">
+            {classroom.teacherName || classroom.teacherEmail || "Unknown teacher"}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onSelect}
+          className="shrink-0 rounded-full bg-blue-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-blue-700"
+        >
+          View
+        </button>
+      </div>
+      <dl className="mt-3 grid grid-cols-2 gap-2 text-xs text-slate-600">
+        <div className="rounded-xl bg-white/80 p-2">
+          <dt className="font-semibold text-slate-500">Roster</dt>
+          <dd className="mt-1 font-bold text-slate-950">
+            {classroom.rosterCount} students
+          </dd>
+        </div>
+        <div className="rounded-xl bg-white/80 p-2">
+          <dt className="font-semibold text-slate-500">Domain</dt>
+          <dd className="mt-1 truncate font-bold text-slate-950">
+            {classroom.teacherEmailDomain ?? "Unknown"}
+          </dd>
+        </div>
+      </dl>
+    </article>
+  );
+}
+
+function ClassroomRosterPanel({
+  classroom,
+  studentSearchTerm,
+  eligibleStudents,
+  onStudentSearchTermChange,
+}: {
+  classroom: AdminManagedClassroom | null;
+  studentSearchTerm: string;
+  eligibleStudents: AdminEligibleStudent[];
+  onStudentSearchTermChange: (value: string) => void;
+}) {
+  if (!classroom) {
+    return (
+      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 text-sm text-slate-600">
+        Select a classroom to view its roster.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-5 rounded-2xl border border-blue-100 bg-blue-50/60 p-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-sm font-bold uppercase tracking-wide text-blue-700">
+            Selected classroom
+          </p>
+          <h3 className="mt-1 text-2xl font-extrabold text-slate-950">
+            {classroom.name}
+          </h3>
+          <p className="text-sm text-slate-600">
+            {classroom.teacherName || classroom.teacherEmail || "Unknown teacher"}
+            {classroom.teacherEmail ? ` · ${classroom.teacherEmail}` : ""}
+          </p>
+        </div>
+        <div className="rounded-2xl bg-white px-4 py-3 text-sm text-slate-600 shadow-sm">
+          <span className="font-bold text-slate-950">{classroom.rosterCount}</span>{" "}
+          roster members
+        </div>
+      </div>
+
+      <div className="rounded-2xl bg-white p-4 shadow-sm">
+        <h4 className="font-bold text-slate-950">Roster</h4>
+        {classroom.roster.length === 0 ? (
+          <p className="mt-3 rounded-xl bg-slate-50 p-4 text-sm text-slate-600">
+            This classroom has no roster members.
+          </p>
+        ) : (
+          <ul className="mt-3 max-h-80 space-y-2 overflow-y-auto pr-2">
+            {classroom.roster.map((member) => (
+              <RosterMemberItem key={member.membershipId} member={member} />
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <div className="rounded-2xl bg-white p-4 shadow-sm">
+        <h4 className="font-bold text-slate-950">Eligible student search</h4>
+        <p className="mt-1 text-sm text-slate-600">
+          Read-only preview of active students who could be eligible for this
+          classroom in the next phase. Add/remove actions are intentionally not
+          available in A3.4a.
+        </p>
+        <label className="mt-4 block text-sm font-semibold text-slate-700">
+          Search active students
+          <input
+            type="search"
+            value={studentSearchTerm}
+            onChange={(event) => onStudentSearchTermChange(event.target.value)}
+            placeholder="Search by name or email"
+            className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 shadow-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+          />
+        </label>
+        <EligibleStudentResults
+          searchTerm={studentSearchTerm}
+          students={eligibleStudents}
+        />
+      </div>
+    </div>
+  );
+}
+
+function RosterMemberItem({ member }: { member: AdminClassroomRosterMember }) {
+  return (
+    <li className="rounded-xl border border-slate-200 p-3 text-sm">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="truncate font-semibold text-slate-950">
+            {member.fullName || member.email || "Unknown student"}
+          </p>
+          <p className="truncate text-xs text-slate-500">
+            {member.email ?? "No email"}
+          </p>
+        </div>
+        <span
+          className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide ${member.isActive ? "bg-emerald-50 text-emerald-700" : "bg-slate-200 text-slate-700"}`}
+        >
+          {member.isActive ? "Active" : "Inactive"}
+        </span>
+      </div>
+      <p className="mt-2 text-xs text-slate-500">
+        Joined {formatDate(member.joinedAt)}
+        {member.joinedVia ? ` · ${member.joinedVia}` : ""}
+        {member.emailDomain ? ` · ${member.emailDomain}` : ""}
+      </p>
+    </li>
+  );
+}
+
+function EligibleStudentResults({
+  searchTerm,
+  students,
+}: {
+  searchTerm: string;
+  students: AdminEligibleStudent[];
+}) {
+  if (searchTerm.trim().length < 2) {
+    return (
+      <p className="mt-3 rounded-xl bg-slate-50 p-4 text-sm text-slate-600">
+        Enter at least 2 characters to preview eligible active students.
+      </p>
+    );
+  }
+
+  if (students.length === 0) {
+    return (
+      <p className="mt-3 rounded-xl bg-slate-50 p-4 text-sm text-slate-600">
+        No active eligible students match this search.
+      </p>
+    );
+  }
+
+  return (
+    <ul className="mt-3 max-h-64 space-y-2 overflow-y-auto pr-2">
+      {students.map((student) => (
+        <li
+          key={student.id}
+          className="rounded-xl border border-slate-200 p-3 text-sm"
+        >
+          <div className="flex flex-wrap items-start justify-between gap-2">
+            <div className="min-w-0">
+              <p className="truncate font-semibold text-slate-950">
+                {student.fullName || student.email || "Unknown student"}
+              </p>
+              <p className="truncate text-xs text-slate-500">
+                {student.email ?? "No email"}
+                {student.emailDomain ? ` · ${student.emailDomain}` : ""}
+              </p>
+            </div>
+            <span
+              className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide ${student.alreadyInClassroom ? "bg-blue-50 text-blue-700" : "bg-slate-100 text-slate-700"}`}
+            >
+              {student.alreadyInClassroom ? "In roster" : "Eligible"}
+            </span>
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 function ClassroomsTable({
   classrooms,
 }: {
@@ -991,6 +1332,8 @@ export default function AdminDashboardPage() {
     useState<ApprovalCenterState>({ status: "idle" });
   const [userDirectoryState, setUserDirectoryState] =
     useState<UserDirectoryState>({ status: "idle" });
+  const [classroomManagementState, setClassroomManagementState] =
+    useState<ClassroomManagementState>({ status: "idle" });
   const [userDirectorySearch, setUserDirectorySearch] = useState("");
   const [userDirectoryRoleFilter, setUserDirectoryRoleFilter] =
     useState<UserDirectoryRoleFilter>("all");
@@ -1010,6 +1353,43 @@ export default function AdminDashboardPage() {
   >(null);
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(
     null,
+  );
+  const [selectedManagedClassroomId, setSelectedManagedClassroomId] = useState<
+    string | null
+  >(null);
+  const [studentSearchTerm, setStudentSearchTerm] = useState("");
+
+  const loadClassroomManagement = useCallback(
+    async (classroomId?: string | null, search?: string) => {
+      setClassroomManagementState((current) =>
+        current.status === "allowed" ? current : { status: "loading" },
+      );
+      try {
+        const data = await getAdminClassroomManagement({
+          classroomId: classroomId ?? null,
+          search: search ?? "",
+        });
+        setClassroomManagementState({ status: "allowed", data });
+        setSelectedManagedClassroomId(
+          (current) =>
+            current && data.classrooms.some((classroom) => classroom.id === current)
+              ? current
+              : (data.classrooms[0]?.id ?? null),
+        );
+      } catch (error) {
+        const typedError = error as Error & { status?: number; code?: string };
+        if (typedError.status === 401 || typedError.code === "unauthorized") {
+          router.push("/login");
+          return;
+        }
+        setClassroomManagementState({
+          status: "error",
+          message:
+            typedError.message || "Failed to load classroom management data.",
+        });
+      }
+    },
+    [router],
   );
 
   const loadApprovalCenter = useCallback(async () => {
@@ -1116,6 +1496,7 @@ export default function AdminDashboardPage() {
           setDashboardState({ status: "allowed", dashboard });
           void loadApprovalCenter();
           void loadUserDirectory();
+          void loadClassroomManagement(null, "");
         }
       } catch (error) {
         if (!active) return;
@@ -1149,7 +1530,24 @@ export default function AdminDashboardPage() {
     return () => {
       active = false;
     };
-  }, [loadApprovalCenter, loadUserDirectory, router]);
+  }, [loadApprovalCenter, loadClassroomManagement, loadUserDirectory, router]);
+
+  const handleManagedClassroomSelect = useCallback(
+    (classroomId: string) => {
+      setSelectedManagedClassroomId(classroomId);
+      setStudentSearchTerm("");
+      void loadClassroomManagement(classroomId, "");
+    },
+    [loadClassroomManagement],
+  );
+
+  const handleStudentSearchTermChange = useCallback(
+    (value: string) => {
+      setStudentSearchTerm(value);
+      void loadClassroomManagement(selectedManagedClassroomId, value);
+    },
+    [loadClassroomManagement, selectedManagedClassroomId],
+  );
 
   if (dashboardState.status === "loading")
     return (
@@ -1320,6 +1718,19 @@ export default function AdminDashboardPage() {
         <DashboardSection title="Classrooms">
           <ClassroomsTable classrooms={dashboard.classrooms} />
         </DashboardSection>
+        <ClassroomManagement
+          state={classroomManagementState}
+          selectedClassroomId={selectedManagedClassroomId}
+          studentSearchTerm={studentSearchTerm}
+          onSelectClassroom={handleManagedClassroomSelect}
+          onStudentSearchTermChange={handleStudentSearchTermChange}
+          onRefresh={() =>
+            void loadClassroomManagement(
+              selectedManagedClassroomId,
+              studentSearchTerm,
+            )
+          }
+        />
         <DashboardSection title="Assignments">
           <AssignmentsTable assignments={dashboard.assignments} />
         </DashboardSection>
