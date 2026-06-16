@@ -313,8 +313,6 @@ function UserDirectory({
                   </div>
                 </div>
               </dl>
-
-              <p className="mt-3 text-xs text-slate-500">Last activity: {formatDateTime(user.lastActivityAt)}</p>
             </article>
           ))}
         </div>
