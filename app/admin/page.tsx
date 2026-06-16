@@ -42,7 +42,7 @@ type UserDirectoryState =
   | { status: "allowed"; directory: AdminUserDirectory }
   | { status: "error"; message: string };
 
-type UserDirectoryRoleFilter = "all" | "student" | "teacher" | "admin" | "master";
+type UserDirectoryRoleFilter = "all" | "student" | "teacher" | "admin";
 type UserDirectoryApprovalFilter = "all" | "approved" | "pending" | "denied";
 
 function formatPercent(value: number | null | undefined) {
@@ -256,7 +256,6 @@ function UserDirectory({
             <option value="student">Student</option>
             <option value="teacher">Teacher</option>
             <option value="admin">Admin</option>
-            <option value="master">Master</option>
           </select>
         </label>
         <label className="text-sm font-semibold text-slate-700">
