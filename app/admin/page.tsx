@@ -19,6 +19,11 @@ import {
   type AdminDashboardTeacher,
   type AdminOrgDashboard,
 } from "@/lib/admin/orgDashboard";
+import {
+  getAdminUserDirectory,
+  type AdminDirectoryUser,
+  type AdminUserDirectory,
+} from "@/lib/admin/userDirectory";
 
 type DashboardState =
   | { status: "loading" }
@@ -30,6 +35,15 @@ type ApprovalCenterState =
   | { status: "idle" | "loading" | "hidden" }
   | { status: "allowed"; requests: AdminApprovalRequest[] }
   | { status: "error"; message: string };
+
+type UserDirectoryState =
+  | { status: "idle" }
+  | { status: "loading" }
+  | { status: "allowed"; directory: AdminUserDirectory }
+  | { status: "error"; message: string };
+
+type UserDirectoryRoleFilter = "all" | "student" | "teacher" | "admin";
+type UserDirectoryApprovalFilter = "all" | "approved" | "pending" | "denied";
 
 function formatPercent(value: number | null | undefined) {
   return typeof value === "number" ? `${value}%` : "No data";
@@ -143,6 +157,166 @@ function ApprovalCenter({
           </table>
         </div>
       ) : null}
+    </section>
+  );
+}
+
+function formatCompactValue(value: string | null | undefined) {
+  return value?.trim() || "Not available";
+}
+
+function matchesUserDirectorySearch(user: AdminDirectoryUser, searchTerm: string) {
+  const normalizedSearch = searchTerm.trim().toLowerCase();
+
+  if (!normalizedSearch) return true;
+
+  return [user.fullName, user.username, user.email, user.emailDomain].some((value) =>
+    value?.toLowerCase().includes(normalizedSearch),
+  );
+}
+
+function UserDirectory({
+  state,
+  searchTerm,
+  roleFilter,
+  approvalFilter,
+  onSearchTermChange,
+  onRoleFilterChange,
+  onApprovalFilterChange,
+}: {
+  state: UserDirectoryState;
+  searchTerm: string;
+  roleFilter: UserDirectoryRoleFilter;
+  approvalFilter: UserDirectoryApprovalFilter;
+  onSearchTermChange: (value: string) => void;
+  onRoleFilterChange: (value: UserDirectoryRoleFilter) => void;
+  onApprovalFilterChange: (value: UserDirectoryApprovalFilter) => void;
+}) {
+  if (state.status === "idle" || state.status === "loading") {
+    return (
+      <section className="mt-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">Read-only</p>
+        <h2 className="mt-1 text-2xl font-extrabold text-slate-950">User Directory</h2>
+        <p className="mt-4 rounded-xl bg-slate-50 p-4 text-sm text-slate-600">Loading user directory...</p>
+      </section>
+    );
+  }
+
+  if (state.status === "error") {
+    return (
+      <section className="mt-8 rounded-3xl border border-rose-200 bg-rose-50 p-6 shadow-sm">
+        <p className="text-sm font-semibold uppercase tracking-wide text-rose-700">Read-only</p>
+        <h2 className="mt-1 text-2xl font-extrabold text-slate-950">User Directory</h2>
+        <p className="mt-4 rounded-xl bg-white p-4 text-sm font-semibold text-rose-700">{state.message}</p>
+      </section>
+    );
+  }
+
+  const directory = state.directory;
+  const filteredUsers = directory.users.filter((user: AdminDirectoryUser) => {
+    const matchesRole = roleFilter === "all" || user.role === roleFilter;
+    const matchesApproval = approvalFilter === "all" || user.approvalStatus === approvalFilter;
+    return matchesRole && matchesApproval && matchesUserDirectorySearch(user, searchTerm);
+  });
+
+  return (
+    <section className="mt-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">Read-only</p>
+          <h2 className="mt-1 text-2xl font-extrabold text-slate-950">User Directory</h2>
+          <p className="mt-2 max-w-3xl text-sm text-slate-700">
+            {directory.scope.label}. Search and review identity, role, and approval status for users available in your administrator scope.
+          </p>
+        </div>
+        <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-600">
+          <span className="font-bold text-slate-950">{filteredUsers.length}</span> of {directory.users.length} users shown
+        </div>
+      </div>
+
+      <div className="mt-5 grid gap-3 lg:grid-cols-[minmax(0,1fr)_12rem_12rem]">
+        <label className="text-sm font-semibold text-slate-700">
+          Search users
+          <input
+            type="search"
+            value={searchTerm}
+            onChange={(event) => onSearchTermChange(event.target.value)}
+            placeholder="Search name, username, email, or domain"
+            className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 shadow-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+          />
+        </label>
+        <label className="text-sm font-semibold text-slate-700">
+          Role
+          <select
+            value={roleFilter}
+            onChange={(event) => onRoleFilterChange(event.target.value as UserDirectoryRoleFilter)}
+            className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 shadow-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+          >
+            <option value="all">All</option>
+            <option value="student">Student</option>
+            <option value="teacher">Teacher</option>
+            <option value="admin">Admin</option>
+          </select>
+        </label>
+        <label className="text-sm font-semibold text-slate-700">
+          Approval status
+          <select
+            value={approvalFilter}
+            onChange={(event) => onApprovalFilterChange(event.target.value as UserDirectoryApprovalFilter)}
+            className="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 shadow-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+          >
+            <option value="all">All</option>
+            <option value="approved">Approved</option>
+            <option value="pending">Pending</option>
+            <option value="denied">Denied</option>
+          </select>
+        </label>
+      </div>
+
+      {filteredUsers.length === 0 ? (
+        <p className="mt-5 rounded-xl bg-slate-50 p-4 text-sm text-slate-600">No users match the current search and filters.</p>
+      ) : (
+        <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {filteredUsers.map((user: AdminDirectoryUser) => (
+            <article key={user.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <h3 className="truncate font-bold text-slate-950">{formatCompactValue(user.fullName || user.email)}</h3>
+                  <p className="truncate text-xs text-slate-500">{user.username ? `@${user.username}` : "No username"}</p>
+                </div>
+                <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-blue-700">{user.role}</span>
+              </div>
+
+              <dl className="mt-4 grid gap-2 text-xs text-slate-600">
+                <div className="rounded-xl bg-slate-50 p-3">
+                  <dt className="font-semibold text-slate-500">Email</dt>
+                  <dd className="mt-1 break-words font-bold text-slate-950">{formatCompactValue(user.email)}</dd>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="rounded-xl bg-slate-50 p-3">
+                    <dt className="font-semibold text-slate-500">Domain</dt>
+                    <dd className="mt-1 break-words font-bold text-slate-950">{formatCompactValue(user.emailDomain)}</dd>
+                  </div>
+                  <div className="rounded-xl bg-slate-50 p-3">
+                    <dt className="font-semibold text-slate-500">Status</dt>
+                    <dd className="mt-1 font-bold capitalize text-slate-950">{formatCompactValue(user.approvalStatus)}</dd>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="rounded-xl bg-slate-50 p-3">
+                    <dt className="font-semibold text-slate-500">Requested role</dt>
+                    <dd className="mt-1 font-bold capitalize text-slate-950">{formatCompactValue(user.requestedRole)}</dd>
+                  </div>
+                  <div className="rounded-xl bg-slate-50 p-3">
+                    <dt className="font-semibold text-slate-500">Created</dt>
+                    <dd className="mt-1 font-bold text-slate-950">{formatDate(user.createdAt)}</dd>
+                  </div>
+                </div>
+              </dl>
+            </article>
+          ))}
+        </div>
+      )}
     </section>
   );
 }
@@ -316,6 +490,10 @@ export default function AdminDashboardPage() {
   const router = useRouter();
   const [dashboardState, setDashboardState] = useState<DashboardState>({ status: "loading" });
   const [approvalCenterState, setApprovalCenterState] = useState<ApprovalCenterState>({ status: "idle" });
+  const [userDirectoryState, setUserDirectoryState] = useState<UserDirectoryState>({ status: "idle" });
+  const [userDirectorySearch, setUserDirectorySearch] = useState("");
+  const [userDirectoryRoleFilter, setUserDirectoryRoleFilter] = useState<UserDirectoryRoleFilter>("all");
+  const [userDirectoryApprovalFilter, setUserDirectoryApprovalFilter] = useState<UserDirectoryApprovalFilter>("all");
   const [updatingApprovalRequestId, setUpdatingApprovalRequestId] = useState<string | null>(null);
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
 
@@ -340,6 +518,21 @@ export default function AdminDashboardPage() {
     }
   }, [router]);
 
+  const loadUserDirectory = useCallback(async () => {
+    setUserDirectoryState({ status: "loading" });
+    try {
+      const directory = await getAdminUserDirectory();
+      setUserDirectoryState({ status: "allowed", directory });
+    } catch (error) {
+      const typedError = error as Error & { status?: number; code?: string };
+      if (typedError.status === 401 || typedError.code === "unauthorized") {
+        router.push("/login");
+        return;
+      }
+      setUserDirectoryState({ status: "error", message: typedError.message || "Failed to load user directory." });
+    }
+  }, [router]);
+
   const handleApprovalRequestUpdate = useCallback(async (requestId: string, action: "approve" | "deny") => {
     setUpdatingApprovalRequestId(requestId);
     try {
@@ -361,6 +554,7 @@ export default function AdminDashboardPage() {
         if (active) {
           setDashboardState({ status: "allowed", dashboard });
           void loadApprovalCenter();
+          void loadUserDirectory();
         }
       } catch (error) {
         if (!active) return;
@@ -372,7 +566,7 @@ export default function AdminDashboardPage() {
     }
     void loadDashboard();
     return () => { active = false; };
-  }, [loadApprovalCenter, router]);
+  }, [loadApprovalCenter, loadUserDirectory, router]);
 
   if (dashboardState.status === "loading") return <main className="mx-auto flex min-h-[70vh] max-w-4xl items-center justify-center px-4 py-12"><div className="w-full rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm"><p className="text-sm font-semibold uppercase tracking-wide text-blue-700">Administrator</p><h1 className="mt-2 text-3xl font-bold text-slate-950">Loading organization dashboard...</h1></div></main>;
 
@@ -387,6 +581,7 @@ export default function AdminDashboardPage() {
     <main className="mx-auto min-h-[70vh] max-w-7xl px-4 py-10">
       <div className="rounded-3xl border border-blue-100 bg-white p-8 shadow-sm"><p className="text-sm font-semibold uppercase tracking-wide text-blue-700">Administrator Dashboard</p><h1 className="mt-2 text-4xl font-extrabold text-slate-950">Organization overview</h1><p className="mt-4 max-w-3xl text-slate-700">{dashboard.scope.label}. This read-only dashboard summarizes Regents Algebra 1 teachers, students, classrooms, assignments, and progress available in your administrator scope.</p></div>
       <ApprovalCenter state={approvalCenterState} updatingRequestId={updatingApprovalRequestId} onRefresh={() => void loadApprovalCenter()} onUpdate={(requestId, action) => void handleApprovalRequestUpdate(requestId, action)} />
+      <UserDirectory state={userDirectoryState} searchTerm={userDirectorySearch} roleFilter={userDirectoryRoleFilter} approvalFilter={userDirectoryApprovalFilter} onSearchTermChange={setUserDirectorySearch} onRoleFilterChange={setUserDirectoryRoleFilter} onApprovalFilterChange={setUserDirectoryApprovalFilter} />
       <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4"><DashboardCard label="Organization" value={dashboard.scope.domain ?? "Global"} help={dashboard.scope.type === "master_global" ? "Master global admin view" : "Email-domain scoped"} /><DashboardCard label="Total teachers" value={dashboard.summary.totalTeachers} /><DashboardCard label="Total students" value={dashboard.summary.totalStudents} /><DashboardCard label="Total classrooms" value={dashboard.summary.totalClassrooms} /><DashboardCard label="Grouped assignments" value={dashboard.summary.totalGroupedAssignments} help={`${dashboard.summary.activeAssignments} active · ${dashboard.summary.archivedAssignments} archived`} /><DashboardCard label="Average completion" value={formatPercent(dashboard.summary.averageCompletion)} help="From Algebra 1 progress" /><DashboardCard label="Average accuracy" value={formatPercent(dashboard.summary.averageAccuracy)} help="From question attempts where available" /></div>
       <div className="mt-8 space-y-8"><DashboardSection title="Teachers"><TeachersTable teachers={dashboard.teachers} /></DashboardSection><DashboardSection title="Students"><div className="grid gap-5 xl:grid-cols-[minmax(17rem,22rem)_minmax(0,1fr)]"><div><StudentsList students={dashboard.students} selectedStudentId={selectedStudentId} onSelectStudent={setSelectedStudentId} /></div><div>{selectedStudentDetail ? <StudentDetailPanel detail={selectedStudentDetail} /> : <WholeSchoolActivityPanel activities={dashboard.recentActivity} />}</div></div></DashboardSection><DashboardSection title="Classrooms"><ClassroomsTable classrooms={dashboard.classrooms} /></DashboardSection><DashboardSection title="Assignments"><AssignmentsTable assignments={dashboard.assignments} /></DashboardSection></div>
     </main>
