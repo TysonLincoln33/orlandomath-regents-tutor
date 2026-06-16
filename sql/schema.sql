@@ -1009,6 +1009,8 @@ CREATE TABLE IF NOT EXISTS "public"."profiles" (
     "requested_role" "text" DEFAULT 'student'::"text" NOT NULL,
     "approval_status" "text" DEFAULT 'approved'::"text" NOT NULL,
     "email_domain" "text",
+    "is_active" boolean DEFAULT true NOT NULL,
+    "deactivated_at" timestamp with time zone,
     CONSTRAINT "profiles_approval_status_check" CHECK (("approval_status" = ANY (ARRAY['pending'::"text", 'approved'::"text", 'denied'::"text"]))),
     CONSTRAINT "profiles_requested_role_check" CHECK (("requested_role" = ANY (ARRAY['student'::"text", 'teacher'::"text", 'admin'::"text"]))),
     CONSTRAINT "profiles_role_check" CHECK (("role" = ANY (ARRAY['student'::"text", 'teacher'::"text", 'admin'::"text", 'master'::"text"])))
