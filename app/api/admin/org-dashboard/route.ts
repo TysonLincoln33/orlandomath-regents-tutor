@@ -501,6 +501,38 @@ function buildDashboard({
     return averagePercent(progressValues);
   };
 
+  const getGroupedRecipientStatusCounts = (recipientsForGroup: AssignmentRecipientRow[]) => {
+    const statusesByUser = new Map<string, Array<string | null>>();
+
+    for (const recipient of recipientsForGroup) {
+      statusesByUser.set(recipient.user_id, [
+        ...(statusesByUser.get(recipient.user_id) ?? []),
+        recipient.status,
+      ]);
+    }
+
+    let completedCount = 0;
+    let incompleteCount = 0;
+    let excusedCount = 0;
+
+    for (const statuses of statusesByUser.values()) {
+      if (statuses.length > 0 && statuses.every((status) => status === "excused")) {
+        excusedCount += 1;
+      } else if (statuses.length > 0 && statuses.every((status) => status === "completed")) {
+        completedCount += 1;
+      } else {
+        incompleteCount += 1;
+      }
+    }
+
+    return {
+      recipientCount: statusesByUser.size,
+      completedCount,
+      incompleteCount,
+      excusedCount,
+    };
+  };
+
   const teachersPayload = regentsTeachers
     .map((teacher) => {
       const teacherClassrooms = classroomsByTeacher.get(teacher.id) ?? [];
@@ -573,16 +605,7 @@ function buildDashboard({
       const groupRecipients = sortedAssignments.flatMap(
         (assignment) => recipientsByAssignment.get(assignment.id) ?? [],
       );
-      const completedCount = groupRecipients.filter(
-        (recipient) => recipient.status === "completed",
-      ).length;
-      const excusedCount = groupRecipients.filter(
-        (recipient) => recipient.status === "excused",
-      ).length;
-      const incompleteCount = Math.max(
-        groupRecipients.length - completedCount - excusedCount,
-        0,
-      );
+      const groupedRecipientStatusCounts = getGroupedRecipientStatusCounts(groupRecipients);
       const sectionAssignments = sortedAssignments.map((assignment) => {
         const assignmentRecipients = recipientsByAssignment.get(assignment.id) ?? [];
         const assignmentCompletedCount = assignmentRecipients.filter(
@@ -642,10 +665,10 @@ function buildDashboard({
         dueDate: first.due_date,
         sectionIds: sortedAssignments.map((assignment) => assignment.section_id),
         sectionCount: sortedAssignments.length,
-        recipientCount: groupRecipients.length,
-        completedCount,
-        incompleteCount,
-        excusedCount,
+        recipientCount: groupedRecipientStatusCounts.recipientCount,
+        completedCount: groupedRecipientStatusCounts.completedCount,
+        incompleteCount: groupedRecipientStatusCounts.incompleteCount,
+        excusedCount: groupedRecipientStatusCounts.excusedCount,
         averageProgress: averageAssignmentSectionProgress(sortedAssignments),
         archivedAt: sortedAssignments.every((assignment) => Boolean(assignment.archived_at))
           ? latestDate(sortedAssignments.map((assignment) => assignment.archived_at))

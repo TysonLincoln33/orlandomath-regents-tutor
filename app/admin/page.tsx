@@ -1165,13 +1165,89 @@ function formatAssignmentStatus(status: string | null | undefined) {
   return status.charAt(0).toUpperCase() + status.slice(1);
 }
 
+
+type AdminAssignmentSection = AdminDashboardAssignment["sectionAssignments"][number];
+type AdminAssignmentRecipient = AdminAssignmentSection["recipients"][number];
+
+function averageNullablePercent(values: Array<number | null | undefined>) {
+  const validValues = values.filter(
+    (value): value is number => typeof value === "number" && Number.isFinite(value),
+  );
+
+  if (validValues.length === 0) return null;
+
+  return Math.round(
+    validValues.reduce((sum, value) => sum + value, 0) / validValues.length,
+  );
+}
+
+function getOverallRecipientStatus(statuses: Array<string | null | undefined>) {
+  if (statuses.length > 0 && statuses.every((status) => status === "excused")) {
+    return "excused";
+  }
+
+  if (statuses.length > 0 && statuses.every((status) => status === "completed")) {
+    return "completed";
+  }
+
+  return "assigned";
+}
+
+function getOverallAssignmentSummary(assignment: AdminDashboardAssignment) {
+  const rowsByUser = new Map<
+    string,
+    {
+      recipient: AdminAssignmentRecipient;
+      statuses: Array<string | null | undefined>;
+      completionValues: number[];
+      accuracyValues: number[];
+    }
+  >();
+
+  for (const sectionAssignment of assignment.sectionAssignments) {
+    for (const recipient of sectionAssignment.recipients) {
+      const summary = rowsByUser.get(recipient.userId) ?? {
+        recipient,
+        statuses: [],
+        completionValues: [],
+        accuracyValues: [],
+      };
+      const isActive = recipient.status !== "excused" && recipient.status !== "archived";
+
+      summary.statuses.push(recipient.status);
+      if (isActive && typeof recipient.completionPercent === "number") {
+        summary.completionValues.push(recipient.completionPercent);
+      }
+      if (isActive && typeof recipient.accuracyPercent === "number") {
+        summary.accuracyValues.push(recipient.accuracyPercent);
+      }
+      rowsByUser.set(recipient.userId, summary);
+    }
+  }
+
+  const recipients = [...rowsByUser.values()]
+    .map(({ recipient, statuses, completionValues, accuracyValues }) => ({
+      ...recipient,
+      status: getOverallRecipientStatus(statuses),
+      completionPercent: averageNullablePercent(completionValues),
+      accuracyPercent: averageNullablePercent(accuracyValues),
+    }))
+    .sort((a, b) => (a.fullName ?? a.email ?? "").localeCompare(b.fullName ?? b.email ?? ""));
+
+  return {
+    recipients,
+    completionPercent: averageNullablePercent(recipients.map((recipient) => recipient.completionPercent)),
+    accuracyPercent: averageNullablePercent(recipients.map((recipient) => recipient.accuracyPercent)),
+  };
+}
+
 function AssignmentsTable({
   assignments,
 }: {
   assignments: AdminDashboardAssignment[];
 }) {
   const [expandedAssignmentId, setExpandedAssignmentId] = useState<string | null>(null);
-  const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
+  const [selectedSectionId, setSelectedSectionId] = useState<string | "overall" | null>(null);
 
   if (assignments.length === 0)
     return (
@@ -1184,9 +1260,14 @@ function AssignmentsTable({
     (assignment) => assignment.id === expandedAssignmentId,
   );
   const selectedSection =
-    expandedAssignment?.sectionAssignments.find(
-      (assignment) => assignment.id === selectedSectionId,
-    ) ?? expandedAssignment?.sectionAssignments[0];
+    selectedSectionId === "overall"
+      ? null
+      : expandedAssignment?.sectionAssignments.find(
+          (assignment) => assignment.id === selectedSectionId,
+        ) ?? expandedAssignment?.sectionAssignments[0];
+  const overallSummary = expandedAssignment
+    ? getOverallAssignmentSummary(expandedAssignment)
+    : null;
 
   return (
     <div className="space-y-4">
@@ -1249,7 +1330,7 @@ function AssignmentsTable({
                           return;
                         }
                         setExpandedAssignmentId(assignment.id);
-                        setSelectedSectionId(assignment.sectionAssignments[0]?.id ?? null);
+                        setSelectedSectionId("overall");
                       }}
                       className="rounded-lg bg-slate-950 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-slate-800"
                     >
@@ -1284,6 +1365,13 @@ function AssignmentsTable({
           </div>
 
           <div className="mt-4 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setSelectedSectionId("overall")}
+              className={`rounded-full border px-3 py-1 text-xs font-bold ${selectedSectionId === "overall" ? "border-blue-700 bg-blue-700 text-white" : "border-blue-200 bg-white text-blue-800"}`}
+            >
+              Overall
+            </button>
             {expandedAssignment.sectionAssignments.map((sectionAssignment) => (
               <button
                 type="button"
@@ -1295,6 +1383,69 @@ function AssignmentsTable({
               </button>
             ))}
           </div>
+
+          {selectedSectionId === "overall" && overallSummary ? (
+            <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
+              <div className="grid gap-3 text-sm text-slate-800 md:grid-cols-5">
+                <div>
+                  <p className="font-bold text-slate-950">Sections</p>
+                  <p>{expandedAssignment.sectionCount}</p>
+                </div>
+                <div>
+                  <p className="font-bold text-slate-950">Unique recipients</p>
+                  <p>{expandedAssignment.recipientCount}</p>
+                </div>
+                <div>
+                  <p className="font-bold text-slate-950">Statuses</p>
+                  <p>{expandedAssignment.completedCount} complete · {expandedAssignment.incompleteCount} incomplete · {expandedAssignment.excusedCount} excused</p>
+                </div>
+                <div>
+                  <p className="font-bold text-slate-950">Avg. section progress</p>
+                  <p>{formatPercent(expandedAssignment.averageProgress)}</p>
+                </div>
+                <div>
+                  <p className="font-bold text-slate-950">Avg. accuracy</p>
+                  <p>{formatPercent(overallSummary.accuracyPercent)}</p>
+                </div>
+              </div>
+
+              <div className="mt-4 overflow-x-auto">
+                <table className="min-w-full divide-y divide-slate-200 text-sm">
+                  <thead className="bg-slate-50 text-left text-xs font-bold uppercase tracking-wide text-slate-600">
+                    <tr>
+                      <th className="px-3 py-2">Recipient</th>
+                      <th className="px-3 py-2">Overall status</th>
+                      <th className="px-3 py-2">Avg. completion</th>
+                      <th className="px-3 py-2">Avg. accuracy</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 text-slate-800">
+                    {overallSummary.recipients.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="px-3 py-3 text-slate-700">
+                          No recipients found for this grouped assignment.
+                        </td>
+                      </tr>
+                    ) : (
+                      overallSummary.recipients.map((recipient) => (
+                        <tr key={recipient.userId}>
+                          <td className="px-3 py-2">
+                            <p className="font-semibold text-slate-950">
+                              {displayName({ fullName: recipient.fullName, email: recipient.email })}
+                            </p>
+                            <p className="text-xs text-slate-600">{recipient.email ?? "No email"}</p>
+                          </td>
+                          <td className="px-3 py-2 font-medium text-slate-800">{formatAssignmentStatus(recipient.status)}</td>
+                          <td className="px-3 py-2 font-medium text-slate-800">{formatPercent(recipient.completionPercent)}</td>
+                          <td className="px-3 py-2 font-medium text-slate-800">{formatPercent(recipient.accuracyPercent)}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : null}
 
           {selectedSection ? (
             <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
@@ -1319,7 +1470,7 @@ function AssignmentsTable({
 
               <div className="mt-4 overflow-x-auto">
                 <table className="min-w-full divide-y divide-slate-200 text-sm">
-                  <thead className="bg-slate-50 text-left text-xs font-bold uppercase tracking-wide text-slate-500">
+                  <thead className="bg-slate-50 text-left text-xs font-bold uppercase tracking-wide text-slate-600">
                     <tr>
                       <th className="px-3 py-2">Recipient</th>
                       <th className="px-3 py-2">Status</th>
@@ -1329,10 +1480,10 @@ function AssignmentsTable({
                       <th className="px-3 py-2">Accuracy</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody className="divide-y divide-slate-100 text-slate-800">
                     {selectedSection.recipients.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="px-3 py-3 text-slate-600">
+                        <td colSpan={6} className="px-3 py-3 text-slate-700">
                           No recipients found for this section assignment.
                         </td>
                       </tr>
@@ -1343,13 +1494,13 @@ function AssignmentsTable({
                             <p className="font-semibold text-slate-950">
                               {displayName({ fullName: recipient.fullName, email: recipient.email })}
                             </p>
-                            <p className="text-xs text-slate-500">{recipient.email ?? "No email"}</p>
+                            <p className="text-xs text-slate-600">{recipient.email ?? "No email"}</p>
                           </td>
-                          <td className="px-3 py-2">{formatAssignmentStatus(recipient.status)}</td>
-                          <td className="px-3 py-2">{formatDateTime(recipient.assignedAt)}</td>
-                          <td className="px-3 py-2">{formatDateTime(recipient.completedAt)}</td>
-                          <td className="px-3 py-2">{formatPercent(recipient.completionPercent)}</td>
-                          <td className="px-3 py-2">{formatPercent(recipient.accuracyPercent)}</td>
+                          <td className="px-3 py-2 font-medium text-slate-800">{formatAssignmentStatus(recipient.status)}</td>
+                          <td className="px-3 py-2 font-medium text-slate-800">{formatDateTime(recipient.assignedAt)}</td>
+                          <td className="px-3 py-2 font-medium text-slate-800">{formatDateTime(recipient.completedAt)}</td>
+                          <td className="px-3 py-2 font-medium text-slate-800">{formatPercent(recipient.completionPercent)}</td>
+                          <td className="px-3 py-2 font-medium text-slate-800">{formatPercent(recipient.accuracyPercent)}</td>
                         </tr>
                       ))
                     )}
