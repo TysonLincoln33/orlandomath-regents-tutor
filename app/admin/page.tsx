@@ -9,7 +9,9 @@ import {
   updateAdminApprovalRequest,
 } from "@/lib/admin/approvalRequests";
 import {
+  addAdminClassroomMember,
   getAdminClassroomManagement,
+  removeAdminClassroomMember,
   type AdminClassroomManagement,
   type AdminEligibleStudent,
   type AdminManagedClassroom,
@@ -58,6 +60,11 @@ type ClassroomManagementState =
   | { status: "idle" | "loading" }
   | { status: "allowed"; data: AdminClassroomManagement }
   | { status: "error"; message: string };
+
+type ClassroomMemberMutation =
+  | { type: "add"; userId: string }
+  | { type: "remove"; userId: string }
+  | null;
 
 type UserDirectoryRoleFilter = "all" | "student" | "teacher" | "admin";
 type UserDirectoryApprovalFilter = "all" | "approved" | "pending" | "denied";
@@ -696,15 +703,23 @@ function ClassroomManagement({
   state,
   selectedClassroomId,
   studentSearchTerm,
+  mutation,
+  mutationMessage,
   onSelectClassroom,
   onStudentSearchTermChange,
+  onAddStudent,
+  onRemoveStudent,
   onRefresh,
 }: {
   state: ClassroomManagementState;
   selectedClassroomId: string | null;
   studentSearchTerm: string;
+  mutation: ClassroomMemberMutation;
+  mutationMessage: { type: "success" | "error"; text: string } | null;
   onSelectClassroom: (classroomId: string) => void;
   onStudentSearchTermChange: (value: string) => void;
+  onAddStudent: (userId: string) => void;
+  onRemoveStudent: (userId: string) => void;
   onRefresh: () => void;
 }) {
   if (state.status === "error") {
@@ -750,14 +765,15 @@ function ClassroomManagement({
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">
-            A3.4a read-only
+            A3.4b roster tools
           </p>
           <h2 className="mt-1 text-2xl font-extrabold text-slate-950">
             Classroom Management
           </h2>
           <p className="mt-2 max-w-3xl text-sm text-slate-700">
             {data.scope.label}. View classroom ownership, rosters, roster counts,
-            and eligible active student search before membership changes are enabled.
+            and add or remove student roster memberships without changing
+            assignments or progress.
           </p>
         </div>
         <button
@@ -804,7 +820,11 @@ function ClassroomManagement({
             classroom={selectedClassroom}
             studentSearchTerm={studentSearchTerm}
             eligibleStudents={data.eligibleStudents}
+            mutation={mutation}
+            mutationMessage={mutationMessage}
             onStudentSearchTermChange={onStudentSearchTermChange}
+            onAddStudent={onAddStudent}
+            onRemoveStudent={onRemoveStudent}
           />
         </div>
       )}
@@ -864,12 +884,20 @@ function ClassroomRosterPanel({
   classroom,
   studentSearchTerm,
   eligibleStudents,
+  mutation,
+  mutationMessage,
   onStudentSearchTermChange,
+  onAddStudent,
+  onRemoveStudent,
 }: {
   classroom: AdminManagedClassroom | null;
   studentSearchTerm: string;
   eligibleStudents: AdminEligibleStudent[];
+  mutation: ClassroomMemberMutation;
+  mutationMessage: { type: "success" | "error"; text: string } | null;
   onStudentSearchTermChange: (value: string) => void;
+  onAddStudent: (userId: string) => void;
+  onRemoveStudent: (userId: string) => void;
 }) {
   if (!classroom) {
     return (
@@ -900,6 +928,18 @@ function ClassroomRosterPanel({
         </div>
       </div>
 
+      {mutationMessage ? (
+        <p
+          className={`rounded-xl p-3 text-sm font-semibold ${
+            mutationMessage.type === "success"
+              ? "bg-emerald-50 text-emerald-700"
+              : "bg-rose-50 text-rose-700"
+          }`}
+        >
+          {mutationMessage.text}
+        </p>
+      ) : null}
+
       <div className="rounded-2xl bg-white p-4 shadow-sm">
         <h4 className="font-bold text-slate-950">Roster</h4>
         {classroom.roster.length === 0 ? (
@@ -909,7 +949,14 @@ function ClassroomRosterPanel({
         ) : (
           <ul className="mt-3 max-h-80 space-y-2 overflow-y-auto pr-2">
             {classroom.roster.map((member) => (
-              <RosterMemberItem key={member.membershipId} member={member} />
+              <RosterMemberItem
+                key={member.membershipId}
+                member={member}
+                isRemoving={
+                  mutation?.type === "remove" && mutation.userId === member.userId
+                }
+                onRemove={() => onRemoveStudent(member.userId)}
+              />
             ))}
           </ul>
         )}
@@ -918,9 +965,8 @@ function ClassroomRosterPanel({
       <div className="rounded-2xl bg-white p-4 shadow-sm">
         <h4 className="font-bold text-slate-950">Eligible student search</h4>
         <p className="mt-1 text-sm text-slate-600">
-          Read-only preview of active students who could be eligible for this
-          classroom in the next phase. Add/remove actions are intentionally not
-          available in A3.4a.
+          Search active eligible students to add them to this classroom. Roster
+          removals only remove classroom membership.
         </p>
         <label className="mt-4 block text-sm font-semibold text-slate-700">
           Search active students
@@ -935,13 +981,23 @@ function ClassroomRosterPanel({
         <EligibleStudentResults
           searchTerm={studentSearchTerm}
           students={eligibleStudents}
+          addingStudentId={mutation?.type === "add" ? mutation.userId : null}
+          onAddStudent={onAddStudent}
         />
       </div>
     </div>
   );
 }
 
-function RosterMemberItem({ member }: { member: AdminClassroomRosterMember }) {
+function RosterMemberItem({
+  member,
+  isRemoving,
+  onRemove,
+}: {
+  member: AdminClassroomRosterMember;
+  isRemoving: boolean;
+  onRemove: () => void;
+}) {
   return (
     <li className="rounded-xl border border-slate-200 p-3 text-sm">
       <div className="flex flex-wrap items-start justify-between gap-2">
@@ -953,11 +1009,23 @@ function RosterMemberItem({ member }: { member: AdminClassroomRosterMember }) {
             {member.email ?? "No email"}
           </p>
         </div>
-        <span
-          className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide ${member.isActive ? "bg-emerald-50 text-emerald-700" : "bg-slate-200 text-slate-700"}`}
-        >
-          {member.isActive ? "Active" : "Inactive"}
-        </span>
+        <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+          <span
+            className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide ${member.isActive ? "bg-emerald-50 text-emerald-700" : "bg-slate-200 text-slate-700"}`}
+          >
+            {member.isActive ? "Active" : "Inactive"}
+          </span>
+          {member.canRemove ? (
+            <button
+              type="button"
+              disabled={isRemoving}
+              onClick={onRemove}
+              className="rounded-full bg-rose-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isRemoving ? "Removing..." : "Remove"}
+            </button>
+          ) : null}
+        </div>
       </div>
       <p className="mt-2 text-xs text-slate-500">
         Joined {formatDate(member.joinedAt)}
@@ -971,9 +1039,13 @@ function RosterMemberItem({ member }: { member: AdminClassroomRosterMember }) {
 function EligibleStudentResults({
   searchTerm,
   students,
+  addingStudentId,
+  onAddStudent,
 }: {
   searchTerm: string;
   students: AdminEligibleStudent[];
+  addingStudentId: string | null;
+  onAddStudent: (userId: string) => void;
 }) {
   if (searchTerm.trim().length < 2) {
     return (
@@ -1008,11 +1080,23 @@ function EligibleStudentResults({
                 {student.emailDomain ? ` · ${student.emailDomain}` : ""}
               </p>
             </div>
-            <span
-              className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide ${student.alreadyInClassroom ? "bg-blue-50 text-blue-700" : "bg-slate-100 text-slate-700"}`}
-            >
-              {student.alreadyInClassroom ? "In roster" : "Eligible"}
-            </span>
+            <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+              <span
+                className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide ${student.alreadyInClassroom ? "bg-blue-50 text-blue-700" : "bg-slate-100 text-slate-700"}`}
+              >
+                {student.alreadyInClassroom ? "Already enrolled" : "Eligible"}
+              </span>
+              {!student.alreadyInClassroom ? (
+                <button
+                  type="button"
+                  disabled={addingStudentId === student.id}
+                  onClick={() => onAddStudent(student.id)}
+                  className="rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {addingStudentId === student.id ? "Adding..." : "Add"}
+                </button>
+              ) : null}
+            </div>
           </div>
         </li>
       ))}
@@ -1358,6 +1442,12 @@ export default function AdminDashboardPage() {
     string | null
   >(null);
   const [studentSearchTerm, setStudentSearchTerm] = useState("");
+  const [classroomMemberMutation, setClassroomMemberMutation] =
+    useState<ClassroomMemberMutation>(null);
+  const [classroomMutationMessage, setClassroomMutationMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
   const loadClassroomManagement = useCallback(
     async (classroomId?: string | null, search?: string) => {
@@ -1536,6 +1626,7 @@ export default function AdminDashboardPage() {
     (classroomId: string) => {
       setSelectedManagedClassroomId(classroomId);
       setStudentSearchTerm("");
+      setClassroomMutationMessage(null);
       void loadClassroomManagement(classroomId, "");
     },
     [loadClassroomManagement],
@@ -1547,6 +1638,84 @@ export default function AdminDashboardPage() {
       void loadClassroomManagement(selectedManagedClassroomId, value);
     },
     [loadClassroomManagement, selectedManagedClassroomId],
+  );
+
+  const handleAddClassroomStudent = useCallback(
+    async (userId: string) => {
+      if (!selectedManagedClassroomId) return;
+
+      setClassroomMemberMutation({ type: "add", userId });
+      setClassroomMutationMessage(null);
+      try {
+        const result = await addAdminClassroomMember(
+          selectedManagedClassroomId,
+          userId,
+        );
+        await loadClassroomManagement(
+          selectedManagedClassroomId,
+          studentSearchTerm,
+        );
+        setClassroomMutationMessage({
+          type: "success",
+          text:
+            result.status === "already_enrolled"
+              ? "Student is already enrolled in this classroom."
+              : "Student added to classroom.",
+        });
+      } catch (error) {
+        const typedError = error as Error & { status?: number; code?: string };
+        if (typedError.status === 401 || typedError.code === "unauthorized") {
+          router.push("/login");
+          return;
+        }
+        setClassroomMutationMessage({
+          type: "error",
+          text: typedError.message || "Failed to add student to classroom.",
+        });
+      } finally {
+        setClassroomMemberMutation(null);
+      }
+    },
+    [loadClassroomManagement, router, selectedManagedClassroomId, studentSearchTerm],
+  );
+
+  const handleRemoveClassroomStudent = useCallback(
+    async (userId: string) => {
+      if (!selectedManagedClassroomId) return;
+
+      setClassroomMemberMutation({ type: "remove", userId });
+      setClassroomMutationMessage(null);
+      try {
+        const result = await removeAdminClassroomMember(
+          selectedManagedClassroomId,
+          userId,
+        );
+        await loadClassroomManagement(
+          selectedManagedClassroomId,
+          studentSearchTerm,
+        );
+        setClassroomMutationMessage({
+          type: "success",
+          text:
+            result.status === "not_found"
+              ? "Student was not enrolled in this classroom."
+              : "Student removed from classroom.",
+        });
+      } catch (error) {
+        const typedError = error as Error & { status?: number; code?: string };
+        if (typedError.status === 401 || typedError.code === "unauthorized") {
+          router.push("/login");
+          return;
+        }
+        setClassroomMutationMessage({
+          type: "error",
+          text: typedError.message || "Failed to remove student from classroom.",
+        });
+      } finally {
+        setClassroomMemberMutation(null);
+      }
+    },
+    [loadClassroomManagement, router, selectedManagedClassroomId, studentSearchTerm],
   );
 
   if (dashboardState.status === "loading")
@@ -1722,8 +1891,12 @@ export default function AdminDashboardPage() {
           state={classroomManagementState}
           selectedClassroomId={selectedManagedClassroomId}
           studentSearchTerm={studentSearchTerm}
+          mutation={classroomMemberMutation}
+          mutationMessage={classroomMutationMessage}
           onSelectClassroom={handleManagedClassroomSelect}
           onStudentSearchTermChange={handleStudentSearchTermChange}
+          onAddStudent={handleAddClassroomStudent}
+          onRemoveStudent={handleRemoveClassroomStudent}
           onRefresh={() =>
             void loadClassroomManagement(
               selectedManagedClassroomId,
