@@ -471,6 +471,36 @@ function buildDashboard({
     };
   };
 
+  const progressPercentOrNull = (value: number | string | null | undefined) => {
+    if (value === null || value === undefined) return null;
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  };
+
+  const averageAssignmentSectionProgress = (assignmentsForGroup: AssignmentRow[]) => {
+    const progressValues: number[] = [];
+
+    for (const assignment of assignmentsForGroup) {
+      const assignmentRecipients = recipientsByAssignment.get(assignment.id) ?? [];
+      const activeRecipients = assignmentRecipients.filter(
+        (recipient) => recipient.status !== "excused" && recipient.status !== "archived",
+      );
+
+      for (const recipient of activeRecipients) {
+        const matchingProgressRows = (progressByStudent.get(recipient.user_id) ?? []).filter(
+          (row) => row.section_id === assignment.section_id,
+        );
+
+        for (const row of matchingProgressRows) {
+          const progress = progressPercentOrNull(row.completion_percent);
+          if (progress !== null) progressValues.push(progress);
+        }
+      }
+    }
+
+    return averagePercent(progressValues);
+  };
+
   const teachersPayload = regentsTeachers
     .map((teacher) => {
       const teacherClassrooms = classroomsByTeacher.get(teacher.id) ?? [];
@@ -616,10 +646,7 @@ function buildDashboard({
         completedCount,
         incompleteCount,
         excusedCount,
-        averageProgress: averageForStudents(
-          [...new Set(groupRecipients.map((recipient) => recipient.user_id))],
-          "completion",
-        ),
+        averageProgress: averageAssignmentSectionProgress(sortedAssignments),
         archivedAt: sortedAssignments.every((assignment) => Boolean(assignment.archived_at))
           ? latestDate(sortedAssignments.map((assignment) => assignment.archived_at))
           : null,

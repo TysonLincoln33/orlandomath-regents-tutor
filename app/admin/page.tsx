@@ -1201,7 +1201,7 @@ function AssignmentsTable({
               <th className="px-4 py-3">Due</th>
               <th className="px-4 py-3">Recipients</th>
               <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">Avg. progress</th>
+              <th className="px-4 py-3">Avg. Section Progress</th>
               <th className="px-4 py-3">Details</th>
             </tr>
           </thead>
