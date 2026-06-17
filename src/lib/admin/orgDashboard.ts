@@ -210,3 +210,72 @@ export async function getAdminOrgDashboard(): Promise<AdminOrgDashboard> {
 
   return payload as AdminOrgDashboard;
 }
+
+export type AdminAssignmentRecipientAction = "excuse" | "unexcuse";
+
+export type AdminAssignmentRecipientMutationResult = {
+  recipient: {
+    assignment_id: string;
+    classroom_id: string;
+    user_id: string;
+    status: string;
+    assigned_at: string | null;
+    completed_at: string | null;
+  };
+};
+
+export async function updateAdminAssignmentRecipient(
+  assignmentId: string,
+  userId: string,
+  action: AdminAssignmentRecipientAction,
+): Promise<AdminAssignmentRecipientMutationResult> {
+  const supabase = getSupabaseBrowserClient();
+  const {
+    data: { session },
+    error: sessionError,
+  } = await supabase.auth.getSession();
+
+  if (sessionError) {
+    throw new Error(sessionError.message || "Failed to verify session.");
+  }
+
+  if (!session?.access_token) {
+    const error = new Error("Please sign in again.") as Error & {
+      status?: number;
+      code?: string;
+    };
+    error.status = 401;
+    error.code = "unauthorized";
+    throw error;
+  }
+
+  const response = await fetch(
+    `/api/admin/assignments/${assignmentId}/recipients/${userId}`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ action }),
+    },
+  );
+
+  const payload = (await response.json().catch(() => null)) as
+    | AdminAssignmentRecipientMutationResult
+    | { error?: string; code?: string }
+    | null;
+
+  if (!response.ok) {
+    const error = new Error(
+      payload && "error" in payload && payload.error
+        ? payload.error
+        : "Failed to update assignment recipient.",
+    ) as Error & { status?: number; code?: string };
+    error.status = response.status;
+    error.code = payload && "code" in payload ? payload.code : undefined;
+    throw error;
+  }
+
+  return payload as AdminAssignmentRecipientMutationResult;
+}

@@ -19,6 +19,8 @@ import {
 } from "@/lib/admin/classroomManagement";
 import {
   getAdminOrgDashboard,
+  updateAdminAssignmentRecipient,
+  type AdminAssignmentRecipientAction,
   type AdminDashboardAccessError,
   type AdminDashboardActivity,
   type AdminDashboardAssignment,
@@ -1243,11 +1245,48 @@ function getOverallAssignmentSummary(assignment: AdminDashboardAssignment) {
 
 function AssignmentsTable({
   assignments,
+  onRefreshDashboard,
 }: {
   assignments: AdminDashboardAssignment[];
+  onRefreshDashboard: () => Promise<void>;
 }) {
   const [expandedAssignmentId, setExpandedAssignmentId] = useState<string | null>(null);
   const [selectedSectionId, setSelectedSectionId] = useState<string | "overall" | null>(null);
+  const [updatingRecipientKey, setUpdatingRecipientKey] = useState<string | null>(null);
+  const [recipientMutationMessage, setRecipientMutationMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+
+  async function handleRecipientAction(
+    assignmentId: string,
+    recipient: AdminAssignmentRecipient,
+    action: AdminAssignmentRecipientAction,
+  ) {
+    const mutationKey = `${assignmentId}:${recipient.userId}`;
+    setUpdatingRecipientKey(mutationKey);
+    setRecipientMutationMessage(null);
+
+    try {
+      await updateAdminAssignmentRecipient(assignmentId, recipient.userId, action);
+      await onRefreshDashboard();
+      setRecipientMutationMessage({
+        type: "success",
+        text:
+          action === "excuse"
+            ? "Recipient excused successfully."
+            : "Recipient unexcused successfully.",
+      });
+    } catch (error) {
+      const typedError = error as Error;
+      setRecipientMutationMessage({
+        type: "error",
+        text: typedError.message || "Failed to update assignment recipient.",
+      });
+    } finally {
+      setUpdatingRecipientKey(null);
+    }
+  }
 
   if (assignments.length === 0)
     return (
@@ -1349,7 +1388,7 @@ function AssignmentsTable({
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <p className="text-sm font-bold uppercase tracking-wide text-blue-700">
-                Assignment detail · read only
+                Assignment detail · limited recipient actions
               </p>
               <h3 className="mt-1 text-xl font-extrabold text-slate-950">
                 {expandedAssignment.title}
@@ -1363,6 +1402,18 @@ function AssignmentsTable({
               <p>{expandedAssignment.recipientCount} total recipients</p>
             </div>
           </div>
+
+          {recipientMutationMessage ? (
+            <div
+              className={`mt-4 rounded-xl border px-4 py-3 text-sm font-semibold ${
+                recipientMutationMessage.type === "success"
+                  ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                  : "border-rose-200 bg-rose-50 text-rose-800"
+              }`}
+            >
+              {recipientMutationMessage.text}
+            </div>
+          ) : null}
 
           <div className="mt-4 flex flex-wrap gap-2">
             <button
@@ -1478,31 +1529,82 @@ function AssignmentsTable({
                       <th className="px-3 py-2">Completed</th>
                       <th className="px-3 py-2">Completion</th>
                       <th className="px-3 py-2">Accuracy</th>
+                      <th className="px-3 py-2">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 text-slate-800">
                     {selectedSection.recipients.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="px-3 py-3 text-slate-700">
+                        <td colSpan={7} className="px-3 py-3 text-slate-700">
                           No recipients found for this section assignment.
                         </td>
                       </tr>
                     ) : (
-                      selectedSection.recipients.map((recipient) => (
-                        <tr key={recipient.userId}>
-                          <td className="px-3 py-2">
-                            <p className="font-semibold text-slate-950">
-                              {displayName({ fullName: recipient.fullName, email: recipient.email })}
-                            </p>
-                            <p className="text-xs text-slate-600">{recipient.email ?? "No email"}</p>
-                          </td>
-                          <td className="px-3 py-2 font-medium text-slate-800">{formatAssignmentStatus(recipient.status)}</td>
-                          <td className="px-3 py-2 font-medium text-slate-800">{formatDateTime(recipient.assignedAt)}</td>
-                          <td className="px-3 py-2 font-medium text-slate-800">{formatDateTime(recipient.completedAt)}</td>
-                          <td className="px-3 py-2 font-medium text-slate-800">{formatPercent(recipient.completionPercent)}</td>
-                          <td className="px-3 py-2 font-medium text-slate-800">{formatPercent(recipient.accuracyPercent)}</td>
-                        </tr>
-                      ))
+                      selectedSection.recipients.map((recipient) => {
+                        const mutationKey = `${selectedSection.id}:${recipient.userId}`;
+                        const isUpdating = updatingRecipientKey === mutationKey;
+                        const canExcuse = recipient.status === "assigned";
+                        const canUnexcuse = recipient.status === "excused";
+
+                        return (
+                          <tr
+                            key={recipient.userId}
+                            className={
+                              recipient.status === "excused"
+                                ? "bg-amber-50/70"
+                                : undefined
+                            }
+                          >
+                            <td className="px-3 py-2">
+                              <p className="font-semibold text-slate-950">
+                                {displayName({ fullName: recipient.fullName, email: recipient.email })}
+                              </p>
+                              <p className="text-xs text-slate-600">{recipient.email ?? "No email"}</p>
+                            </td>
+                            <td className="px-3 py-2 font-medium text-slate-800">
+                              <span
+                                className={`inline-flex rounded-full px-2 py-0.5 text-xs font-bold ${
+                                  recipient.status === "excused"
+                                    ? "bg-amber-100 text-amber-900 ring-1 ring-amber-300"
+                                    : "bg-slate-100 text-slate-800 ring-1 ring-slate-200"
+                                }`}
+                              >
+                                {formatAssignmentStatus(recipient.status)}
+                              </span>
+                            </td>
+                            <td className="px-3 py-2 font-medium text-slate-800">{formatDateTime(recipient.assignedAt)}</td>
+                            <td className="px-3 py-2 font-medium text-slate-800">{formatDateTime(recipient.completedAt)}</td>
+                            <td className="px-3 py-2 font-medium text-slate-800">{formatPercent(recipient.completionPercent)}</td>
+                            <td className="px-3 py-2 font-medium text-slate-800">{formatPercent(recipient.accuracyPercent)}</td>
+                            <td className="px-3 py-2">
+                              {canExcuse || canUnexcuse ? (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    void handleRecipientAction(
+                                      selectedSection.id,
+                                      recipient,
+                                      canExcuse ? "excuse" : "unexcuse",
+                                    )
+                                  }
+                                  disabled={isUpdating}
+                                  className="rounded-md border border-amber-300 bg-white px-2 py-1 text-xs font-bold text-amber-800 transition hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-60"
+                                >
+                                  {isUpdating
+                                    ? "Updating..."
+                                    : canExcuse
+                                      ? "Excuse"
+                                      : "Unexcuse"}
+                                </button>
+                              ) : (
+                                <span className="text-xs font-medium text-slate-500">
+                                  No action
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })
                     )}
                   </tbody>
                 </table>
@@ -2192,7 +2294,13 @@ export default function AdminDashboardPage() {
           }
         />
         <DashboardSection title="Assignments">
-          <AssignmentsTable assignments={dashboard.assignments} />
+          <AssignmentsTable
+            assignments={dashboard.assignments}
+            onRefreshDashboard={async () => {
+              const refreshedDashboard = await getAdminOrgDashboard();
+              setDashboardState({ status: "allowed", dashboard: refreshedDashboard });
+            }}
+          />
         </DashboardSection>
       </div>
       <UserDirectory
