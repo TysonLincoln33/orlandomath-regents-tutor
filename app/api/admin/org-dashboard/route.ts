@@ -341,11 +341,12 @@ function buildDashboard({
   const membershipsByClassroom = new Map<string, ClassroomMemberRow[]>();
   const membershipsByStudent = new Map<string, ClassroomMemberRow[]>();
   const classroomsByTeacher = new Map<string, ClassroomRow[]>();
-  const assignmentsByClassroom = new Map<string, AssignmentRow[]>();
-  const assignmentsByTeacher = new Map<string, AssignmentRow[]>();
+  const assignmentGroupKeysByClassroom = new Map<string, Set<string>>();
+  const assignmentGroupKeysByTeacher = new Map<string, Set<string>>();
   const recipientsByStudent = new Map<string, AssignmentRecipientRow[]>();
   const recipientsByAssignment = new Map<string, AssignmentRecipientRow[]>();
   const studentsByTeacher = new Map<string, Set<string>>();
+  const assignmentGroups = new Map<string, AssignmentRow[]>();
 
   for (const classroom of classrooms) {
     classroomsByTeacher.set(classroom.teacher_id, [
@@ -374,16 +375,19 @@ function buildDashboard({
 
   for (const assignment of assignments) {
     const classroom = classroomMap.get(assignment.classroom_id);
-    assignmentsByClassroom.set(assignment.classroom_id, [
-      ...(assignmentsByClassroom.get(assignment.classroom_id) ?? []),
-      assignment,
-    ]);
+    const groupKey = getAssignmentGroupKey(assignment);
+    assignmentGroups.set(groupKey, [...(assignmentGroups.get(groupKey) ?? []), assignment]);
+
+    const classroomGroupKeys =
+      assignmentGroupKeysByClassroom.get(assignment.classroom_id) ?? new Set<string>();
+    classroomGroupKeys.add(groupKey);
+    assignmentGroupKeysByClassroom.set(assignment.classroom_id, classroomGroupKeys);
 
     if (classroom) {
-      assignmentsByTeacher.set(classroom.teacher_id, [
-        ...(assignmentsByTeacher.get(classroom.teacher_id) ?? []),
-        assignment,
-      ]);
+      const teacherGroupKeys =
+        assignmentGroupKeysByTeacher.get(classroom.teacher_id) ?? new Set<string>();
+      teacherGroupKeys.add(groupKey);
+      assignmentGroupKeysByTeacher.set(classroom.teacher_id, teacherGroupKeys);
     }
   }
 
@@ -544,7 +548,7 @@ function buildDashboard({
         email: teacher.email,
         classroomCount: teacherClassrooms.length,
         studentCount: teacherStudentIds.length,
-        assignmentCount: assignmentsByTeacher.get(teacher.id)?.length ?? 0,
+        assignmentCount: assignmentGroupKeysByTeacher.get(teacher.id)?.size ?? 0,
         averageCompletion: averageForStudents(teacherStudentIds, "completion"),
         averageAccuracy: averageForStudents(teacherStudentIds, "accuracy"),
       };
@@ -581,18 +585,12 @@ function buildDashboard({
         teacherName: teacher?.full_name ?? null,
         teacherEmail: teacher?.email ?? null,
         studentCount: classroomStudentIds.length,
-        assignmentCount: assignmentsByClassroom.get(classroom.id)?.length ?? 0,
+        assignmentCount: assignmentGroupKeysByClassroom.get(classroom.id)?.size ?? 0,
         averageCompletion: averageForStudents(classroomStudentIds, "completion"),
         averageAccuracy: averageForStudents(classroomStudentIds, "accuracy"),
       };
     })
     .sort((a, b) => a.name.localeCompare(b.name));
-
-  const assignmentGroups = new Map<string, AssignmentRow[]>();
-  for (const assignment of assignments) {
-    const key = getAssignmentGroupKey(assignment);
-    assignmentGroups.set(key, [...(assignmentGroups.get(key) ?? []), assignment]);
-  }
 
   const assignmentsPayload = [...assignmentGroups.entries()]
     .map(([groupId, groupAssignments]) => {
