@@ -42,6 +42,7 @@ type AssignmentRecipientRow = {
   user_id: string;
   status: string | null;
   assigned_at: string | null;
+  completed_at: string | null;
 };
 
 type ProgressRow = {
@@ -335,6 +336,7 @@ function buildDashboard({
 
   const regentsTeachers = teachers;
   const teacherMap = new Map(regentsTeachers.map((teacher) => [teacher.id, teacher]));
+  const studentMap = new Map(regentsStudents.map((student) => [student.id, student]));
 
   const membershipsByClassroom = new Map<string, ClassroomMemberRow[]>();
   const membershipsByStudent = new Map<string, ClassroomMemberRow[]>();
@@ -450,6 +452,87 @@ function buildDashboard({
   const averageForStudents = (ids: string[], metric: "completion" | "accuracy") =>
     averagePercent(ids.map((id) => studentMetrics.get(id)?.[metric] ?? null));
 
+  const assignmentMetricsForStudent = (studentId: string, sectionId: string | null) => {
+    const sectionProgress = (progressByStudent.get(studentId) ?? []).filter(
+      (row) => row.section_id === sectionId,
+    );
+    const sectionAttempts = (attemptsByStudent.get(studentId) ?? []).filter(
+      (row) => row.section_id === sectionId,
+    );
+    const attempted = sectionAttempts.length;
+    const correct = sectionAttempts.filter((attempt) => attempt.correct === true).length;
+
+    return {
+      completion: averagePercent(sectionProgress.map((row) => toNumber(row.completion_percent))),
+      accuracy:
+        attempted > 0
+          ? percentOrNull((correct / attempted) * 100)
+          : averagePercent(sectionProgress.map((row) => toNumber(row.accuracy_percent))),
+    };
+  };
+
+  const progressPercentOrNull = (value: number | string | null | undefined) => {
+    if (value === null || value === undefined) return null;
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  };
+
+  const averageAssignmentSectionProgress = (assignmentsForGroup: AssignmentRow[]) => {
+    const progressValues: number[] = [];
+
+    for (const assignment of assignmentsForGroup) {
+      const assignmentRecipients = recipientsByAssignment.get(assignment.id) ?? [];
+      const activeRecipients = assignmentRecipients.filter(
+        (recipient) => recipient.status !== "excused" && recipient.status !== "archived",
+      );
+
+      for (const recipient of activeRecipients) {
+        const matchingProgressRows = (progressByStudent.get(recipient.user_id) ?? []).filter(
+          (row) => row.section_id === assignment.section_id,
+        );
+
+        for (const row of matchingProgressRows) {
+          const progress = progressPercentOrNull(row.completion_percent);
+          if (progress !== null) progressValues.push(progress);
+        }
+      }
+    }
+
+    return averagePercent(progressValues);
+  };
+
+  const getGroupedRecipientStatusCounts = (recipientsForGroup: AssignmentRecipientRow[]) => {
+    const statusesByUser = new Map<string, Array<string | null>>();
+
+    for (const recipient of recipientsForGroup) {
+      statusesByUser.set(recipient.user_id, [
+        ...(statusesByUser.get(recipient.user_id) ?? []),
+        recipient.status,
+      ]);
+    }
+
+    let completedCount = 0;
+    let incompleteCount = 0;
+    let excusedCount = 0;
+
+    for (const statuses of statusesByUser.values()) {
+      if (statuses.length > 0 && statuses.every((status) => status === "excused")) {
+        excusedCount += 1;
+      } else if (statuses.length > 0 && statuses.every((status) => status === "completed")) {
+        completedCount += 1;
+      } else {
+        incompleteCount += 1;
+      }
+    }
+
+    return {
+      recipientCount: statusesByUser.size,
+      completedCount,
+      incompleteCount,
+      excusedCount,
+    };
+  };
+
   const teachersPayload = regentsTeachers
     .map((teacher) => {
       const teacherClassrooms = classroomsByTeacher.get(teacher.id) ?? [];
@@ -522,16 +605,52 @@ function buildDashboard({
       const groupRecipients = sortedAssignments.flatMap(
         (assignment) => recipientsByAssignment.get(assignment.id) ?? [],
       );
-      const completedCount = groupRecipients.filter(
-        (recipient) => recipient.status === "completed",
-      ).length;
-      const excusedCount = groupRecipients.filter(
-        (recipient) => recipient.status === "excused",
-      ).length;
-      const incompleteCount = Math.max(
-        groupRecipients.length - completedCount - excusedCount,
-        0,
-      );
+      const groupedRecipientStatusCounts = getGroupedRecipientStatusCounts(groupRecipients);
+      const sectionAssignments = sortedAssignments.map((assignment) => {
+        const assignmentRecipients = recipientsByAssignment.get(assignment.id) ?? [];
+        const assignmentCompletedCount = assignmentRecipients.filter(
+          (recipient) => recipient.status === "completed",
+        ).length;
+        const assignmentExcusedCount = assignmentRecipients.filter(
+          (recipient) => recipient.status === "excused",
+        ).length;
+
+        return {
+          id: assignment.id,
+          sectionId: assignment.section_id,
+          sectionTitle: getSectionTitle(assignment.section_id),
+          dueDate: assignment.due_date,
+          createdAt: assignment.created_at,
+          archivedAt: assignment.archived_at,
+          recipientCount: assignmentRecipients.length,
+          completedCount: assignmentCompletedCount,
+          incompleteCount: Math.max(
+            assignmentRecipients.length - assignmentCompletedCount - assignmentExcusedCount,
+            0,
+          ),
+          excusedCount: assignmentExcusedCount,
+          recipients: assignmentRecipients
+            .map((recipient) => {
+              const student = studentMap.get(recipient.user_id);
+              const metrics = assignmentMetricsForStudent(
+                recipient.user_id,
+                assignment.section_id,
+              );
+
+              return {
+                userId: recipient.user_id,
+                fullName: student?.full_name ?? null,
+                email: student?.email ?? null,
+                status: recipient.status,
+                assignedAt: recipient.assigned_at,
+                completedAt: recipient.completed_at,
+                completionPercent: metrics?.completion ?? null,
+                accuracyPercent: metrics?.accuracy ?? null,
+              };
+            })
+            .sort((a, b) => (a.fullName ?? a.email ?? "").localeCompare(b.fullName ?? b.email ?? "")),
+        };
+      });
 
       return {
         id: groupId,
@@ -546,17 +665,15 @@ function buildDashboard({
         dueDate: first.due_date,
         sectionIds: sortedAssignments.map((assignment) => assignment.section_id),
         sectionCount: sortedAssignments.length,
-        recipientCount: groupRecipients.length,
-        completedCount,
-        incompleteCount,
-        excusedCount,
-        averageProgress: averageForStudents(
-          [...new Set(groupRecipients.map((recipient) => recipient.user_id))],
-          "completion",
-        ),
+        recipientCount: groupedRecipientStatusCounts.recipientCount,
+        completedCount: groupedRecipientStatusCounts.completedCount,
+        incompleteCount: groupedRecipientStatusCounts.incompleteCount,
+        excusedCount: groupedRecipientStatusCounts.excusedCount,
+        averageProgress: averageAssignmentSectionProgress(sortedAssignments),
         archivedAt: sortedAssignments.every((assignment) => Boolean(assignment.archived_at))
           ? latestDate(sortedAssignments.map((assignment) => assignment.archived_at))
           : null,
+        sectionAssignments,
       };
     })
     .sort((a, b) => a.title.localeCompare(b.title));
@@ -825,7 +942,7 @@ export async function GET(req: NextRequest) {
       await selectIn<AssignmentRecipientRow>(
         adminClient
           .from("assignment_recipients")
-          .select("assignment_id,classroom_id,user_id,status,assigned_at"),
+          .select("assignment_id,classroom_id,user_id,status,assigned_at,completed_at"),
         "assignment_id",
         assignmentIds,
       );
