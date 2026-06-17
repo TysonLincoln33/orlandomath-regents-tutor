@@ -1160,70 +1160,206 @@ function ClassroomsTable({
   );
 }
 
+function formatAssignmentStatus(status: string | null | undefined) {
+  if (!status) return "Unknown";
+  return status.charAt(0).toUpperCase() + status.slice(1);
+}
+
 function AssignmentsTable({
   assignments,
 }: {
   assignments: AdminDashboardAssignment[];
 }) {
+  const [expandedAssignmentId, setExpandedAssignmentId] = useState<string | null>(null);
+  const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
+
   if (assignments.length === 0)
     return (
       <EmptyTableMessage>
         No Regents Algebra 1 assignments found for this administrator scope.
       </EmptyTableMessage>
     );
+
+  const expandedAssignment = assignments.find(
+    (assignment) => assignment.id === expandedAssignmentId,
+  );
+  const selectedSection =
+    expandedAssignment?.sectionAssignments.find(
+      (assignment) => assignment.id === selectedSectionId,
+    ) ?? expandedAssignment?.sectionAssignments[0];
+
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-slate-200 text-sm">
-        <thead className="bg-slate-50 text-left text-xs font-bold uppercase tracking-wide text-slate-500">
-          <tr>
-            <th className="px-4 py-3">Assignment</th>
-            <th className="px-4 py-3">Teacher</th>
-            <th className="px-4 py-3">Classroom</th>
-            <th className="px-4 py-3">Sections</th>
-            <th className="px-4 py-3">Due</th>
-            <th className="px-4 py-3">Recipients</th>
-            <th className="px-4 py-3">Status</th>
-            <th className="px-4 py-3">Avg. progress</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-100 bg-white text-slate-700">
-          {assignments.map((assignment) => (
-            <tr key={assignment.id}>
-              <td className="px-4 py-3">
-                <p className="font-semibold text-slate-950">
-                  {assignment.title}
-                </p>
-                <p className="text-xs text-slate-500">
-                  {assignment.description || "No description"}
-                </p>
-                <p className="text-xs text-slate-500">
-                  {assignment.archivedAt ? "Archived" : "Active"}
-                </p>
-              </td>
-              <td className="px-4 py-3">
-                {assignment.teacherName || assignment.teacherEmail || "Unknown"}
-              </td>
-              <td className="px-4 py-3">
-                {assignment.classroomName ?? "Unknown"}
-              </td>
-              <td className="px-4 py-3">
-                {assignment.sectionCount}{" "}
-                {assignment.sectionCount === 1 ? "section" : "sections"}
-              </td>
-              <td className="px-4 py-3">{formatDate(assignment.dueDate)}</td>
-              <td className="px-4 py-3">{assignment.recipientCount}</td>
-              <td className="px-4 py-3">
-                {assignment.completedCount} complete ·{" "}
-                {assignment.incompleteCount} incomplete ·{" "}
-                {assignment.excusedCount} excused
-              </td>
-              <td className="px-4 py-3">
-                {formatPercent(assignment.averageProgress)}
-              </td>
+    <div className="space-y-4">
+      <div className="overflow-x-auto">
+        <table className="min-w-full divide-y divide-slate-200 text-sm">
+          <thead className="bg-slate-50 text-left text-xs font-bold uppercase tracking-wide text-slate-500">
+            <tr>
+              <th className="px-4 py-3">Assignment</th>
+              <th className="px-4 py-3">Teacher</th>
+              <th className="px-4 py-3">Classroom</th>
+              <th className="px-4 py-3">Sections</th>
+              <th className="px-4 py-3">Due</th>
+              <th className="px-4 py-3">Recipients</th>
+              <th className="px-4 py-3">Status</th>
+              <th className="px-4 py-3">Avg. progress</th>
+              <th className="px-4 py-3">Details</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className="divide-y divide-slate-100 bg-white text-slate-700">
+            {assignments.map((assignment) => {
+              const isExpanded = expandedAssignmentId === assignment.id;
+
+              return (
+                <tr key={assignment.id} className={isExpanded ? "bg-blue-50/60" : undefined}>
+                  <td className="px-4 py-3">
+                    <p className="font-semibold text-slate-950">
+                      {assignment.title}
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      {assignment.description || "No description"}
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      {assignment.archivedAt ? "Archived" : "Active"}
+                    </p>
+                  </td>
+                  <td className="px-4 py-3">
+                    {assignment.teacherName || assignment.teacherEmail || "Unknown"}
+                  </td>
+                  <td className="px-4 py-3">
+                    {assignment.classroomName ?? "Unknown"}
+                  </td>
+                  <td className="px-4 py-3">
+                    {assignment.sectionCount} {assignment.sectionCount === 1 ? "section" : "sections"}
+                  </td>
+                  <td className="px-4 py-3">{formatDate(assignment.dueDate)}</td>
+                  <td className="px-4 py-3">{assignment.recipientCount}</td>
+                  <td className="px-4 py-3">
+                    {assignment.completedCount} complete · {assignment.incompleteCount} incomplete · {assignment.excusedCount} excused
+                  </td>
+                  <td className="px-4 py-3">
+                    {formatPercent(assignment.averageProgress)}
+                  </td>
+                  <td className="px-4 py-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (isExpanded) {
+                          setExpandedAssignmentId(null);
+                          setSelectedSectionId(null);
+                          return;
+                        }
+                        setExpandedAssignmentId(assignment.id);
+                        setSelectedSectionId(assignment.sectionAssignments[0]?.id ?? null);
+                      }}
+                      className="rounded-lg bg-slate-950 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-slate-800"
+                    >
+                      {isExpanded ? "Hide" : "View"}
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {expandedAssignment ? (
+        <div className="rounded-2xl border border-blue-100 bg-blue-50/70 p-5">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p className="text-sm font-bold uppercase tracking-wide text-blue-700">
+                Assignment detail · read only
+              </p>
+              <h3 className="mt-1 text-xl font-extrabold text-slate-950">
+                {expandedAssignment.title}
+              </h3>
+              <p className="mt-1 text-sm text-slate-600">
+                {expandedAssignment.classroomName ?? "Unknown classroom"} · {expandedAssignment.teacherName || expandedAssignment.teacherEmail || "Unknown teacher"}
+              </p>
+            </div>
+            <div className="text-sm text-slate-700">
+              <p>{expandedAssignment.sectionCount} section{expandedAssignment.sectionCount === 1 ? "" : "s"}</p>
+              <p>{expandedAssignment.recipientCount} total recipients</p>
+            </div>
+          </div>
+
+          <div className="mt-4 flex flex-wrap gap-2">
+            {expandedAssignment.sectionAssignments.map((sectionAssignment) => (
+              <button
+                type="button"
+                key={sectionAssignment.id}
+                onClick={() => setSelectedSectionId(sectionAssignment.id)}
+                className={`rounded-full border px-3 py-1 text-xs font-bold ${selectedSection?.id === sectionAssignment.id ? "border-blue-700 bg-blue-700 text-white" : "border-blue-200 bg-white text-blue-800"}`}
+              >
+                {sectionAssignment.sectionTitle}
+              </button>
+            ))}
+          </div>
+
+          {selectedSection ? (
+            <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
+              <div className="grid gap-3 text-sm text-slate-700 md:grid-cols-4">
+                <div>
+                  <p className="font-bold text-slate-950">Section</p>
+                  <p>{selectedSection.sectionTitle}</p>
+                </div>
+                <div>
+                  <p className="font-bold text-slate-950">Due</p>
+                  <p>{formatDate(selectedSection.dueDate)}</p>
+                </div>
+                <div>
+                  <p className="font-bold text-slate-950">Created</p>
+                  <p>{formatDateTime(selectedSection.createdAt)}</p>
+                </div>
+                <div>
+                  <p className="font-bold text-slate-950">Status</p>
+                  <p>{selectedSection.archivedAt ? "Archived" : "Active"}</p>
+                </div>
+              </div>
+
+              <div className="mt-4 overflow-x-auto">
+                <table className="min-w-full divide-y divide-slate-200 text-sm">
+                  <thead className="bg-slate-50 text-left text-xs font-bold uppercase tracking-wide text-slate-500">
+                    <tr>
+                      <th className="px-3 py-2">Recipient</th>
+                      <th className="px-3 py-2">Status</th>
+                      <th className="px-3 py-2">Assigned</th>
+                      <th className="px-3 py-2">Completed</th>
+                      <th className="px-3 py-2">Completion</th>
+                      <th className="px-3 py-2">Accuracy</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {selectedSection.recipients.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="px-3 py-3 text-slate-600">
+                          No recipients found for this section assignment.
+                        </td>
+                      </tr>
+                    ) : (
+                      selectedSection.recipients.map((recipient) => (
+                        <tr key={recipient.userId}>
+                          <td className="px-3 py-2">
+                            <p className="font-semibold text-slate-950">
+                              {displayName({ fullName: recipient.fullName, email: recipient.email })}
+                            </p>
+                            <p className="text-xs text-slate-500">{recipient.email ?? "No email"}</p>
+                          </td>
+                          <td className="px-3 py-2">{formatAssignmentStatus(recipient.status)}</td>
+                          <td className="px-3 py-2">{formatDateTime(recipient.assignedAt)}</td>
+                          <td className="px-3 py-2">{formatDateTime(recipient.completedAt)}</td>
+                          <td className="px-3 py-2">{formatPercent(recipient.completionPercent)}</td>
+                          <td className="px-3 py-2">{formatPercent(recipient.accuracyPercent)}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }

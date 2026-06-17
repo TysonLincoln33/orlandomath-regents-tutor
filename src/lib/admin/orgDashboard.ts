@@ -52,6 +52,31 @@ export type AdminDashboardClassroom = {
   averageAccuracy: number | null;
 };
 
+export type AdminDashboardAssignmentRecipient = {
+  userId: string;
+  fullName: string | null;
+  email: string | null;
+  status: string | null;
+  assignedAt: string | null;
+  completedAt: string | null;
+  completionPercent: number | null;
+  accuracyPercent: number | null;
+};
+
+export type AdminDashboardSectionAssignment = {
+  id: string;
+  sectionId: string | null;
+  sectionTitle: string;
+  dueDate: string | null;
+  createdAt: string;
+  archivedAt: string | null;
+  recipientCount: number;
+  completedCount: number;
+  incompleteCount: number;
+  excusedCount: number;
+  recipients: AdminDashboardAssignmentRecipient[];
+};
+
 export type AdminDashboardAssignment = {
   id: string;
   assignmentIds: string[];
@@ -71,6 +96,7 @@ export type AdminDashboardAssignment = {
   excusedCount: number;
   averageProgress: number | null;
   archivedAt: string | null;
+  sectionAssignments: AdminDashboardSectionAssignment[];
 };
 
 export type AdminDashboardRecentAttempt = {

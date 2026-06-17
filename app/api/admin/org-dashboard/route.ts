@@ -42,6 +42,7 @@ type AssignmentRecipientRow = {
   user_id: string;
   status: string | null;
   assigned_at: string | null;
+  completed_at: string | null;
 };
 
 type ProgressRow = {
@@ -335,6 +336,7 @@ function buildDashboard({
 
   const regentsTeachers = teachers;
   const teacherMap = new Map(regentsTeachers.map((teacher) => [teacher.id, teacher]));
+  const studentMap = new Map(regentsStudents.map((student) => [student.id, student]));
 
   const membershipsByClassroom = new Map<string, ClassroomMemberRow[]>();
   const membershipsByStudent = new Map<string, ClassroomMemberRow[]>();
@@ -450,6 +452,25 @@ function buildDashboard({
   const averageForStudents = (ids: string[], metric: "completion" | "accuracy") =>
     averagePercent(ids.map((id) => studentMetrics.get(id)?.[metric] ?? null));
 
+  const assignmentMetricsForStudent = (studentId: string, sectionId: string | null) => {
+    const sectionProgress = (progressByStudent.get(studentId) ?? []).filter(
+      (row) => row.section_id === sectionId,
+    );
+    const sectionAttempts = (attemptsByStudent.get(studentId) ?? []).filter(
+      (row) => row.section_id === sectionId,
+    );
+    const attempted = sectionAttempts.length;
+    const correct = sectionAttempts.filter((attempt) => attempt.correct === true).length;
+
+    return {
+      completion: averagePercent(sectionProgress.map((row) => toNumber(row.completion_percent))),
+      accuracy:
+        attempted > 0
+          ? percentOrNull((correct / attempted) * 100)
+          : averagePercent(sectionProgress.map((row) => toNumber(row.accuracy_percent))),
+    };
+  };
+
   const teachersPayload = regentsTeachers
     .map((teacher) => {
       const teacherClassrooms = classroomsByTeacher.get(teacher.id) ?? [];
@@ -532,6 +553,51 @@ function buildDashboard({
         groupRecipients.length - completedCount - excusedCount,
         0,
       );
+      const sectionAssignments = sortedAssignments.map((assignment) => {
+        const assignmentRecipients = recipientsByAssignment.get(assignment.id) ?? [];
+        const assignmentCompletedCount = assignmentRecipients.filter(
+          (recipient) => recipient.status === "completed",
+        ).length;
+        const assignmentExcusedCount = assignmentRecipients.filter(
+          (recipient) => recipient.status === "excused",
+        ).length;
+
+        return {
+          id: assignment.id,
+          sectionId: assignment.section_id,
+          sectionTitle: getSectionTitle(assignment.section_id),
+          dueDate: assignment.due_date,
+          createdAt: assignment.created_at,
+          archivedAt: assignment.archived_at,
+          recipientCount: assignmentRecipients.length,
+          completedCount: assignmentCompletedCount,
+          incompleteCount: Math.max(
+            assignmentRecipients.length - assignmentCompletedCount - assignmentExcusedCount,
+            0,
+          ),
+          excusedCount: assignmentExcusedCount,
+          recipients: assignmentRecipients
+            .map((recipient) => {
+              const student = studentMap.get(recipient.user_id);
+              const metrics = assignmentMetricsForStudent(
+                recipient.user_id,
+                assignment.section_id,
+              );
+
+              return {
+                userId: recipient.user_id,
+                fullName: student?.full_name ?? null,
+                email: student?.email ?? null,
+                status: recipient.status,
+                assignedAt: recipient.assigned_at,
+                completedAt: recipient.completed_at,
+                completionPercent: metrics?.completion ?? null,
+                accuracyPercent: metrics?.accuracy ?? null,
+              };
+            })
+            .sort((a, b) => (a.fullName ?? a.email ?? "").localeCompare(b.fullName ?? b.email ?? "")),
+        };
+      });
 
       return {
         id: groupId,
@@ -557,6 +623,7 @@ function buildDashboard({
         archivedAt: sortedAssignments.every((assignment) => Boolean(assignment.archived_at))
           ? latestDate(sortedAssignments.map((assignment) => assignment.archived_at))
           : null,
+        sectionAssignments,
       };
     })
     .sort((a, b) => a.title.localeCompare(b.title));
@@ -825,7 +892,7 @@ export async function GET(req: NextRequest) {
       await selectIn<AssignmentRecipientRow>(
         adminClient
           .from("assignment_recipients")
-          .select("assignment_id,classroom_id,user_id,status,assigned_at"),
+          .select("assignment_id,classroom_id,user_id,status,assigned_at,completed_at"),
         "assignment_id",
         assignmentIds,
       );
