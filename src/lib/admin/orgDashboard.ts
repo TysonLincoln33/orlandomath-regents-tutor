@@ -61,6 +61,8 @@ export type AdminDashboardAssignmentRecipient = {
   completedAt: string | null;
   completionPercent: number | null;
   accuracyPercent: number | null;
+  hasProgress: boolean;
+  hasAttempts: boolean;
 };
 
 export type AdminDashboardSectionAssignment = {
@@ -229,6 +231,22 @@ export type AdminAssignmentRecipientBulkMutationResult = {
   updated_count: number;
 };
 
+export type AdminAssignmentRecipientCreateResult = {
+  recipient: AdminAssignmentRecipientMutationResult["recipient"];
+};
+
+export type AdminAssignmentRecipientBulkCreateResult = {
+  recipients: AdminAssignmentRecipientMutationResult["recipient"][];
+  created_count: number;
+};
+
+export type AdminAssignmentRecipientRemoveResult = {
+  removed: true;
+  removed_count: number;
+  recipient?: AdminAssignmentRecipientMutationResult["recipient"];
+  recipients?: AdminAssignmentRecipientMutationResult["recipient"][];
+};
+
 export async function updateAdminAssignmentRecipient(
   assignmentId: string,
   userId: string,
@@ -336,4 +354,135 @@ export async function updateAdminAssignmentRecipientsBulk(
   }
 
   return payload as AdminAssignmentRecipientBulkMutationResult;
+}
+
+async function getAdminAssignmentMutationAccessToken() {
+  const supabase = getSupabaseBrowserClient();
+  const {
+    data: { session },
+    error: sessionError,
+  } = await supabase.auth.getSession();
+
+  if (sessionError) {
+    throw new Error(sessionError.message || "Failed to verify session.");
+  }
+
+  if (!session?.access_token) {
+    const error = new Error("Please sign in again.") as Error & {
+      status?: number;
+      code?: string;
+    };
+    error.status = 401;
+    error.code = "unauthorized";
+    throw error;
+  }
+
+  return session.access_token;
+}
+
+async function parseAdminAssignmentMutationResponse<T>(
+  response: Response,
+  fallbackMessage: string,
+): Promise<T> {
+  const payload = (await response.json().catch(() => null)) as
+    | T
+    | { error?: string; code?: string }
+    | null;
+
+  if (!response.ok) {
+    const errorPayload =
+      payload && typeof payload === "object" && "error" in payload
+        ? payload
+        : null;
+    const error = new Error(
+      errorPayload?.error
+        ? errorPayload.error
+        : fallbackMessage,
+    ) as Error & { status?: number; code?: string };
+    error.status = response.status;
+    error.code =
+      errorPayload && "code" in errorPayload ? errorPayload.code : undefined;
+    throw error;
+  }
+
+  return payload as T;
+}
+
+export async function addAdminAssignmentRecipient(
+  assignmentId: string,
+  userId: string,
+): Promise<AdminAssignmentRecipientCreateResult> {
+  const accessToken = await getAdminAssignmentMutationAccessToken();
+  const response = await fetch(`/api/admin/assignments/${assignmentId}/recipients`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({ userId }),
+  });
+
+  return parseAdminAssignmentMutationResponse<AdminAssignmentRecipientCreateResult>(
+    response,
+    "Failed to add assignment recipient.",
+  );
+}
+
+export async function removeAdminAssignmentRecipient(
+  assignmentId: string,
+  userId: string,
+): Promise<AdminAssignmentRecipientRemoveResult> {
+  const accessToken = await getAdminAssignmentMutationAccessToken();
+  const response = await fetch(
+    `/api/admin/assignments/${assignmentId}/recipients/${userId}`,
+    {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${accessToken}` },
+    },
+  );
+
+  return parseAdminAssignmentMutationResponse<AdminAssignmentRecipientRemoveResult>(
+    response,
+    "Failed to remove assignment recipient.",
+  );
+}
+
+export async function addAdminAssignmentRecipientsBulk(
+  assignmentIds: string[],
+  userId: string,
+): Promise<AdminAssignmentRecipientBulkCreateResult> {
+  const accessToken = await getAdminAssignmentMutationAccessToken();
+  const response = await fetch(`/api/admin/assignments/recipients/${userId}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({ assignmentIds }),
+  });
+
+  return parseAdminAssignmentMutationResponse<AdminAssignmentRecipientBulkCreateResult>(
+    response,
+    "Failed to add assignment recipients.",
+  );
+}
+
+export async function removeAdminAssignmentRecipientsBulk(
+  assignmentIds: string[],
+  userId: string,
+): Promise<AdminAssignmentRecipientRemoveResult> {
+  const accessToken = await getAdminAssignmentMutationAccessToken();
+  const response = await fetch(`/api/admin/assignments/recipients/${userId}`, {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({ assignmentIds }),
+  });
+
+  return parseAdminAssignmentMutationResponse<AdminAssignmentRecipientRemoveResult>(
+    response,
+    "Failed to remove assignment recipients.",
+  );
 }

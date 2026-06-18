@@ -472,6 +472,8 @@ function buildDashboard({
         attempted > 0
           ? percentOrNull((correct / attempted) * 100)
           : averagePercent(sectionProgress.map((row) => toNumber(row.accuracy_percent))),
+      hasProgress: sectionProgress.length > 0,
+      hasAttempts: attempted > 0,
     };
   };
 
@@ -644,6 +646,8 @@ function buildDashboard({
                 completedAt: recipient.completed_at,
                 completionPercent: metrics?.completion ?? null,
                 accuracyPercent: metrics?.accuracy ?? null,
+                hasProgress: metrics?.hasProgress ?? false,
+                hasAttempts: metrics?.hasAttempts ?? false,
               };
             })
             .sort((a, b) => (a.fullName ?? a.email ?? "").localeCompare(b.fullName ?? b.email ?? "")),

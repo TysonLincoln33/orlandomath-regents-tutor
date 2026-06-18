@@ -129,8 +129,15 @@ export async function GET(req: NextRequest) {
 
     const teacherMap = mapProfileById(allTeachers);
     const memberProfileMap = mapProfileById((memberProfilesRows ?? []) as ProfileRow[]);
+    const visibleMembers = isMaster
+      ? members
+      : members.filter((member) => {
+          const profile = memberProfileMap.get(member.user_id);
+          const memberDomain = profile?.email_domain ?? getEmailDomain(profile?.email);
+          return profile?.role === "student" && memberDomain === domain;
+        });
     const membersByClassroom = new Map<string, ClassroomMemberRow[]>();
-    members.forEach((member) => {
+    visibleMembers.forEach((member) => {
       membersByClassroom.set(member.classroom_id, [
         ...(membersByClassroom.get(member.classroom_id) ?? []),
         member,

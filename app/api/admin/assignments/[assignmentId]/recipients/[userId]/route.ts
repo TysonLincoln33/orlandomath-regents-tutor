@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import {
+  assertRecipientsCanBeRemoved,
+  getRecipientRows,
+  getVerifiedAssignment,
+} from "../../../_recipientUtils";
+import {
   AdminClassroomManagementApiError,
   getManageableClassroom,
   getRouteContext,
@@ -159,6 +164,68 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
     return NextResponse.json({ recipient: updatedRecipient });
   } catch (error) {
     console.error("admin assignment recipient route error", error);
+    return jsonError(error);
+  }
+}
+
+export async function DELETE(req: NextRequest, context: RouteContext) {
+  try {
+    const { assignmentId, userId } = await context.params;
+    const ctx = await getRouteContext(req);
+    const assignment = await getVerifiedAssignment(ctx, assignmentId);
+
+    await getValidatedStudent(ctx, userId);
+
+    const recipients = await getRecipientRows(
+      ctx.adminClient,
+      assignment.classroom_id,
+      userId,
+      [assignmentId],
+    );
+
+    if (recipients.length === 0) {
+      throw new AdminClassroomManagementApiError(
+        "Assignment recipient not found.",
+        404,
+      );
+    }
+
+    await assertRecipientsCanBeRemoved(
+      ctx.adminClient,
+      [assignment],
+      recipients,
+      userId,
+    );
+
+    const { data: deletedRecipients, error: deleteError } = await ctx.adminClient
+      .from("assignment_recipients")
+      .delete()
+      .eq("assignment_id", assignmentId)
+      .eq("classroom_id", assignment.classroom_id)
+      .eq("user_id", userId)
+      .select(RECIPIENT_SELECT);
+
+    if (deleteError || !deletedRecipients) {
+      throw new AdminClassroomManagementApiError(
+        deleteError?.message || "Failed to remove assignment recipient.",
+        500,
+      );
+    }
+
+    if (deletedRecipients.length !== 1) {
+      throw new AdminClassroomManagementApiError(
+        "Failed to remove assignment recipient.",
+        500,
+      );
+    }
+
+    return NextResponse.json({
+      removed: true,
+      removed_count: deletedRecipients.length,
+      recipient: deletedRecipients[0],
+    });
+  } catch (error) {
+    console.error("admin delete assignment recipient route error", error);
     return jsonError(error);
   }
 }

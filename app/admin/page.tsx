@@ -18,6 +18,8 @@ import {
   type AdminClassroomRosterMember,
 } from "@/lib/admin/classroomManagement";
 import {
+  addAdminAssignmentRecipient,
+  addAdminAssignmentRecipientsBulk,
   getAdminOrgDashboard,
   updateAdminAssignmentRecipient,
   updateAdminAssignmentRecipientsBulk,
@@ -1223,6 +1225,8 @@ function getOverallAssignmentSummary(assignment: AdminDashboardAssignment) {
       completionValues: number[];
       accuracyValues: number[];
       assignmentIds: string[];
+      hasProgress: boolean;
+      hasAttempts: boolean;
     }
   >();
 
@@ -1234,6 +1238,8 @@ function getOverallAssignmentSummary(assignment: AdminDashboardAssignment) {
         completionValues: [],
         accuracyValues: [],
         assignmentIds: [],
+        hasProgress: false,
+        hasAttempts: false,
       };
       const isActive = recipient.status !== "excused" && recipient.status !== "archived";
 
@@ -1245,18 +1251,22 @@ function getOverallAssignmentSummary(assignment: AdminDashboardAssignment) {
       if (isActive && typeof recipient.accuracyPercent === "number") {
         summary.accuracyValues.push(recipient.accuracyPercent);
       }
+      summary.hasProgress = summary.hasProgress || recipient.hasProgress;
+      summary.hasAttempts = summary.hasAttempts || recipient.hasAttempts;
       rowsByUser.set(recipient.userId, summary);
     }
   }
 
   const recipients = [...rowsByUser.values()]
-    .map(({ recipient, statuses, completionValues, accuracyValues, assignmentIds }) => ({
+    .map(({ recipient, statuses, completionValues, accuracyValues, assignmentIds, hasProgress, hasAttempts }) => ({
       ...recipient,
       assignmentIds,
       statuses,
       status: getOverallRecipientStatus(statuses),
       completionPercent: averageNullablePercent(completionValues),
       accuracyPercent: averageNullablePercent(accuracyValues),
+      hasProgress,
+      hasAttempts,
     }))
     .sort((a, b) => (a.fullName ?? a.email ?? "").localeCompare(b.fullName ?? b.email ?? ""));
 
@@ -1269,9 +1279,11 @@ function getOverallAssignmentSummary(assignment: AdminDashboardAssignment) {
 
 function AssignmentsTable({
   assignments,
+  classroomManagement,
   onRefreshDashboard,
 }: {
   assignments: AdminDashboardAssignment[];
+  classroomManagement: AdminClassroomManagement | null;
   onRefreshDashboard: () => Promise<void>;
 }) {
   const [expandedAssignmentId, setExpandedAssignmentId] = useState<string | null>(null);
@@ -1281,6 +1293,7 @@ function AssignmentsTable({
     type: "success" | "error";
     text: string;
   } | null>(null);
+  const [selectedAddRecipientId, setSelectedAddRecipientId] = useState("");
 
   async function handleRecipientAction(
     assignmentId: string,
@@ -1347,6 +1360,56 @@ function AssignmentsTable({
     }
   }
 
+  async function handleAddSectionRecipient(assignmentId: string, userId: string) {
+    if (!userId) return;
+    const mutationKey = `add:${assignmentId}`;
+    setUpdatingRecipientKey(mutationKey);
+    setRecipientMutationMessage(null);
+
+    try {
+      await addAdminAssignmentRecipient(assignmentId, userId);
+      setSelectedAddRecipientId("");
+      await onRefreshDashboard();
+      setRecipientMutationMessage({
+        type: "success",
+        text: "Recipient added successfully.",
+      });
+    } catch (error) {
+      const typedError = error as Error;
+      setRecipientMutationMessage({
+        type: "error",
+        text: typedError.message || "Failed to add assignment recipient.",
+      });
+    } finally {
+      setUpdatingRecipientKey(null);
+    }
+  }
+
+  async function handleAddOverallRecipient(assignmentIds: string[], userId: string) {
+    if (!userId) return;
+    const mutationKey = `add:overall`;
+    setUpdatingRecipientKey(mutationKey);
+    setRecipientMutationMessage(null);
+
+    try {
+      await addAdminAssignmentRecipientsBulk(assignmentIds, userId);
+      setSelectedAddRecipientId("");
+      await onRefreshDashboard();
+      setRecipientMutationMessage({
+        type: "success",
+        text: "Recipient added to all sections successfully.",
+      });
+    } catch (error) {
+      const typedError = error as Error;
+      setRecipientMutationMessage({
+        type: "error",
+        text: typedError.message || "Failed to add assignment recipients.",
+      });
+    } finally {
+      setUpdatingRecipientKey(null);
+    }
+  }
+
   if (assignments.length === 0)
     return (
       <EmptyTableMessage>
@@ -1366,6 +1429,25 @@ function AssignmentsTable({
   const overallSummary = expandedAssignment
     ? getOverallAssignmentSummary(expandedAssignment)
     : null;
+  const expandedClassroom = expandedAssignment && classroomManagement
+    ? classroomManagement.classrooms.find(
+        (classroom) => classroom.id === expandedAssignment.classroomId,
+      ) ?? null
+    : null;
+  const activeRoster = expandedClassroom?.roster.filter((member) => member.isActive) ?? [];
+  const selectedSectionRecipientIds = new Set(
+    selectedSection?.recipients.map((recipient) => recipient.userId) ?? [],
+  );
+  const overallRecipientIds = new Set(
+    overallSummary?.recipients.map((recipient) => recipient.userId) ?? [],
+  );
+  const addCandidates = activeRoster
+    .filter((member) =>
+      selectedSectionId === "overall"
+        ? !overallRecipientIds.has(member.userId)
+        : !selectedSectionRecipientIds.has(member.userId),
+    )
+    .sort((a, b) => (a.fullName ?? a.email ?? "").localeCompare(b.fullName ?? b.email ?? ""));
 
   return (
     <div className="space-y-4">
@@ -1477,7 +1559,10 @@ function AssignmentsTable({
           <div className="mt-4 flex flex-wrap gap-2">
             <button
               type="button"
-              onClick={() => setSelectedSectionId("overall")}
+              onClick={() => {
+                setSelectedSectionId("overall");
+                setSelectedAddRecipientId("");
+              }}
               className={`rounded-full border px-3 py-1 text-xs font-bold ${selectedSectionId === "overall" ? "border-blue-700 bg-blue-700 text-white" : "border-blue-200 bg-white text-blue-800"}`}
             >
               Overall
@@ -1486,7 +1571,10 @@ function AssignmentsTable({
               <button
                 type="button"
                 key={sectionAssignment.id}
-                onClick={() => setSelectedSectionId(sectionAssignment.id)}
+                onClick={() => {
+                  setSelectedSectionId(sectionAssignment.id);
+                  setSelectedAddRecipientId("");
+                }}
                 className={`rounded-full border px-3 py-1 text-xs font-bold ${selectedSection?.id === sectionAssignment.id ? "border-blue-700 bg-blue-700 text-white" : "border-blue-200 bg-white text-blue-800"}`}
               >
                 {sectionAssignment.sectionTitle}
@@ -1517,6 +1605,50 @@ function AssignmentsTable({
                   <p className="font-bold text-slate-950">Avg. accuracy</p>
                   <p>{formatPercent(overallSummary.accuracyPercent)}</p>
                 </div>
+              </div>
+
+              <div className="mt-4 rounded-lg border border-blue-100 bg-blue-50/60 p-3">
+                <p className="text-sm font-bold text-slate-950">
+                  Add recipient to all sections
+                </p>
+                <p className="mt-1 text-xs text-slate-600">
+                  Adds an active classroom roster student to every section assignment in this group.
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <select
+                    value={selectedAddRecipientId}
+                    onChange={(event) => setSelectedAddRecipientId(event.target.value)}
+                    className="min-w-64 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800"
+                  >
+                    <option value="">
+                      {expandedClassroom ? "Select eligible student" : "Classroom roster unavailable"}
+                    </option>
+                    {addCandidates.map((member) => (
+                      <option key={member.userId} value={member.userId}>
+                        {displayName({ fullName: member.fullName, email: member.email })}
+                        {member.email ? ` · ${member.email}` : ""}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      void handleAddOverallRecipient(
+                        expandedAssignment.assignmentIds,
+                        selectedAddRecipientId,
+                      )
+                    }
+                    disabled={!selectedAddRecipientId || updatingRecipientKey === "add:overall"}
+                    className="rounded-md bg-blue-700 px-3 py-2 text-sm font-bold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {updatingRecipientKey === "add:overall" ? "Adding..." : "Add to all sections"}
+                  </button>
+                </div>
+                {expandedClassroom && addCandidates.length === 0 ? (
+                  <p className="mt-2 text-xs font-medium text-slate-600">
+                    No eligible active roster students are available to add to all sections.
+                  </p>
+                ) : null}
               </div>
 
               <div className="mt-4 overflow-x-auto">
@@ -1624,6 +1756,50 @@ function AssignmentsTable({
                   <p className="font-bold text-slate-950">Status</p>
                   <p>{selectedSection.archivedAt ? "Archived" : "Active"}</p>
                 </div>
+              </div>
+
+              <div className="mt-4 rounded-lg border border-blue-100 bg-blue-50/60 p-3">
+                <p className="text-sm font-bold text-slate-950">
+                  Add recipient to this section
+                </p>
+                <p className="mt-1 text-xs text-slate-600">
+                  Adds an active classroom roster student to only this section assignment.
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <select
+                    value={selectedAddRecipientId}
+                    onChange={(event) => setSelectedAddRecipientId(event.target.value)}
+                    className="min-w-64 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800"
+                  >
+                    <option value="">
+                      {expandedClassroom ? "Select eligible student" : "Classroom roster unavailable"}
+                    </option>
+                    {addCandidates.map((member) => (
+                      <option key={member.userId} value={member.userId}>
+                        {displayName({ fullName: member.fullName, email: member.email })}
+                        {member.email ? ` · ${member.email}` : ""}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      void handleAddSectionRecipient(selectedSection.id, selectedAddRecipientId)
+                    }
+                    disabled={
+                      !selectedAddRecipientId ||
+                      updatingRecipientKey === `add:${selectedSection.id}`
+                    }
+                    className="rounded-md bg-blue-700 px-3 py-2 text-sm font-bold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {updatingRecipientKey === `add:${selectedSection.id}` ? "Adding..." : "Add to section"}
+                  </button>
+                </div>
+                {expandedClassroom && addCandidates.length === 0 ? (
+                  <p className="mt-2 text-xs font-medium text-slate-600">
+                    No eligible active roster students are available to add to this section.
+                  </p>
+                ) : null}
               </div>
 
               <div className="mt-4 overflow-x-auto">
@@ -2403,6 +2579,11 @@ export default function AdminDashboardPage() {
         <DashboardSection title="Assignments">
           <AssignmentsTable
             assignments={dashboard.assignments}
+            classroomManagement={
+              classroomManagementState.status === "allowed"
+                ? classroomManagementState.data
+                : null
+            }
             onRefreshDashboard={async () => {
               const refreshedDashboard = await getAdminOrgDashboard();
               setDashboardState({ status: "allowed", dashboard: refreshedDashboard });
