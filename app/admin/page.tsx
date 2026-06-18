@@ -21,8 +21,6 @@ import {
   addAdminAssignmentRecipient,
   addAdminAssignmentRecipientsBulk,
   getAdminOrgDashboard,
-  removeAdminAssignmentRecipient,
-  removeAdminAssignmentRecipientsBulk,
   updateAdminAssignmentRecipient,
   updateAdminAssignmentRecipientsBulk,
   type AdminAssignmentRecipientAction,
@@ -1218,36 +1216,6 @@ function getOverallRecipientAction(recipient: OverallAssignmentRecipient) {
   return null;
 }
 
-function getSectionRecipientRemovalBlockReason(recipient: AdminAssignmentRecipient) {
-  if (recipient.status === "completed") return "Cannot remove: assignment is completed.";
-  if (recipient.hasAttempts) return "Cannot remove: student has attempts for this section.";
-  if (recipient.hasProgress) return "Cannot remove: student has recorded progress.";
-  if (recipient.status === "archived") return "Cannot remove: assignment recipient is archived.";
-  if (recipient.status !== "assigned" && recipient.status !== "excused") {
-    return "Cannot remove: recipient status is not removable.";
-  }
-  return null;
-}
-
-function getOverallRecipientRemovalBlockReason(recipient: OverallAssignmentRecipient) {
-  if (recipient.statuses.some((status) => status === "completed")) {
-    return "Cannot remove: assignment is completed.";
-  }
-  if (recipient.hasAttempts) return "Cannot remove: student has attempts for this section.";
-  if (recipient.hasProgress) return "Cannot remove: student has recorded progress.";
-  if (recipient.statuses.some((status) => status === "archived")) {
-    return "Cannot remove: assignment recipient is archived.";
-  }
-  if (
-    recipient.statuses.some(
-      (status) => status !== "assigned" && status !== "excused",
-    )
-  ) {
-    return "Cannot remove: recipient status is not removable.";
-  }
-  return null;
-}
-
 function getOverallAssignmentSummary(assignment: AdminDashboardAssignment) {
   const rowsByUser = new Map<
     string,
@@ -1436,58 +1404,6 @@ function AssignmentsTable({
       setRecipientMutationMessage({
         type: "error",
         text: typedError.message || "Failed to add assignment recipients.",
-      });
-    } finally {
-      setUpdatingRecipientKey(null);
-    }
-  }
-
-  async function handleRemoveSectionRecipient(
-    assignmentId: string,
-    recipient: AdminAssignmentRecipient,
-  ) {
-    const mutationKey = `remove:${assignmentId}:${recipient.userId}`;
-    setUpdatingRecipientKey(mutationKey);
-    setRecipientMutationMessage(null);
-
-    try {
-      await removeAdminAssignmentRecipient(assignmentId, recipient.userId);
-      await onRefreshDashboard();
-      setRecipientMutationMessage({
-        type: "success",
-        text: "Recipient removed successfully.",
-      });
-    } catch (error) {
-      const typedError = error as Error;
-      setRecipientMutationMessage({
-        type: "error",
-        text: typedError.message || "Failed to remove assignment recipient.",
-      });
-    } finally {
-      setUpdatingRecipientKey(null);
-    }
-  }
-
-  async function handleRemoveOverallRecipient(
-    assignment: AdminDashboardAssignment,
-    recipient: OverallAssignmentRecipient,
-  ) {
-    const mutationKey = `remove:overall:${assignment.id}:${recipient.userId}`;
-    setUpdatingRecipientKey(mutationKey);
-    setRecipientMutationMessage(null);
-
-    try {
-      await removeAdminAssignmentRecipientsBulk(assignment.assignmentIds, recipient.userId);
-      await onRefreshDashboard();
-      setRecipientMutationMessage({
-        type: "success",
-        text: "Recipient removed from all sections successfully.",
-      });
-    } catch (error) {
-      const typedError = error as Error;
-      setRecipientMutationMessage({
-        type: "error",
-        text: typedError.message || "Failed to remove assignment recipients.",
       });
     } finally {
       setUpdatingRecipientKey(null);
@@ -1743,7 +1659,7 @@ function AssignmentsTable({
                       <th className="px-3 py-2">Overall status</th>
                       <th className="px-3 py-2">Avg. completion</th>
                       <th className="px-3 py-2">Avg. accuracy</th>
-                      <th className="px-3 py-2">Actions</th>
+                      <th className="px-3 py-2">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 text-slate-800">
@@ -1757,13 +1673,7 @@ function AssignmentsTable({
                       overallSummary.recipients.map((recipient) => {
                         const recipientAction = getOverallRecipientAction(recipient);
                         const mutationKey = `overall:${expandedAssignment.id}:${recipient.userId}`;
-                        const removeMutationKey = `remove:overall:${expandedAssignment.id}:${recipient.userId}`;
                         const isUpdating = updatingRecipientKey === mutationKey;
-                        const isRemoving = updatingRecipientKey === removeMutationKey;
-                        const removeBlockReason =
-                          recipient.assignmentIds.length !== expandedAssignment.assignmentIds.length
-                            ? "Cannot remove: recipient is not assigned to every section."
-                            : getOverallRecipientRemovalBlockReason(recipient);
 
                         return (
                           <tr
@@ -1796,53 +1706,26 @@ function AssignmentsTable({
                             <td className="px-3 py-2 font-medium text-slate-800">{formatPercent(recipient.completionPercent)}</td>
                             <td className="px-3 py-2 font-medium text-slate-800">{formatPercent(recipient.accuracyPercent)}</td>
                             <td className="px-3 py-2">
-                              <div className="flex flex-col items-start gap-1">
-                                {recipientAction ? (
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      void handleOverallRecipientAction(
-                                        expandedAssignment.id,
-                                        recipient,
-                                        recipientAction.action,
-                                      )
-                                    }
-                                    disabled={isUpdating}
-                                    className="rounded-md border border-amber-300 bg-white px-2 py-1 text-xs font-bold text-amber-800 transition hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-60"
-                                  >
-                                    {isUpdating ? "Updating..." : recipientAction.label}
-                                  </button>
-                                ) : (
-                                  <span className="text-xs font-medium text-slate-500">
-                                    {recipient.status === "mixed" ? "Mixed statuses" : "No status action"}
-                                  </span>
-                                )}
-                                {removeBlockReason ? (
-                                  <span className="text-xs font-semibold text-rose-700">
-                                    {removeBlockReason}
-                                  </span>
-                                ) : (
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      if (
-                                        window.confirm(
-                                          "Remove this student from all sections of this grouped assignment? This will not delete progress, attempts, classroom membership, or the student account.",
-                                        )
-                                      ) {
-                                        void handleRemoveOverallRecipient(
-                                          expandedAssignment,
-                                          recipient,
-                                        );
-                                      }
-                                    }}
-                                    disabled={isRemoving}
-                                    className="rounded-md border border-rose-300 bg-white px-2 py-1 text-xs font-bold text-rose-800 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-60"
-                                  >
-                                    {isRemoving ? "Removing..." : "Remove all"}
-                                  </button>
-                                )}
-                              </div>
+                              {recipientAction ? (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    void handleOverallRecipientAction(
+                                      expandedAssignment.id,
+                                      recipient,
+                                      recipientAction.action,
+                                    )
+                                  }
+                                  disabled={isUpdating}
+                                  className="rounded-md border border-amber-300 bg-white px-2 py-1 text-xs font-bold text-amber-800 transition hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-60"
+                                >
+                                  {isUpdating ? "Updating..." : recipientAction.label}
+                                </button>
+                              ) : (
+                                <span className="text-xs font-medium text-slate-500">
+                                  {recipient.status === "mixed" ? "Mixed statuses" : "No action"}
+                                </span>
+                              )}
                             </td>
                           </tr>
                         );
@@ -1929,7 +1812,7 @@ function AssignmentsTable({
                       <th className="px-3 py-2">Completed</th>
                       <th className="px-3 py-2">Completion</th>
                       <th className="px-3 py-2">Accuracy</th>
-                      <th className="px-3 py-2">Actions</th>
+                      <th className="px-3 py-2">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 text-slate-800">
@@ -1942,12 +1825,9 @@ function AssignmentsTable({
                     ) : (
                       selectedSection.recipients.map((recipient) => {
                         const mutationKey = `${selectedSection.id}:${recipient.userId}`;
-                        const removeMutationKey = `remove:${selectedSection.id}:${recipient.userId}`;
                         const isUpdating = updatingRecipientKey === mutationKey;
-                        const isRemoving = updatingRecipientKey === removeMutationKey;
                         const canExcuse = recipient.status === "assigned";
                         const canUnexcuse = recipient.status === "excused";
-                        const removeBlockReason = getSectionRecipientRemovalBlockReason(recipient);
 
                         return (
                           <tr
@@ -1980,57 +1860,30 @@ function AssignmentsTable({
                             <td className="px-3 py-2 font-medium text-slate-800">{formatPercent(recipient.completionPercent)}</td>
                             <td className="px-3 py-2 font-medium text-slate-800">{formatPercent(recipient.accuracyPercent)}</td>
                             <td className="px-3 py-2">
-                              <div className="flex flex-col items-start gap-1">
-                                {canExcuse || canUnexcuse ? (
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      void handleRecipientAction(
-                                        selectedSection.id,
-                                        recipient,
-                                        canExcuse ? "excuse" : "unexcuse",
-                                      )
-                                    }
-                                    disabled={isUpdating}
-                                    className="rounded-md border border-amber-300 bg-white px-2 py-1 text-xs font-bold text-amber-800 transition hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-60"
-                                  >
-                                    {isUpdating
-                                      ? "Updating..."
-                                      : canExcuse
-                                        ? "Excuse"
-                                        : "Unexcuse"}
-                                  </button>
-                                ) : (
-                                  <span className="text-xs font-medium text-slate-500">
-                                    No status action
-                                  </span>
-                                )}
-                                {removeBlockReason ? (
-                                  <span className="text-xs font-semibold text-rose-700">
-                                    {removeBlockReason}
-                                  </span>
-                                ) : (
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      if (
-                                        window.confirm(
-                                          "Remove this student from this section assignment? This will not delete progress, attempts, classroom membership, or the student account.",
-                                        )
-                                      ) {
-                                        void handleRemoveSectionRecipient(
-                                          selectedSection.id,
-                                          recipient,
-                                        );
-                                      }
-                                    }}
-                                    disabled={isRemoving}
-                                    className="rounded-md border border-rose-300 bg-white px-2 py-1 text-xs font-bold text-rose-800 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-60"
-                                  >
-                                    {isRemoving ? "Removing..." : "Remove"}
-                                  </button>
-                                )}
-                              </div>
+                              {canExcuse || canUnexcuse ? (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    void handleRecipientAction(
+                                      selectedSection.id,
+                                      recipient,
+                                      canExcuse ? "excuse" : "unexcuse",
+                                    )
+                                  }
+                                  disabled={isUpdating}
+                                  className="rounded-md border border-amber-300 bg-white px-2 py-1 text-xs font-bold text-amber-800 transition hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-60"
+                                >
+                                  {isUpdating
+                                    ? "Updating..."
+                                    : canExcuse
+                                      ? "Excuse"
+                                      : "Unexcuse"}
+                                </button>
+                              ) : (
+                                <span className="text-xs font-medium text-slate-500">
+                                  No action
+                                </span>
+                              )}
                             </td>
                           </tr>
                         );
