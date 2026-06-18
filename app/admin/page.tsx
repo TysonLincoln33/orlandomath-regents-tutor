@@ -18,7 +18,11 @@ import {
   type AdminClassroomRosterMember,
 } from "@/lib/admin/classroomManagement";
 import {
+  addAdminAssignmentRecipient,
+  addAdminAssignmentRecipientsBulk,
   getAdminOrgDashboard,
+  removeAdminAssignmentRecipient,
+  removeAdminAssignmentRecipientsBulk,
   updateAdminAssignmentRecipient,
   updateAdminAssignmentRecipientsBulk,
   type AdminAssignmentRecipientAction,
@@ -1214,6 +1218,36 @@ function getOverallRecipientAction(recipient: OverallAssignmentRecipient) {
   return null;
 }
 
+function getSectionRecipientRemovalBlockReason(recipient: AdminAssignmentRecipient) {
+  if (recipient.status === "completed") return "Cannot remove: assignment is completed.";
+  if (recipient.hasAttempts) return "Cannot remove: student has attempts for this section.";
+  if (recipient.hasProgress) return "Cannot remove: student has recorded progress.";
+  if (recipient.status === "archived") return "Cannot remove: assignment recipient is archived.";
+  if (recipient.status !== "assigned" && recipient.status !== "excused") {
+    return "Cannot remove: recipient status is not removable.";
+  }
+  return null;
+}
+
+function getOverallRecipientRemovalBlockReason(recipient: OverallAssignmentRecipient) {
+  if (recipient.statuses.some((status) => status === "completed")) {
+    return "Cannot remove: assignment is completed.";
+  }
+  if (recipient.hasAttempts) return "Cannot remove: student has attempts for this section.";
+  if (recipient.hasProgress) return "Cannot remove: student has recorded progress.";
+  if (recipient.statuses.some((status) => status === "archived")) {
+    return "Cannot remove: assignment recipient is archived.";
+  }
+  if (
+    recipient.statuses.some(
+      (status) => status !== "assigned" && status !== "excused",
+    )
+  ) {
+    return "Cannot remove: recipient status is not removable.";
+  }
+  return null;
+}
+
 function getOverallAssignmentSummary(assignment: AdminDashboardAssignment) {
   const rowsByUser = new Map<
     string,
@@ -1223,6 +1257,8 @@ function getOverallAssignmentSummary(assignment: AdminDashboardAssignment) {
       completionValues: number[];
       accuracyValues: number[];
       assignmentIds: string[];
+      hasProgress: boolean;
+      hasAttempts: boolean;
     }
   >();
 
@@ -1234,6 +1270,8 @@ function getOverallAssignmentSummary(assignment: AdminDashboardAssignment) {
         completionValues: [],
         accuracyValues: [],
         assignmentIds: [],
+        hasProgress: false,
+        hasAttempts: false,
       };
       const isActive = recipient.status !== "excused" && recipient.status !== "archived";
 
@@ -1245,18 +1283,22 @@ function getOverallAssignmentSummary(assignment: AdminDashboardAssignment) {
       if (isActive && typeof recipient.accuracyPercent === "number") {
         summary.accuracyValues.push(recipient.accuracyPercent);
       }
+      summary.hasProgress = summary.hasProgress || recipient.hasProgress;
+      summary.hasAttempts = summary.hasAttempts || recipient.hasAttempts;
       rowsByUser.set(recipient.userId, summary);
     }
   }
 
   const recipients = [...rowsByUser.values()]
-    .map(({ recipient, statuses, completionValues, accuracyValues, assignmentIds }) => ({
+    .map(({ recipient, statuses, completionValues, accuracyValues, assignmentIds, hasProgress, hasAttempts }) => ({
       ...recipient,
       assignmentIds,
       statuses,
       status: getOverallRecipientStatus(statuses),
       completionPercent: averageNullablePercent(completionValues),
       accuracyPercent: averageNullablePercent(accuracyValues),
+      hasProgress,
+      hasAttempts,
     }))
     .sort((a, b) => (a.fullName ?? a.email ?? "").localeCompare(b.fullName ?? b.email ?? ""));
 
@@ -1269,9 +1311,11 @@ function getOverallAssignmentSummary(assignment: AdminDashboardAssignment) {
 
 function AssignmentsTable({
   assignments,
+  classroomManagement,
   onRefreshDashboard,
 }: {
   assignments: AdminDashboardAssignment[];
+  classroomManagement: AdminClassroomManagement | null;
   onRefreshDashboard: () => Promise<void>;
 }) {
   const [expandedAssignmentId, setExpandedAssignmentId] = useState<string | null>(null);
@@ -1281,6 +1325,7 @@ function AssignmentsTable({
     type: "success" | "error";
     text: string;
   } | null>(null);
+  const [selectedAddRecipientId, setSelectedAddRecipientId] = useState("");
 
   async function handleRecipientAction(
     assignmentId: string,
@@ -1347,6 +1392,108 @@ function AssignmentsTable({
     }
   }
 
+  async function handleAddSectionRecipient(assignmentId: string, userId: string) {
+    if (!userId) return;
+    const mutationKey = `add:${assignmentId}`;
+    setUpdatingRecipientKey(mutationKey);
+    setRecipientMutationMessage(null);
+
+    try {
+      await addAdminAssignmentRecipient(assignmentId, userId);
+      setSelectedAddRecipientId("");
+      await onRefreshDashboard();
+      setRecipientMutationMessage({
+        type: "success",
+        text: "Recipient added successfully.",
+      });
+    } catch (error) {
+      const typedError = error as Error;
+      setRecipientMutationMessage({
+        type: "error",
+        text: typedError.message || "Failed to add assignment recipient.",
+      });
+    } finally {
+      setUpdatingRecipientKey(null);
+    }
+  }
+
+  async function handleAddOverallRecipient(assignmentIds: string[], userId: string) {
+    if (!userId) return;
+    const mutationKey = `add:overall`;
+    setUpdatingRecipientKey(mutationKey);
+    setRecipientMutationMessage(null);
+
+    try {
+      await addAdminAssignmentRecipientsBulk(assignmentIds, userId);
+      setSelectedAddRecipientId("");
+      await onRefreshDashboard();
+      setRecipientMutationMessage({
+        type: "success",
+        text: "Recipient added to all sections successfully.",
+      });
+    } catch (error) {
+      const typedError = error as Error;
+      setRecipientMutationMessage({
+        type: "error",
+        text: typedError.message || "Failed to add assignment recipients.",
+      });
+    } finally {
+      setUpdatingRecipientKey(null);
+    }
+  }
+
+  async function handleRemoveSectionRecipient(
+    assignmentId: string,
+    recipient: AdminAssignmentRecipient,
+  ) {
+    const mutationKey = `remove:${assignmentId}:${recipient.userId}`;
+    setUpdatingRecipientKey(mutationKey);
+    setRecipientMutationMessage(null);
+
+    try {
+      await removeAdminAssignmentRecipient(assignmentId, recipient.userId);
+      await onRefreshDashboard();
+      setRecipientMutationMessage({
+        type: "success",
+        text: "Recipient removed successfully.",
+      });
+    } catch (error) {
+      const typedError = error as Error;
+      setRecipientMutationMessage({
+        type: "error",
+        text: typedError.message || "Failed to remove assignment recipient.",
+      });
+    } finally {
+      setUpdatingRecipientKey(null);
+    }
+  }
+
+  async function handleRemoveOverallRecipient(
+    assignment: AdminDashboardAssignment,
+    recipient: OverallAssignmentRecipient,
+  ) {
+    const mutationKey = `remove:overall:${assignment.id}:${recipient.userId}`;
+    setUpdatingRecipientKey(mutationKey);
+    setRecipientMutationMessage(null);
+
+    try {
+      await removeAdminAssignmentRecipientsBulk(assignment.assignmentIds, recipient.userId);
+      await onRefreshDashboard();
+      setRecipientMutationMessage({
+        type: "success",
+        text: "Recipient removed from all sections successfully.",
+      });
+    } catch (error) {
+      const typedError = error as Error;
+      setRecipientMutationMessage({
+        type: "error",
+        text: typedError.message || "Failed to remove assignment recipients.",
+      });
+    } finally {
+      setUpdatingRecipientKey(null);
+    }
+  }
+
   if (assignments.length === 0)
     return (
       <EmptyTableMessage>
@@ -1366,6 +1513,25 @@ function AssignmentsTable({
   const overallSummary = expandedAssignment
     ? getOverallAssignmentSummary(expandedAssignment)
     : null;
+  const expandedClassroom = expandedAssignment && classroomManagement
+    ? classroomManagement.classrooms.find(
+        (classroom) => classroom.id === expandedAssignment.classroomId,
+      ) ?? null
+    : null;
+  const activeRoster = expandedClassroom?.roster.filter((member) => member.isActive) ?? [];
+  const selectedSectionRecipientIds = new Set(
+    selectedSection?.recipients.map((recipient) => recipient.userId) ?? [],
+  );
+  const overallRecipientIds = new Set(
+    overallSummary?.recipients.map((recipient) => recipient.userId) ?? [],
+  );
+  const addCandidates = activeRoster
+    .filter((member) =>
+      selectedSectionId === "overall"
+        ? !overallRecipientIds.has(member.userId)
+        : !selectedSectionRecipientIds.has(member.userId),
+    )
+    .sort((a, b) => (a.fullName ?? a.email ?? "").localeCompare(b.fullName ?? b.email ?? ""));
 
   return (
     <div className="space-y-4">
@@ -1477,7 +1643,10 @@ function AssignmentsTable({
           <div className="mt-4 flex flex-wrap gap-2">
             <button
               type="button"
-              onClick={() => setSelectedSectionId("overall")}
+              onClick={() => {
+                setSelectedSectionId("overall");
+                setSelectedAddRecipientId("");
+              }}
               className={`rounded-full border px-3 py-1 text-xs font-bold ${selectedSectionId === "overall" ? "border-blue-700 bg-blue-700 text-white" : "border-blue-200 bg-white text-blue-800"}`}
             >
               Overall
@@ -1486,7 +1655,10 @@ function AssignmentsTable({
               <button
                 type="button"
                 key={sectionAssignment.id}
-                onClick={() => setSelectedSectionId(sectionAssignment.id)}
+                onClick={() => {
+                  setSelectedSectionId(sectionAssignment.id);
+                  setSelectedAddRecipientId("");
+                }}
                 className={`rounded-full border px-3 py-1 text-xs font-bold ${selectedSection?.id === sectionAssignment.id ? "border-blue-700 bg-blue-700 text-white" : "border-blue-200 bg-white text-blue-800"}`}
               >
                 {sectionAssignment.sectionTitle}
@@ -1519,6 +1691,50 @@ function AssignmentsTable({
                 </div>
               </div>
 
+              <div className="mt-4 rounded-lg border border-blue-100 bg-blue-50/60 p-3">
+                <p className="text-sm font-bold text-slate-950">
+                  Add recipient to all sections
+                </p>
+                <p className="mt-1 text-xs text-slate-600">
+                  Adds an active classroom roster student to every section assignment in this group.
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <select
+                    value={selectedAddRecipientId}
+                    onChange={(event) => setSelectedAddRecipientId(event.target.value)}
+                    className="min-w-64 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800"
+                  >
+                    <option value="">
+                      {expandedClassroom ? "Select eligible student" : "Classroom roster unavailable"}
+                    </option>
+                    {addCandidates.map((member) => (
+                      <option key={member.userId} value={member.userId}>
+                        {displayName({ fullName: member.fullName, email: member.email })}
+                        {member.email ? ` · ${member.email}` : ""}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      void handleAddOverallRecipient(
+                        expandedAssignment.assignmentIds,
+                        selectedAddRecipientId,
+                      )
+                    }
+                    disabled={!selectedAddRecipientId || updatingRecipientKey === "add:overall"}
+                    className="rounded-md bg-blue-700 px-3 py-2 text-sm font-bold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {updatingRecipientKey === "add:overall" ? "Adding..." : "Add to all sections"}
+                  </button>
+                </div>
+                {expandedClassroom && addCandidates.length === 0 ? (
+                  <p className="mt-2 text-xs font-medium text-slate-600">
+                    No eligible active roster students are available to add to all sections.
+                  </p>
+                ) : null}
+              </div>
+
               <div className="mt-4 overflow-x-auto">
                 <table className="min-w-full divide-y divide-slate-200 text-sm">
                   <thead className="bg-slate-50 text-left text-xs font-bold uppercase tracking-wide text-slate-600">
@@ -1527,7 +1743,7 @@ function AssignmentsTable({
                       <th className="px-3 py-2">Overall status</th>
                       <th className="px-3 py-2">Avg. completion</th>
                       <th className="px-3 py-2">Avg. accuracy</th>
-                      <th className="px-3 py-2">Action</th>
+                      <th className="px-3 py-2">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 text-slate-800">
@@ -1541,7 +1757,13 @@ function AssignmentsTable({
                       overallSummary.recipients.map((recipient) => {
                         const recipientAction = getOverallRecipientAction(recipient);
                         const mutationKey = `overall:${expandedAssignment.id}:${recipient.userId}`;
+                        const removeMutationKey = `remove:overall:${expandedAssignment.id}:${recipient.userId}`;
                         const isUpdating = updatingRecipientKey === mutationKey;
+                        const isRemoving = updatingRecipientKey === removeMutationKey;
+                        const removeBlockReason =
+                          recipient.assignmentIds.length !== expandedAssignment.assignmentIds.length
+                            ? "Cannot remove: recipient is not assigned to every section."
+                            : getOverallRecipientRemovalBlockReason(recipient);
 
                         return (
                           <tr
@@ -1574,26 +1796,53 @@ function AssignmentsTable({
                             <td className="px-3 py-2 font-medium text-slate-800">{formatPercent(recipient.completionPercent)}</td>
                             <td className="px-3 py-2 font-medium text-slate-800">{formatPercent(recipient.accuracyPercent)}</td>
                             <td className="px-3 py-2">
-                              {recipientAction ? (
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    void handleOverallRecipientAction(
-                                      expandedAssignment.id,
-                                      recipient,
-                                      recipientAction.action,
-                                    )
-                                  }
-                                  disabled={isUpdating}
-                                  className="rounded-md border border-amber-300 bg-white px-2 py-1 text-xs font-bold text-amber-800 transition hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-60"
-                                >
-                                  {isUpdating ? "Updating..." : recipientAction.label}
-                                </button>
-                              ) : (
-                                <span className="text-xs font-medium text-slate-500">
-                                  {recipient.status === "mixed" ? "Mixed statuses" : "No action"}
-                                </span>
-                              )}
+                              <div className="flex flex-col items-start gap-1">
+                                {recipientAction ? (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      void handleOverallRecipientAction(
+                                        expandedAssignment.id,
+                                        recipient,
+                                        recipientAction.action,
+                                      )
+                                    }
+                                    disabled={isUpdating}
+                                    className="rounded-md border border-amber-300 bg-white px-2 py-1 text-xs font-bold text-amber-800 transition hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-60"
+                                  >
+                                    {isUpdating ? "Updating..." : recipientAction.label}
+                                  </button>
+                                ) : (
+                                  <span className="text-xs font-medium text-slate-500">
+                                    {recipient.status === "mixed" ? "Mixed statuses" : "No status action"}
+                                  </span>
+                                )}
+                                {removeBlockReason ? (
+                                  <span className="text-xs font-semibold text-rose-700">
+                                    {removeBlockReason}
+                                  </span>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      if (
+                                        window.confirm(
+                                          "Remove this student from all sections of this grouped assignment? This will not delete progress, attempts, classroom membership, or the student account.",
+                                        )
+                                      ) {
+                                        void handleRemoveOverallRecipient(
+                                          expandedAssignment,
+                                          recipient,
+                                        );
+                                      }
+                                    }}
+                                    disabled={isRemoving}
+                                    className="rounded-md border border-rose-300 bg-white px-2 py-1 text-xs font-bold text-rose-800 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-60"
+                                  >
+                                    {isRemoving ? "Removing..." : "Remove all"}
+                                  </button>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         );
@@ -1626,6 +1875,50 @@ function AssignmentsTable({
                 </div>
               </div>
 
+              <div className="mt-4 rounded-lg border border-blue-100 bg-blue-50/60 p-3">
+                <p className="text-sm font-bold text-slate-950">
+                  Add recipient to this section
+                </p>
+                <p className="mt-1 text-xs text-slate-600">
+                  Adds an active classroom roster student to only this section assignment.
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <select
+                    value={selectedAddRecipientId}
+                    onChange={(event) => setSelectedAddRecipientId(event.target.value)}
+                    className="min-w-64 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800"
+                  >
+                    <option value="">
+                      {expandedClassroom ? "Select eligible student" : "Classroom roster unavailable"}
+                    </option>
+                    {addCandidates.map((member) => (
+                      <option key={member.userId} value={member.userId}>
+                        {displayName({ fullName: member.fullName, email: member.email })}
+                        {member.email ? ` · ${member.email}` : ""}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      void handleAddSectionRecipient(selectedSection.id, selectedAddRecipientId)
+                    }
+                    disabled={
+                      !selectedAddRecipientId ||
+                      updatingRecipientKey === `add:${selectedSection.id}`
+                    }
+                    className="rounded-md bg-blue-700 px-3 py-2 text-sm font-bold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {updatingRecipientKey === `add:${selectedSection.id}` ? "Adding..." : "Add to section"}
+                  </button>
+                </div>
+                {expandedClassroom && addCandidates.length === 0 ? (
+                  <p className="mt-2 text-xs font-medium text-slate-600">
+                    No eligible active roster students are available to add to this section.
+                  </p>
+                ) : null}
+              </div>
+
               <div className="mt-4 overflow-x-auto">
                 <table className="min-w-full divide-y divide-slate-200 text-sm">
                   <thead className="bg-slate-50 text-left text-xs font-bold uppercase tracking-wide text-slate-600">
@@ -1636,7 +1929,7 @@ function AssignmentsTable({
                       <th className="px-3 py-2">Completed</th>
                       <th className="px-3 py-2">Completion</th>
                       <th className="px-3 py-2">Accuracy</th>
-                      <th className="px-3 py-2">Action</th>
+                      <th className="px-3 py-2">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 text-slate-800">
@@ -1649,9 +1942,12 @@ function AssignmentsTable({
                     ) : (
                       selectedSection.recipients.map((recipient) => {
                         const mutationKey = `${selectedSection.id}:${recipient.userId}`;
+                        const removeMutationKey = `remove:${selectedSection.id}:${recipient.userId}`;
                         const isUpdating = updatingRecipientKey === mutationKey;
+                        const isRemoving = updatingRecipientKey === removeMutationKey;
                         const canExcuse = recipient.status === "assigned";
                         const canUnexcuse = recipient.status === "excused";
+                        const removeBlockReason = getSectionRecipientRemovalBlockReason(recipient);
 
                         return (
                           <tr
@@ -1684,30 +1980,57 @@ function AssignmentsTable({
                             <td className="px-3 py-2 font-medium text-slate-800">{formatPercent(recipient.completionPercent)}</td>
                             <td className="px-3 py-2 font-medium text-slate-800">{formatPercent(recipient.accuracyPercent)}</td>
                             <td className="px-3 py-2">
-                              {canExcuse || canUnexcuse ? (
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    void handleRecipientAction(
-                                      selectedSection.id,
-                                      recipient,
-                                      canExcuse ? "excuse" : "unexcuse",
-                                    )
-                                  }
-                                  disabled={isUpdating}
-                                  className="rounded-md border border-amber-300 bg-white px-2 py-1 text-xs font-bold text-amber-800 transition hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-60"
-                                >
-                                  {isUpdating
-                                    ? "Updating..."
-                                    : canExcuse
-                                      ? "Excuse"
-                                      : "Unexcuse"}
-                                </button>
-                              ) : (
-                                <span className="text-xs font-medium text-slate-500">
-                                  No action
-                                </span>
-                              )}
+                              <div className="flex flex-col items-start gap-1">
+                                {canExcuse || canUnexcuse ? (
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      void handleRecipientAction(
+                                        selectedSection.id,
+                                        recipient,
+                                        canExcuse ? "excuse" : "unexcuse",
+                                      )
+                                    }
+                                    disabled={isUpdating}
+                                    className="rounded-md border border-amber-300 bg-white px-2 py-1 text-xs font-bold text-amber-800 transition hover:bg-amber-50 disabled:cursor-not-allowed disabled:opacity-60"
+                                  >
+                                    {isUpdating
+                                      ? "Updating..."
+                                      : canExcuse
+                                        ? "Excuse"
+                                        : "Unexcuse"}
+                                  </button>
+                                ) : (
+                                  <span className="text-xs font-medium text-slate-500">
+                                    No status action
+                                  </span>
+                                )}
+                                {removeBlockReason ? (
+                                  <span className="text-xs font-semibold text-rose-700">
+                                    {removeBlockReason}
+                                  </span>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      if (
+                                        window.confirm(
+                                          "Remove this student from this section assignment? This will not delete progress, attempts, classroom membership, or the student account.",
+                                        )
+                                      ) {
+                                        void handleRemoveSectionRecipient(
+                                          selectedSection.id,
+                                          recipient,
+                                        );
+                                      }
+                                    }}
+                                    disabled={isRemoving}
+                                    className="rounded-md border border-rose-300 bg-white px-2 py-1 text-xs font-bold text-rose-800 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-60"
+                                  >
+                                    {isRemoving ? "Removing..." : "Remove"}
+                                  </button>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         );
@@ -2403,6 +2726,11 @@ export default function AdminDashboardPage() {
         <DashboardSection title="Assignments">
           <AssignmentsTable
             assignments={dashboard.assignments}
+            classroomManagement={
+              classroomManagementState.status === "allowed"
+                ? classroomManagementState.data
+                : null
+            }
             onRefreshDashboard={async () => {
               const refreshedDashboard = await getAdminOrgDashboard();
               setDashboardState({ status: "allowed", dashboard: refreshedDashboard });

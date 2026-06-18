@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import {
+  ADMIN_RECIPIENT_SELECT,
+  assertRecipientsCanBeRemoved,
+  assertStudentInClassroomRoster,
+  buildRecipientInsertRows,
+  getRecipientRows,
+  getValidatedActiveStudentForAdd,
+  getVerifiedAssignmentsInOneClassroom,
+  isUniqueRecipientError,
+} from "../../_recipientUtils";
+import {
   AdminClassroomManagementApiError,
   getManageableClassroom,
   getRouteContext,
@@ -228,6 +238,148 @@ export async function PATCH(req: NextRequest, context: RouteContext) {
     });
   } catch (error) {
     console.error("admin bulk assignment recipient route error", error);
+    return jsonError(error);
+  }
+}
+
+export async function POST(req: NextRequest, context: RouteContext) {
+  try {
+    const { userId } = await context.params;
+    const ctx = await getRouteContext(req);
+    const body = await req.json().catch(() => null);
+    const assignmentIds = parseAssignmentIds(body?.assignmentIds);
+    const { assignments, classroomId } = await getVerifiedAssignmentsInOneClassroom(
+      ctx,
+      assignmentIds,
+    );
+
+    const student = await getValidatedActiveStudentForAdd(ctx, userId);
+    await assertStudentInClassroomRoster(ctx.adminClient, classroomId, userId);
+
+    const existingRecipients = await getRecipientRows(
+      ctx.adminClient,
+      classroomId,
+      userId,
+      assignmentIds,
+    );
+
+    if (existingRecipients.length > 0) {
+      throw new AdminClassroomManagementApiError(
+        "Student is already a recipient for one or more selected assignments.",
+        409,
+      );
+    }
+
+    const { data: insertedRecipients, error: insertError } = await ctx.adminClient
+      .from("assignment_recipients")
+      .insert(buildRecipientInsertRows(assignments, student, ctx.userId))
+      .select(ADMIN_RECIPIENT_SELECT);
+
+    if (insertError || !insertedRecipients) {
+      if (insertError && isUniqueRecipientError(insertError)) {
+        throw new AdminClassroomManagementApiError(
+          "Student is already a recipient for one or more selected assignments.",
+          409,
+        );
+      }
+
+      throw new AdminClassroomManagementApiError(
+        insertError?.message || "Failed to add assignment recipients.",
+        500,
+      );
+    }
+
+    if (insertedRecipients.length !== assignmentIds.length) {
+      throw new AdminClassroomManagementApiError(
+        "Failed to add all assignment recipients.",
+        500,
+      );
+    }
+
+    return NextResponse.json(
+      {
+        recipients: insertedRecipients,
+        created_count: insertedRecipients.length,
+      },
+      { status: 201 },
+    );
+  } catch (error) {
+    console.error("admin bulk add assignment recipient route error", error);
+    return jsonError(error);
+  }
+}
+
+export async function DELETE(req: NextRequest, context: RouteContext) {
+  try {
+    const { userId } = await context.params;
+    const ctx = await getRouteContext(req);
+    const body = await req.json().catch(() => null);
+    const assignmentIds = parseAssignmentIds(body?.assignmentIds);
+    const { assignments, classroomId } = await getVerifiedAssignmentsInOneClassroom(
+      ctx,
+      assignmentIds,
+    );
+
+    await getValidatedStudent(ctx, userId);
+
+    const recipients = await getRecipientRows(
+      ctx.adminClient,
+      classroomId,
+      userId,
+      assignmentIds,
+    );
+    const recipientAssignmentIds = new Set(
+      recipients.map((recipient) => recipient.assignment_id),
+    );
+
+    if (recipients.length !== assignmentIds.length) {
+      const missingRecipientAssignmentId = assignmentIds.find(
+        (id) => !recipientAssignmentIds.has(id),
+      );
+      throw new AdminClassroomManagementApiError(
+        missingRecipientAssignmentId
+          ? `Assignment recipient not found for assignment: ${missingRecipientAssignmentId}`
+          : "One or more assignment recipients were not found.",
+        404,
+      );
+    }
+
+    await assertRecipientsCanBeRemoved(
+      ctx.adminClient,
+      assignments,
+      recipients,
+      userId,
+    );
+
+    const { data: deletedRecipients, error: deleteError } = await ctx.adminClient
+      .from("assignment_recipients")
+      .delete()
+      .eq("classroom_id", classroomId)
+      .eq("user_id", userId)
+      .in("assignment_id", assignmentIds)
+      .select(RECIPIENT_SELECT);
+
+    if (deleteError || !deletedRecipients) {
+      throw new AdminClassroomManagementApiError(
+        deleteError?.message || "Failed to remove assignment recipients.",
+        500,
+      );
+    }
+
+    if (deletedRecipients.length !== assignmentIds.length) {
+      throw new AdminClassroomManagementApiError(
+        "Failed to remove all assignment recipients.",
+        500,
+      );
+    }
+
+    return NextResponse.json({
+      removed: true,
+      removed_count: deletedRecipients.length,
+      recipients: deletedRecipients,
+    });
+  } catch (error) {
+    console.error("admin bulk delete assignment recipient route error", error);
     return jsonError(error);
   }
 }

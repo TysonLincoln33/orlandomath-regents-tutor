@@ -68,6 +68,7 @@ export function jsonError(error: unknown) {
 
 export type AdminClassroomManagementRouteContext = {
   adminClient: SupabaseClient;
+  userId: string;
   isMaster: boolean;
   domain: string | null;
 };
@@ -185,7 +186,7 @@ export async function getRouteContext(
     );
   }
 
-  return { adminClient, isMaster, domain };
+  return { adminClient, userId: user.id, isMaster, domain };
 }
 
 export async function getManageableClassroom(
