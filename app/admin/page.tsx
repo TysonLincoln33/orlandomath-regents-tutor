@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type Dispatch, type FormEvent, type SetStateAction } from "react";
+import { SECTIONS } from "@/lib/course/algebra1";
 import {
   type AdminApprovalRequest,
   getAdminApprovalRequests,
   updateAdminApprovalRequest,
 } from "@/lib/admin/approvalRequests";
+import { createAdminAssignment } from "@/lib/admin/assignmentCreation";
 import {
   addAdminClassroomMember,
   getAdminClassroomManagement,
@@ -96,6 +98,14 @@ function formatDate(value: string | null | undefined) {
     day: "numeric",
     year: "numeric",
   }).format(date);
+}
+
+function getSectionLabel(sectionId: string | null | undefined) {
+  if (!sectionId) return "No section";
+  const section = SECTIONS.find((item) => item.id === sectionId);
+  return section
+    ? `Chapter ${section.chapterNumber}, Section ${section.sectionNumber}: ${section.title}`
+    : sectionId;
 }
 
 function formatDateTime(value: string | null | undefined) {
@@ -1178,6 +1188,332 @@ function formatAssignmentStatus(status: string | null | undefined) {
   return status.charAt(0).toUpperCase() + status.slice(1);
 }
 
+
+
+type CreateAssignmentRecipientMode = "class" | "students";
+
+function CreateAssignmentPanel({
+  classroomManagement,
+  onCreated,
+}: {
+  classroomManagement: AdminClassroomManagement | null;
+  onCreated: () => Promise<void>;
+}) {
+  const [classroomId, setClassroomId] = useState("");
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [dueDate, setDueDate] = useState("");
+  const [sectionIds, setSectionIds] = useState<string[]>([]);
+  const [target, setTarget] = useState<CreateAssignmentRecipientMode>("class");
+  const [recipientUserIds, setRecipientUserIds] = useState<string[]>([]);
+  const [addStudentUserIds, setAddStudentUserIds] = useState<string[]>([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  const classrooms = useMemo(
+    () => classroomManagement?.classrooms ?? [],
+    [classroomManagement],
+  );
+  const eligibleStudents = useMemo(
+    () => classroomManagement?.eligibleStudents ?? [],
+    [classroomManagement],
+  );
+  const selectedClassroom = classrooms.find((classroom) => classroom.id === classroomId) ?? null;
+  const roster = selectedClassroom?.roster.filter((member) => member.isActive) ?? [];
+  const selectedRosterUserIds = new Set(
+    selectedClassroom?.roster.map((member) => member.userId) ?? [],
+  );
+  const addCandidates = eligibleStudents.filter(
+    (student) => !selectedRosterUserIds.has(student.id),
+  );
+
+  useEffect(() => {
+    if (!classroomId && classrooms.length > 0) {
+      setClassroomId(classrooms[0].id);
+    }
+  }, [classroomId, classrooms]);
+
+  useEffect(() => {
+    setRecipientUserIds([]);
+    setAddStudentUserIds([]);
+  }, [classroomId]);
+
+  const selectedSectionLabels = useMemo(
+    () => sectionIds.map((sectionId) => getSectionLabel(sectionId)),
+    [sectionIds],
+  );
+
+  function toggleArrayValue(setter: Dispatch<SetStateAction<string[]>>, value: string) {
+    setter((current) =>
+      current.includes(value)
+        ? current.filter((item) => item !== value)
+        : [...current, value],
+    );
+  }
+
+  function resetForm() {
+    setTitle("");
+    setDescription("");
+    setDueDate("");
+    setSectionIds([]);
+    setTarget("class");
+    setRecipientUserIds([]);
+    setAddStudentUserIds([]);
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setMessage(null);
+
+    if (!classroomId) {
+      setMessage({ type: "error", text: "Please select a classroom." });
+      return;
+    }
+
+    if (!title.trim()) {
+      setMessage({ type: "error", text: "Assignment title is required." });
+      return;
+    }
+
+    if (sectionIds.length === 0) {
+      setMessage({ type: "error", text: "Please select at least one section." });
+      return;
+    }
+
+    if (target === "students" && recipientUserIds.length === 0 && addStudentUserIds.length === 0) {
+      setMessage({ type: "error", text: "Please select at least one student." });
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const result = await createAdminAssignment({
+        classroom_id: classroomId,
+        title: title.trim(),
+        description: description.trim() || null,
+        due_date: dueDate || null,
+        section_ids: sectionIds,
+        target,
+        recipient_user_ids: target === "students" ? recipientUserIds : [],
+        add_student_user_ids: addStudentUserIds,
+      });
+      await onCreated();
+      resetForm();
+      setMessage({
+        type: "success",
+        text: `Created ${result.created_count} assignment section${result.created_count === 1 ? "" : "s"} for ${result.recipient_count} recipient${result.recipient_count === 1 ? "" : "s"}.${result.classroom_membership_created_count > 0 ? ` Added ${result.classroom_membership_created_count} student${result.classroom_membership_created_count === 1 ? "" : "s"} to the class.` : ""}`,
+      });
+    } catch (error) {
+      const typedError = error as Error;
+      setMessage({
+        type: "error",
+        text: typedError.message || "Failed to create assignment.",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  if (!classroomManagement) {
+    return (
+      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+        Loading classroom data before assignments can be created...
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="mb-6 rounded-2xl border border-blue-100 bg-blue-50/60 p-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">Create Assignment</p>
+          <h3 className="mt-1 text-xl font-extrabold text-slate-950">Admin-created multi-section assignment</h3>
+          <p className="mt-1 text-sm text-slate-600">
+            Select a classroom, one or more sections, and recipients. Out-of-class students are added only when explicitly selected below.
+          </p>
+        </div>
+        <button
+          type="submit"
+          disabled={submitting}
+          className="rounded-full bg-blue-600 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {submitting ? "Creating..." : "Create Assignment"}
+        </button>
+      </div>
+
+      {message ? (
+        <p className={`mt-4 rounded-xl border p-3 text-sm font-semibold ${message.type === "success" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-rose-200 bg-rose-50 text-rose-700"}`}>
+          {message.text}
+        </p>
+      ) : null}
+
+      <div className="mt-5 grid gap-4 lg:grid-cols-2">
+        <label className="block text-sm font-semibold text-slate-700">
+          Classroom
+          <select
+            value={classroomId}
+            onChange={(event) => setClassroomId(event.target.value)}
+            className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-900"
+          >
+            <option value="">Select classroom</option>
+            {classrooms.map((classroom) => (
+              <option key={classroom.id} value={classroom.id}>
+                {classroom.name} · {classroom.teacherName ?? classroom.teacherEmail ?? "Unknown teacher"}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="block text-sm font-semibold text-slate-700">
+          Due date
+          <input
+            type="date"
+            value={dueDate}
+            onChange={(event) => setDueDate(event.target.value)}
+            className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-900"
+          />
+        </label>
+        <label className="block text-sm font-semibold text-slate-700">
+          Title
+          <input
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+            placeholder="Unit review"
+            className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400"
+          />
+        </label>
+        <label className="block text-sm font-semibold text-slate-700">
+          Description
+          <input
+            value={description}
+            onChange={(event) => setDescription(event.target.value)}
+            placeholder="Optional directions"
+            className="mt-1 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-slate-900 placeholder:text-slate-400"
+          />
+        </label>
+      </div>
+
+      <div className="mt-5 rounded-xl border border-slate-200 bg-white p-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <p className="text-sm font-bold text-slate-900">Sections</p>
+            <p className="text-xs text-slate-500">One assignment row will be created for each selected section.</p>
+          </div>
+          <p className="text-xs font-semibold text-blue-700">{sectionIds.length} selected</p>
+        </div>
+        <div className="mt-3 grid max-h-64 gap-2 overflow-y-auto pr-1 md:grid-cols-2 xl:grid-cols-3">
+          {SECTIONS.map((section) => {
+            const checked = sectionIds.includes(section.id);
+            return (
+              <label key={section.id} className={`flex cursor-pointer gap-2 rounded-lg border p-2 text-xs ${checked ? "border-blue-300 bg-blue-50" : "border-slate-200 bg-slate-50"}`}>
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={() => toggleArrayValue(setSectionIds, section.id)}
+                  className="mt-0.5"
+                />
+                <span>
+                  <span className="block font-bold text-slate-900">Ch {section.chapterNumber}, Sec {section.sectionNumber}</span>
+                  <span className="text-slate-600">{section.title}</span>
+                </span>
+              </label>
+            );
+          })}
+        </div>
+        {selectedSectionLabels.length > 0 ? (
+          <p className="mt-3 text-xs text-slate-600">Selected: {selectedSectionLabels.join(" · ")}</p>
+        ) : null}
+      </div>
+
+      <div className="mt-5 rounded-xl border border-slate-200 bg-white p-4">
+        <p className="text-sm font-bold text-slate-900">Recipients</p>
+        <div className="mt-3 grid gap-3 md:grid-cols-2">
+          <label className="flex cursor-pointer gap-2 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+            <input
+              type="radio"
+              name="admin-create-assignment-target"
+              checked={target === "class"}
+              onChange={() => {
+                setTarget("class");
+                setRecipientUserIds([]);
+              }}
+              className="mt-1"
+            />
+            <span>
+              <span className="block font-bold text-slate-900">Entire classroom roster</span>
+              <span className="text-xs text-slate-500">Assign to all valid active student roster members.</span>
+            </span>
+          </label>
+          <label className="flex cursor-pointer gap-2 rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+            <input
+              type="radio"
+              name="admin-create-assignment-target"
+              checked={target === "students"}
+              onChange={() => setTarget("students")}
+              className="mt-1"
+            />
+            <span>
+              <span className="block font-bold text-slate-900">Selected classroom students</span>
+              <span className="text-xs text-slate-500">Pick current roster students below.</span>
+            </span>
+          </label>
+        </div>
+
+        {target === "students" ? (
+          <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3">
+            <p className="text-sm font-semibold text-slate-900">Selected classroom students</p>
+            {roster.length === 0 ? (
+              <p className="mt-2 text-sm text-slate-500">No active roster students available.</p>
+            ) : (
+              <div className="mt-2 grid max-h-44 gap-2 overflow-y-auto md:grid-cols-2">
+                {roster.map((member) => (
+                  <label key={member.userId} className="flex cursor-pointer items-start gap-2 rounded-lg bg-white p-2 text-sm text-slate-700">
+                    <input
+                      type="checkbox"
+                      checked={recipientUserIds.includes(member.userId)}
+                      onChange={() => toggleArrayValue(setRecipientUserIds, member.userId)}
+                      className="mt-1"
+                    />
+                    <span>
+                      <span className="block font-semibold text-slate-900">{member.fullName || member.email || "Student"}</span>
+                      <span className="text-xs text-slate-500">{member.email ?? "No email"}</span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : null}
+
+        <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3">
+          <p className="text-sm font-bold text-amber-900">Add student to class and assignment</p>
+          <p className="mt-1 text-xs text-amber-800">
+            These active organization students are not silently added. Checking a student here explicitly creates classroom membership and assignment recipients.
+          </p>
+          {addCandidates.length === 0 ? (
+            <p className="mt-2 text-sm text-amber-800">No eligible out-of-class students are currently available in this scope.</p>
+          ) : (
+            <div className="mt-2 grid max-h-44 gap-2 overflow-y-auto md:grid-cols-2">
+              {addCandidates.map((student) => (
+                <label key={student.id} className="flex cursor-pointer items-start gap-2 rounded-lg bg-white p-2 text-sm text-slate-700">
+                  <input
+                    type="checkbox"
+                    checked={addStudentUserIds.includes(student.id)}
+                    onChange={() => toggleArrayValue(setAddStudentUserIds, student.id)}
+                    className="mt-1"
+                  />
+                  <span>
+                    <span className="block font-semibold text-slate-900">{student.fullName || student.email || "Student"}</span>
+                    <span className="text-xs text-slate-500">{student.email ?? "No email"}</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </form>
+  );
+}
 
 type AdminAssignmentSection = AdminDashboardAssignment["sectionAssignments"][number];
 type AdminAssignmentRecipient = AdminAssignmentSection["recipients"][number];
@@ -2671,6 +3007,18 @@ export default function AdminDashboardPage() {
           }
         />
         <DashboardSection title="Assignments">
+          <CreateAssignmentPanel
+            classroomManagement={
+              classroomManagementState.status === "allowed"
+                ? classroomManagementState.data
+                : null
+            }
+            onCreated={async () => {
+              const refreshedDashboard = await getAdminOrgDashboard();
+              setDashboardState({ status: "allowed", dashboard: refreshedDashboard });
+              await loadClassroomManagement(selectedManagedClassroomId, studentSearchTerm);
+            }}
+          />
           <AssignmentsTable
             assignments={dashboard.assignments}
             students={dashboard.students}
