@@ -218,11 +218,12 @@ export async function getManageableClassroom(
 
   if (ctx.isMaster) return classroom;
 
+  if (classroom.teacher_id === ctx.userId) return classroom;
+
   const { data: teacherData, error: teacherError } = await ctx.adminClient
     .from("profiles")
     .select("id,email,email_domain,role")
     .eq("id", classroom.teacher_id)
-    .eq("role", "teacher")
     .maybeSingle();
 
   if (teacherError) {
@@ -238,7 +239,7 @@ export async function getManageableClassroom(
   > | null;
   const teacherDomain = teacher?.email_domain ?? getEmailDomain(teacher?.email);
 
-  if (!teacher || teacherDomain !== ctx.domain) {
+  if (!teacher || teacher.role !== "teacher" || teacherDomain !== ctx.domain) {
     throw new AdminClassroomManagementApiError(
       "Classroom not found.",
       404,
