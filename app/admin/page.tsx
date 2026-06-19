@@ -1279,12 +1279,16 @@ function getOverallAssignmentSummary(assignment: AdminDashboardAssignment) {
 
 function AssignmentsTable({
   assignments,
+  students,
   classroomManagement,
   onRefreshDashboard,
+  onRefreshClassroomManagement,
 }: {
   assignments: AdminDashboardAssignment[];
+  students: AdminDashboardStudent[];
   classroomManagement: AdminClassroomManagement | null;
   onRefreshDashboard: () => Promise<void>;
+  onRefreshClassroomManagement: () => Promise<void>;
 }) {
   const [expandedAssignmentId, setExpandedAssignmentId] = useState<string | null>(null);
   const [selectedSectionId, setSelectedSectionId] = useState<string | "overall" | null>(null);
@@ -1293,7 +1297,6 @@ function AssignmentsTable({
     type: "success" | "error";
     text: string;
   } | null>(null);
-  const [selectedAddRecipientId, setSelectedAddRecipientId] = useState("");
 
   async function handleRecipientAction(
     assignmentId: string,
@@ -1360,19 +1363,24 @@ function AssignmentsTable({
     }
   }
 
-  async function handleAddSectionRecipient(assignmentId: string, userId: string) {
+  async function handleAddSectionRecipient(
+    assignmentId: string,
+    userId: string,
+    addToClassroomIfNeeded: boolean,
+  ) {
     if (!userId) return;
     const mutationKey = `add:${assignmentId}`;
     setUpdatingRecipientKey(mutationKey);
     setRecipientMutationMessage(null);
 
     try {
-      await addAdminAssignmentRecipient(assignmentId, userId);
-      setSelectedAddRecipientId("");
-      await onRefreshDashboard();
+      await addAdminAssignmentRecipient(assignmentId, userId, { addToClassroomIfNeeded });
+      await Promise.all([onRefreshDashboard(), onRefreshClassroomManagement()]);
       setRecipientMutationMessage({
         type: "success",
-        text: "Recipient added successfully.",
+        text: addToClassroomIfNeeded
+          ? "Student added to class and assignment successfully."
+          : "Recipient added successfully.",
       });
     } catch (error) {
       const typedError = error as Error;
@@ -1385,19 +1393,24 @@ function AssignmentsTable({
     }
   }
 
-  async function handleAddOverallRecipient(assignmentIds: string[], userId: string) {
+  async function handleAddOverallRecipient(
+    assignmentIds: string[],
+    userId: string,
+    addToClassroomIfNeeded: boolean,
+  ) {
     if (!userId) return;
     const mutationKey = `add:overall`;
     setUpdatingRecipientKey(mutationKey);
     setRecipientMutationMessage(null);
 
     try {
-      await addAdminAssignmentRecipientsBulk(assignmentIds, userId);
-      setSelectedAddRecipientId("");
-      await onRefreshDashboard();
+      await addAdminAssignmentRecipientsBulk(assignmentIds, userId, { addToClassroomIfNeeded });
+      await Promise.all([onRefreshDashboard(), onRefreshClassroomManagement()]);
       setRecipientMutationMessage({
         type: "success",
-        text: "Recipient added to all sections successfully.",
+        text: addToClassroomIfNeeded
+          ? "Student added to class and all section assignments successfully."
+          : "Recipient added to all sections successfully.",
       });
     } catch (error) {
       const typedError = error as Error;
@@ -1435,19 +1448,31 @@ function AssignmentsTable({
       ) ?? null
     : null;
   const activeRoster = expandedClassroom?.roster.filter((member) => member.isActive) ?? [];
+  const classroomRosterIds = new Set(activeRoster.map((member) => member.userId));
   const selectedSectionRecipientIds = new Set(
     selectedSection?.recipients.map((recipient) => recipient.userId) ?? [],
   );
   const overallRecipientIds = new Set(
     overallSummary?.recipients.map((recipient) => recipient.userId) ?? [],
   );
-  const addCandidates = activeRoster
-    .filter((member) =>
-      selectedSectionId === "overall"
-        ? !overallRecipientIds.has(member.userId)
-        : !selectedSectionRecipientIds.has(member.userId),
-    )
-    .sort((a, b) => (a.fullName ?? a.email ?? "").localeCompare(b.fullName ?? b.email ?? ""));
+  const addCandidates = expandedClassroom
+    ? students
+        .filter((student) => student.isActive)
+        .map((student) => ({
+          userId: student.id,
+          fullName: student.fullName,
+          email: student.email,
+          emailDomain: student.emailDomain,
+          inClassroom: classroomRosterIds.has(student.id),
+          alreadyAssigned:
+            selectedSectionId === "overall"
+              ? overallRecipientIds.has(student.id)
+              : selectedSectionRecipientIds.has(student.id),
+        }))
+        .sort((a, b) =>
+          (a.fullName ?? a.email ?? "").localeCompare(b.fullName ?? b.email ?? ""),
+        )
+    : [];
 
   return (
     <div className="space-y-4">
@@ -1561,7 +1586,6 @@ function AssignmentsTable({
               type="button"
               onClick={() => {
                 setSelectedSectionId("overall");
-                setSelectedAddRecipientId("");
               }}
               className={`rounded-full border px-3 py-1 text-xs font-bold ${selectedSectionId === "overall" ? "border-blue-700 bg-blue-700 text-white" : "border-blue-200 bg-white text-blue-800"}`}
             >
@@ -1573,7 +1597,6 @@ function AssignmentsTable({
                 key={sectionAssignment.id}
                 onClick={() => {
                   setSelectedSectionId(sectionAssignment.id);
-                  setSelectedAddRecipientId("");
                 }}
                 className={`rounded-full border px-3 py-1 text-xs font-bold ${selectedSection?.id === sectionAssignment.id ? "border-blue-700 bg-blue-700 text-white" : "border-blue-200 bg-white text-blue-800"}`}
               >
@@ -1612,41 +1635,57 @@ function AssignmentsTable({
                   Add recipient to all sections
                 </p>
                 <p className="mt-1 text-xs text-slate-600">
-                  Adds an active classroom roster student to every section assignment in this group.
+                  Adds an active organization student to every section assignment in this group.
+                  Students not currently in the classroom are enrolled first.
                 </p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <select
-                    value={selectedAddRecipientId}
-                    onChange={(event) => setSelectedAddRecipientId(event.target.value)}
-                    className="min-w-64 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800"
-                  >
-                    <option value="">
-                      {expandedClassroom ? "Select eligible student" : "Classroom roster unavailable"}
-                    </option>
-                    {addCandidates.map((member) => (
-                      <option key={member.userId} value={member.userId}>
-                        {displayName({ fullName: member.fullName, email: member.email })}
-                        {member.email ? ` · ${member.email}` : ""}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      void handleAddOverallRecipient(
-                        expandedAssignment.assignmentIds,
-                        selectedAddRecipientId,
-                      )
-                    }
-                    disabled={!selectedAddRecipientId || updatingRecipientKey === "add:overall"}
-                    className="rounded-md bg-blue-700 px-3 py-2 text-sm font-bold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {updatingRecipientKey === "add:overall" ? "Adding..." : "Add to all sections"}
-                  </button>
+                <div className="mt-3 max-h-72 overflow-y-auto rounded-lg border border-blue-100 bg-white">
+                  {addCandidates.map((candidate) => {
+                    const isAdding = updatingRecipientKey === "add:overall";
+                    return (
+                      <div
+                        key={candidate.userId}
+                        className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-3 py-2 last:border-b-0"
+                      >
+                        <div>
+                          <p className="font-semibold text-slate-950">
+                            {displayName({ fullName: candidate.fullName, email: candidate.email })}
+                          </p>
+                          <p className="text-xs text-slate-600">{candidate.email ?? "No email"}</p>
+                          <p className="text-xs font-medium text-slate-500">
+                            {candidate.inClassroom ? "In class" : "Not in class"}
+                          </p>
+                        </div>
+                        {candidate.alreadyAssigned ? (
+                          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">
+                            Already assigned
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              void handleAddOverallRecipient(
+                                expandedAssignment.assignmentIds,
+                                candidate.userId,
+                                !candidate.inClassroom,
+                              )
+                            }
+                            disabled={isAdding}
+                            className="rounded-md bg-blue-700 px-3 py-2 text-sm font-bold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {isAdding
+                              ? "Adding..."
+                              : candidate.inClassroom
+                                ? "Add to assignment"
+                                : "Add student to class and assignment"}
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
                 {expandedClassroom && addCandidates.length === 0 ? (
                   <p className="mt-2 text-xs font-medium text-slate-600">
-                    No eligible active roster students are available to add to all sections.
+                    No active organization students are available to add to all sections.
                   </p>
                 ) : null}
               </div>
@@ -1763,41 +1802,57 @@ function AssignmentsTable({
                   Add recipient to this section
                 </p>
                 <p className="mt-1 text-xs text-slate-600">
-                  Adds an active classroom roster student to only this section assignment.
+                  Adds an active organization student to only this section assignment.
+                  Students not currently in the classroom are enrolled first.
                 </p>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <select
-                    value={selectedAddRecipientId}
-                    onChange={(event) => setSelectedAddRecipientId(event.target.value)}
-                    className="min-w-64 rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800"
-                  >
-                    <option value="">
-                      {expandedClassroom ? "Select eligible student" : "Classroom roster unavailable"}
-                    </option>
-                    {addCandidates.map((member) => (
-                      <option key={member.userId} value={member.userId}>
-                        {displayName({ fullName: member.fullName, email: member.email })}
-                        {member.email ? ` · ${member.email}` : ""}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      void handleAddSectionRecipient(selectedSection.id, selectedAddRecipientId)
-                    }
-                    disabled={
-                      !selectedAddRecipientId ||
-                      updatingRecipientKey === `add:${selectedSection.id}`
-                    }
-                    className="rounded-md bg-blue-700 px-3 py-2 text-sm font-bold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {updatingRecipientKey === `add:${selectedSection.id}` ? "Adding..." : "Add to section"}
-                  </button>
+                <div className="mt-3 max-h-72 overflow-y-auto rounded-lg border border-blue-100 bg-white">
+                  {addCandidates.map((candidate) => {
+                    const isAdding = updatingRecipientKey === `add:${selectedSection.id}`;
+                    return (
+                      <div
+                        key={candidate.userId}
+                        className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-3 py-2 last:border-b-0"
+                      >
+                        <div>
+                          <p className="font-semibold text-slate-950">
+                            {displayName({ fullName: candidate.fullName, email: candidate.email })}
+                          </p>
+                          <p className="text-xs text-slate-600">{candidate.email ?? "No email"}</p>
+                          <p className="text-xs font-medium text-slate-500">
+                            {candidate.inClassroom ? "In class" : "Not in class"}
+                          </p>
+                        </div>
+                        {candidate.alreadyAssigned ? (
+                          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">
+                            Already assigned
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              void handleAddSectionRecipient(
+                                selectedSection.id,
+                                candidate.userId,
+                                !candidate.inClassroom,
+                              )
+                            }
+                            disabled={isAdding}
+                            className="rounded-md bg-blue-700 px-3 py-2 text-sm font-bold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            {isAdding
+                              ? "Adding..."
+                              : candidate.inClassroom
+                                ? "Add to assignment"
+                                : "Add student to class and assignment"}
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
                 {expandedClassroom && addCandidates.length === 0 ? (
                   <p className="mt-2 text-xs font-medium text-slate-600">
-                    No eligible active roster students are available to add to this section.
+                    No active organization students are available to add to this section.
                   </p>
                 ) : null}
               </div>
@@ -2579,6 +2634,7 @@ export default function AdminDashboardPage() {
         <DashboardSection title="Assignments">
           <AssignmentsTable
             assignments={dashboard.assignments}
+            students={dashboard.students}
             classroomManagement={
               classroomManagementState.status === "allowed"
                 ? classroomManagementState.data
@@ -2588,6 +2644,9 @@ export default function AdminDashboardPage() {
               const refreshedDashboard = await getAdminOrgDashboard();
               setDashboardState({ status: "allowed", dashboard: refreshedDashboard });
             }}
+            onRefreshClassroomManagement={() =>
+              loadClassroomManagement(selectedManagedClassroomId, studentSearchTerm)
+            }
           />
         </DashboardSection>
       </div>

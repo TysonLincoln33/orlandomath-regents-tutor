@@ -3,12 +3,13 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   ADMIN_RECIPIENT_SELECT,
   assertRecipientsCanBeRemoved,
-  assertStudentInClassroomRoster,
   buildRecipientInsertRows,
+  ensureStudentInClassroomRoster,
   getRecipientRows,
   getValidatedActiveStudentForAdd,
   getVerifiedAssignmentsInOneClassroom,
   isUniqueRecipientError,
+  rollbackCreatedClassroomMembership,
 } from "../../_recipientUtils";
 import {
   AdminClassroomManagementApiError,
@@ -248,13 +249,19 @@ export async function POST(req: NextRequest, context: RouteContext) {
     const ctx = await getRouteContext(req);
     const body = await req.json().catch(() => null);
     const assignmentIds = parseAssignmentIds(body?.assignmentIds);
+    const addToClassroomIfNeeded = body?.addToClassroomIfNeeded === true;
     const { assignments, classroomId } = await getVerifiedAssignmentsInOneClassroom(
       ctx,
       assignmentIds,
     );
 
     const student = await getValidatedActiveStudentForAdd(ctx, userId);
-    await assertStudentInClassroomRoster(ctx.adminClient, classroomId, userId);
+    const { membershipCreated } = await ensureStudentInClassroomRoster(
+      ctx,
+      classroomId,
+      userId,
+      addToClassroomIfNeeded,
+    );
 
     const existingRecipients = await getRecipientRows(
       ctx.adminClient,
@@ -264,6 +271,12 @@ export async function POST(req: NextRequest, context: RouteContext) {
     );
 
     if (existingRecipients.length > 0) {
+      await rollbackCreatedClassroomMembership(
+        ctx,
+        classroomId,
+        userId,
+        membershipCreated,
+      );
       throw new AdminClassroomManagementApiError(
         "Student is already a recipient for one or more selected assignments.",
         409,
@@ -276,6 +289,12 @@ export async function POST(req: NextRequest, context: RouteContext) {
       .select(ADMIN_RECIPIENT_SELECT);
 
     if (insertError || !insertedRecipients) {
+      await rollbackCreatedClassroomMembership(
+        ctx,
+        classroomId,
+        userId,
+        membershipCreated,
+      );
       if (insertError && isUniqueRecipientError(insertError)) {
         throw new AdminClassroomManagementApiError(
           "Student is already a recipient for one or more selected assignments.",
@@ -290,6 +309,12 @@ export async function POST(req: NextRequest, context: RouteContext) {
     }
 
     if (insertedRecipients.length !== assignmentIds.length) {
+      await rollbackCreatedClassroomMembership(
+        ctx,
+        classroomId,
+        userId,
+        membershipCreated,
+      );
       throw new AdminClassroomManagementApiError(
         "Failed to add all assignment recipients.",
         500,
