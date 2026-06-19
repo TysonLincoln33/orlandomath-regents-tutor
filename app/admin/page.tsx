@@ -71,6 +71,14 @@ type ClassroomMemberMutation =
   | { type: "remove"; userId: string }
   | null;
 
+type AssignmentAddCandidate = {
+  userId: string;
+  fullName: string | null;
+  email: string | null;
+  inClassroom: boolean;
+  alreadyAssigned: boolean;
+};
+
 type UserDirectoryRoleFilter = "all" | "student" | "teacher" | "admin";
 type UserDirectoryApprovalFilter = "all" | "approved" | "pending" | "denied";
 type UserDirectoryActivationFilter = "all" | "active" | "inactive";
@@ -1297,6 +1305,11 @@ function AssignmentsTable({
     type: "success" | "error";
     text: string;
   } | null>(null);
+  const [selectedAddCandidateId, setSelectedAddCandidateId] = useState("");
+
+  useEffect(() => {
+    setSelectedAddCandidateId("");
+  }, [expandedAssignmentId, selectedSectionId]);
 
   async function handleRecipientAction(
     assignmentId: string,
@@ -1382,6 +1395,7 @@ function AssignmentsTable({
           ? "Student added to class and assignment successfully."
           : "Recipient added successfully.",
       });
+      setSelectedAddCandidateId("");
     } catch (error) {
       const typedError = error as Error;
       setRecipientMutationMessage({
@@ -1412,6 +1426,7 @@ function AssignmentsTable({
           ? "Student added to class and all section assignments successfully."
           : "Recipient added to all sections successfully.",
       });
+      setSelectedAddCandidateId("");
     } catch (error) {
       const typedError = error as Error;
       setRecipientMutationMessage({
@@ -1455,14 +1470,13 @@ function AssignmentsTable({
   const overallRecipientIds = new Set(
     overallSummary?.recipients.map((recipient) => recipient.userId) ?? [],
   );
-  const addCandidates = expandedClassroom
+  const addCandidates: AssignmentAddCandidate[] = expandedClassroom
     ? students
         .filter((student) => student.isActive)
         .map((student) => ({
           userId: student.id,
           fullName: student.fullName,
           email: student.email,
-          emailDomain: student.emailDomain,
           inClassroom: classroomRosterIds.has(student.id),
           alreadyAssigned:
             selectedSectionId === "overall"
@@ -1473,6 +1487,9 @@ function AssignmentsTable({
           (a.fullName ?? a.email ?? "").localeCompare(b.fullName ?? b.email ?? ""),
         )
     : [];
+  const selectedAddCandidate = addCandidates.find(
+    (candidate) => candidate.userId === selectedAddCandidateId,
+  );
 
   return (
     <div className="space-y-4">
@@ -1638,50 +1655,61 @@ function AssignmentsTable({
                   Adds an active organization student to every section assignment in this group.
                   Students not currently in the classroom are enrolled first.
                 </p>
-                <div className="mt-3 max-h-72 overflow-y-auto rounded-lg border border-blue-100 bg-white">
-                  {addCandidates.map((candidate) => {
-                    const isAdding = updatingRecipientKey === "add:overall";
-                    return (
-                      <div
-                        key={candidate.userId}
-                        className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-3 py-2 last:border-b-0"
-                      >
-                        <div>
-                          <p className="font-semibold text-slate-950">
-                            {displayName({ fullName: candidate.fullName, email: candidate.email })}
-                          </p>
-                          <p className="text-xs text-slate-600">{candidate.email ?? "No email"}</p>
-                          <p className="text-xs font-medium text-slate-500">
-                            {candidate.inClassroom ? "In class" : "Not in class"}
-                          </p>
-                        </div>
-                        {candidate.alreadyAssigned ? (
-                          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">
-                            Already assigned
-                          </span>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              void handleAddOverallRecipient(
-                                expandedAssignment.assignmentIds,
-                                candidate.userId,
-                                !candidate.inClassroom,
-                              )
-                            }
-                            disabled={isAdding}
-                            className="rounded-md bg-blue-700 px-3 py-2 text-sm font-bold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
-                          >
-                            {isAdding
-                              ? "Adding..."
-                              : candidate.inClassroom
-                                ? "Add to assignment"
-                                : "Add student to class and assignment"}
-                          </button>
-                        )}
-                      </div>
-                    );
-                  })}
+                <div className="mt-3 flex flex-col gap-3 rounded-lg border border-blue-100 bg-white p-3 sm:flex-row sm:items-end">
+                  <label className="flex-1 text-xs font-bold uppercase tracking-wide text-slate-600">
+                    Eligible student
+                    <select
+                      value={selectedAddCandidateId}
+                      onChange={(event) =>
+                        setSelectedAddCandidateId(event.target.value)
+                      }
+                      className="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium normal-case tracking-normal text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                    >
+                      <option value="">Select a student...</option>
+                      {addCandidates.map((candidate) => (
+                        <option key={candidate.userId} value={candidate.userId}>
+                          {displayName({
+                            fullName: candidate.fullName,
+                            email: candidate.email,
+                          })}{" "}
+                          · {candidate.email ?? "No email"} ·{" "}
+                          {candidate.alreadyAssigned
+                            ? "Already assigned"
+                            : candidate.inClassroom
+                              ? "In class"
+                              : "Not in class"}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  {selectedAddCandidate?.alreadyAssigned ? (
+                    <button
+                      type="button"
+                      disabled
+                      className="rounded-md bg-slate-100 px-3 py-2 text-sm font-bold text-slate-600 disabled:cursor-not-allowed"
+                    >
+                      Already assigned
+                    </button>
+                  ) : selectedAddCandidate ? (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        void handleAddOverallRecipient(
+                          expandedAssignment.assignmentIds,
+                          selectedAddCandidate.userId,
+                          !selectedAddCandidate.inClassroom,
+                        )
+                      }
+                      disabled={updatingRecipientKey === "add:overall"}
+                      className="rounded-md bg-blue-700 px-3 py-2 text-sm font-bold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {updatingRecipientKey === "add:overall"
+                        ? "Adding..."
+                        : selectedAddCandidate.inClassroom
+                          ? "Add to assignment"
+                          : "Add student to class and assignment"}
+                    </button>
+                  ) : null}
                 </div>
                 {expandedClassroom && addCandidates.length === 0 ? (
                   <p className="mt-2 text-xs font-medium text-slate-600">
@@ -1805,50 +1833,61 @@ function AssignmentsTable({
                   Adds an active organization student to only this section assignment.
                   Students not currently in the classroom are enrolled first.
                 </p>
-                <div className="mt-3 max-h-72 overflow-y-auto rounded-lg border border-blue-100 bg-white">
-                  {addCandidates.map((candidate) => {
-                    const isAdding = updatingRecipientKey === `add:${selectedSection.id}`;
-                    return (
-                      <div
-                        key={candidate.userId}
-                        className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-3 py-2 last:border-b-0"
-                      >
-                        <div>
-                          <p className="font-semibold text-slate-950">
-                            {displayName({ fullName: candidate.fullName, email: candidate.email })}
-                          </p>
-                          <p className="text-xs text-slate-600">{candidate.email ?? "No email"}</p>
-                          <p className="text-xs font-medium text-slate-500">
-                            {candidate.inClassroom ? "In class" : "Not in class"}
-                          </p>
-                        </div>
-                        {candidate.alreadyAssigned ? (
-                          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">
-                            Already assigned
-                          </span>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              void handleAddSectionRecipient(
-                                selectedSection.id,
-                                candidate.userId,
-                                !candidate.inClassroom,
-                              )
-                            }
-                            disabled={isAdding}
-                            className="rounded-md bg-blue-700 px-3 py-2 text-sm font-bold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
-                          >
-                            {isAdding
-                              ? "Adding..."
-                              : candidate.inClassroom
-                                ? "Add to assignment"
-                                : "Add student to class and assignment"}
-                          </button>
-                        )}
-                      </div>
-                    );
-                  })}
+                <div className="mt-3 flex flex-col gap-3 rounded-lg border border-blue-100 bg-white p-3 sm:flex-row sm:items-end">
+                  <label className="flex-1 text-xs font-bold uppercase tracking-wide text-slate-600">
+                    Eligible student
+                    <select
+                      value={selectedAddCandidateId}
+                      onChange={(event) =>
+                        setSelectedAddCandidateId(event.target.value)
+                      }
+                      className="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium normal-case tracking-normal text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                    >
+                      <option value="">Select a student...</option>
+                      {addCandidates.map((candidate) => (
+                        <option key={candidate.userId} value={candidate.userId}>
+                          {displayName({
+                            fullName: candidate.fullName,
+                            email: candidate.email,
+                          })}{" "}
+                          · {candidate.email ?? "No email"} ·{" "}
+                          {candidate.alreadyAssigned
+                            ? "Already assigned"
+                            : candidate.inClassroom
+                              ? "In class"
+                              : "Not in class"}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  {selectedAddCandidate?.alreadyAssigned ? (
+                    <button
+                      type="button"
+                      disabled
+                      className="rounded-md bg-slate-100 px-3 py-2 text-sm font-bold text-slate-600 disabled:cursor-not-allowed"
+                    >
+                      Already assigned
+                    </button>
+                  ) : selectedAddCandidate ? (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        void handleAddSectionRecipient(
+                          selectedSection.id,
+                          selectedAddCandidate.userId,
+                          !selectedAddCandidate.inClassroom,
+                        )
+                      }
+                      disabled={updatingRecipientKey === `add:${selectedSection.id}`}
+                      className="rounded-md bg-blue-700 px-3 py-2 text-sm font-bold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {updatingRecipientKey === `add:${selectedSection.id}`
+                        ? "Adding..."
+                        : selectedAddCandidate.inClassroom
+                          ? "Add to assignment"
+                          : "Add student to class and assignment"}
+                    </button>
+                  ) : null}
                 </div>
                 {expandedClassroom && addCandidates.length === 0 ? (
                   <p className="mt-2 text-xs font-medium text-slate-600">
