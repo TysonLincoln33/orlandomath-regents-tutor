@@ -12,6 +12,7 @@ type ProfileRow = {
   requested_role: string | null;
   approval_status: string | null;
   email_domain: string | null;
+  is_active: boolean | null;
 };
 
 type ClassroomRow = {
@@ -220,7 +221,7 @@ async function getRouteContext(req: NextRequest) {
 
   const { data: profileData, error: profileError } = await adminClient
     .from("profiles")
-    .select("id,email,full_name,role,requested_role,approval_status,email_domain")
+    .select("id,email,full_name,role,requested_role,approval_status,email_domain,is_active")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -565,6 +566,8 @@ function buildDashboard({
         id: student.id,
         fullName: student.full_name,
         email: student.email,
+        emailDomain: student.email_domain ?? getEmailDomain(student.email),
+        isActive: student.is_active === true,
         classroomCount: membershipsByStudent.get(student.id)?.length ?? 0,
         assignedWorkCount: recipientsByStudent.get(student.id)?.length ?? 0,
         completionPercent: metrics?.completion ?? null,
@@ -812,14 +815,14 @@ export async function GET(req: NextRequest) {
 
     let teachersQuery = adminClient
       .from("profiles")
-      .select("id,email,full_name,role,requested_role,approval_status,email_domain")
+      .select("id,email,full_name,role,requested_role,approval_status,email_domain,is_active")
       .eq("role", "teacher")
       .eq("approval_status", "approved")
       .order("full_name", { ascending: true });
 
     let studentsQuery = adminClient
       .from("profiles")
-      .select("id,email,full_name,role,requested_role,approval_status,email_domain")
+      .select("id,email,full_name,role,requested_role,approval_status,email_domain,is_active")
       .eq("role", "student")
       .order("full_name", { ascending: true });
 
@@ -881,7 +884,7 @@ export async function GET(req: NextRequest) {
       const { data, error } = await selectIn<ProfileRow>(
         adminClient
           .from("profiles")
-          .select("id,email,full_name,role,requested_role,approval_status,email_domain"),
+          .select("id,email,full_name,role,requested_role,approval_status,email_domain,is_active"),
         "id",
         missingTeacherIds,
       );

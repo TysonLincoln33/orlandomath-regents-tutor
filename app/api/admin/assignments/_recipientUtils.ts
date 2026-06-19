@@ -6,6 +6,7 @@ import {
   type ProfileRow,
   getManageableClassroom,
   getValidatedStudent,
+  parseUniqueMembershipError,
 } from "../classroom-management/_utils";
 
 export const ADMIN_RECIPIENT_SELECT =
@@ -174,6 +175,84 @@ export async function assertStudentInClassroomRoster(
       "Student must belong to this classroom roster before being added as an assignment recipient.",
       400,
     );
+  }
+}
+
+
+export async function ensureStudentInClassroomRoster(
+  ctx: AdminClassroomManagementRouteContext,
+  classroomId: string,
+  userId: string,
+  addToClassroomIfNeeded: boolean,
+) {
+  const { data: existingMembership, error: existingError } = await ctx.adminClient
+    .from("classroom_members")
+    .select("id")
+    .eq("classroom_id", classroomId)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (existingError) {
+    throw new AdminClassroomManagementApiError(
+      existingError.message || "Failed to verify classroom roster membership.",
+      500,
+    );
+  }
+
+  if (existingMembership) {
+    return { membershipCreated: false };
+  }
+
+  if (!addToClassroomIfNeeded) {
+    throw new AdminClassroomManagementApiError(
+      "Student must belong to this classroom roster before being added as an assignment recipient.",
+      400,
+    );
+  }
+
+  const { error: insertError } = await ctx.adminClient
+    .from("classroom_members")
+    .insert({
+      classroom_id: classroomId,
+      user_id: userId,
+      joined_via: ctx.isMaster ? "master_added" : "admin_added",
+    });
+
+  if (insertError) {
+    if (parseUniqueMembershipError(insertError)) {
+      return { membershipCreated: false };
+    }
+
+    throw new AdminClassroomManagementApiError(
+      insertError.message || "Failed to add student to classroom.",
+      500,
+    );
+  }
+
+  return { membershipCreated: true };
+}
+
+export async function rollbackCreatedClassroomMembership(
+  ctx: AdminClassroomManagementRouteContext,
+  classroomId: string,
+  userId: string,
+  membershipCreated: boolean,
+) {
+  if (!membershipCreated) return;
+
+  // Best-effort compensation for the non-RPC implementation: if this request
+  // created classroom membership but recipient insertion fails, remove only the
+  // membership row created by this operation so the mutation behaves as close to
+  // all-or-none as possible without touching progress, attempts, assignments,
+  // profiles, or pre-existing membership rows.
+  const { error } = await ctx.adminClient
+    .from("classroom_members")
+    .delete()
+    .eq("classroom_id", classroomId)
+    .eq("user_id", userId);
+
+  if (error) {
+    console.error("failed to rollback classroom membership after recipient insert failure", error);
   }
 }
 

@@ -33,6 +33,8 @@ export type AdminDashboardStudent = {
   id: string;
   fullName: string | null;
   email: string | null;
+  emailDomain: string | null;
+  isActive: boolean;
   classroomCount: number;
   assignedWorkCount: number;
   completionPercent: number | null;
@@ -411,6 +413,7 @@ async function parseAdminAssignmentMutationResponse<T>(
 export async function addAdminAssignmentRecipient(
   assignmentId: string,
   userId: string,
+  options?: { addToClassroomIfNeeded?: boolean },
 ): Promise<AdminAssignmentRecipientCreateResult> {
   const accessToken = await getAdminAssignmentMutationAccessToken();
   const response = await fetch(`/api/admin/assignments/${assignmentId}/recipients`, {
@@ -419,7 +422,10 @@ export async function addAdminAssignmentRecipient(
       "Content-Type": "application/json",
       Authorization: `Bearer ${accessToken}`,
     },
-    body: JSON.stringify({ userId }),
+    body: JSON.stringify({
+      userId,
+      addToClassroomIfNeeded: options?.addToClassroomIfNeeded === true,
+    }),
   });
 
   return parseAdminAssignmentMutationResponse<AdminAssignmentRecipientCreateResult>(
@@ -450,6 +456,7 @@ export async function removeAdminAssignmentRecipient(
 export async function addAdminAssignmentRecipientsBulk(
   assignmentIds: string[],
   userId: string,
+  options?: { addToClassroomIfNeeded?: boolean },
 ): Promise<AdminAssignmentRecipientBulkCreateResult> {
   const accessToken = await getAdminAssignmentMutationAccessToken();
   const response = await fetch(`/api/admin/assignments/recipients/${userId}`, {
@@ -458,7 +465,10 @@ export async function addAdminAssignmentRecipientsBulk(
       "Content-Type": "application/json",
       Authorization: `Bearer ${accessToken}`,
     },
-    body: JSON.stringify({ assignmentIds }),
+    body: JSON.stringify({
+      assignmentIds,
+      addToClassroomIfNeeded: options?.addToClassroomIfNeeded === true,
+    }),
   });
 
   return parseAdminAssignmentMutationResponse<AdminAssignmentRecipientBulkCreateResult>(
