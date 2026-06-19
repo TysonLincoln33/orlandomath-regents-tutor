@@ -24,7 +24,7 @@ function mapProfileById(profiles: ProfileRow[]) {
 
 export async function GET(req: NextRequest) {
   try {
-    const { adminClient, isMaster, domain } = await getRouteContext(req);
+    const { adminClient, userId, isMaster, domain } = await getRouteContext(req);
     const selectedClassroomId = req.nextUrl.searchParams.get("classroomId") ?? "";
     const search = (req.nextUrl.searchParams.get("q") ?? "").trim();
 
@@ -49,18 +49,17 @@ export async function GET(req: NextRequest) {
     const teachers = (teacherRows ?? []) as ProfileRow[];
     const teacherIds = teachers.map((teacher) => teacher.id);
 
+    const visibleOwnerIds = [...new Set([...teacherIds, userId])];
     const { data: classroomRows, error: classroomsError } = isMaster
       ? await adminClient
           .from("classrooms")
           .select("id,teacher_id,name,subject,term,class_code")
           .order("name", { ascending: true })
-      : teacherIds.length > 0
-        ? await adminClient
-            .from("classrooms")
-            .select("id,teacher_id,name,subject,term,class_code")
-            .in("teacher_id", teacherIds)
-            .order("name", { ascending: true })
-        : { data: [], error: null };
+      : await adminClient
+          .from("classrooms")
+          .select("id,teacher_id,name,subject,term,class_code")
+          .in("teacher_id", visibleOwnerIds)
+          .order("name", { ascending: true });
 
     if (classroomsError) {
       throw new AdminClassroomManagementApiError(

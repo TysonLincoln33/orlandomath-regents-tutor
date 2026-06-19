@@ -811,7 +811,7 @@ function buildDashboard({
 
 export async function GET(req: NextRequest) {
   try {
-    const { adminClient, isMaster, domain } = await getRouteContext(req);
+    const { adminClient, profile, isMaster, domain } = await getRouteContext(req);
 
     let teachersQuery = adminClient
       .from("profiles")
@@ -859,12 +859,13 @@ export async function GET(req: NextRequest) {
       if (error) throw new Error(error.message || "Failed to load classrooms.");
       classrooms = (data ?? []) as ClassroomRow[];
     } else {
+      const visibleOwnerIds = [...new Set([...teacherIds, profile.id])];
       const { data, error } = await selectIn<ClassroomRow>(
         adminClient.from("classrooms").select("id,teacher_id,name").order("name", {
           ascending: true,
         }),
         "teacher_id",
-        teacherIds,
+        visibleOwnerIds,
       );
 
       if (error) throw new Error(error.message || "Failed to load classrooms.");
