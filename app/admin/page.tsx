@@ -20,7 +20,9 @@ import {
 import {
   addAdminAssignmentRecipient,
   addAdminAssignmentRecipientsBulk,
+  createAdminOwnClassroom,
   createAdminOwnClassroomChapterAssignments,
+  getAdminOwnClassroom,
   getAdminOrgDashboard,
   updateAdminAssignmentRecipient,
   updateAdminAssignmentRecipientsBulk,
@@ -33,6 +35,7 @@ import {
   type AdminDashboardStudentDetail,
   type AdminDashboardTeacher,
   type AdminOrgDashboard,
+  type AdminOwnClassroomState,
 } from "@/lib/admin/orgDashboard";
 import {
   getAdminUserDirectory,
@@ -1301,6 +1304,10 @@ function AdminAssignmentCreation({
   const [selectedChapterIds, setSelectedChapterIds] = useState<string[]>([]);
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
+  const [setupLoading, setSetupLoading] = useState(false);
+  const [classroomState, setClassroomState] = useState<
+    AdminOwnClassroomState | { status: "loading" }
+  >({ status: "loading" });
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   const activeStudents = useMemo(
@@ -1318,6 +1325,36 @@ function AdminAssignmentCreation({
   const totalAssignmentRows = selectedSections.length;
   const totalRecipientRows = totalAssignmentRows * selectedStudents.length;
 
+  useEffect(() => {
+    let active = true;
+
+    async function loadAdminClassroom() {
+      if (dashboard.scope.type === "master_global") return;
+
+      setClassroomState({ status: "loading" });
+      try {
+        const state = await getAdminOwnClassroom();
+        if (active) setClassroomState(state);
+      } catch (error) {
+        const typedError = error as Error;
+        if (active) {
+          setClassroomState({
+            status: "missing",
+            classroom: null,
+            message:
+              typedError.message || "Admin classroom setup could not be loaded.",
+          });
+        }
+      }
+    }
+
+    void loadAdminClassroom();
+
+    return () => {
+      active = false;
+    };
+  }, [dashboard.scope.type]);
+
   function toggleChapter(chapterId: string) {
     setSelectedChapterIds((current) =>
       current.includes(chapterId)
@@ -1332,6 +1369,32 @@ function AdminAssignmentCreation({
         ? current.filter((id) => id !== studentId)
         : [...current, studentId],
     );
+  }
+
+  async function handleCreateAdminClassroom() {
+    setMessage(null);
+    setSetupLoading(true);
+
+    try {
+      const result = await createAdminOwnClassroom();
+      setClassroomState({ status: "ready", classroom: result.classroom });
+      setMessage({
+        type: "success",
+        text: result.created
+          ? "Admin classroom created. You can create assignments now."
+          : "Admin classroom is ready. You can create assignments now.",
+      });
+      await onCreated();
+    } catch (error) {
+      const typedError = error as Error;
+      setMessage({
+        type: "error",
+        text:
+          typedError.message || "Failed to create admin classroom.",
+      });
+    } finally {
+      setSetupLoading(false);
+    }
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -1377,13 +1440,52 @@ function AdminAssignmentCreation({
     );
   }
 
+  if (classroomState.status === "loading") {
+    return (
+      <div className="mb-6 rounded-2xl border border-blue-100 bg-blue-50/50 p-5 text-sm text-slate-700 shadow-sm">
+        Loading admin classroom setup...
+      </div>
+    );
+  }
+
+  if (classroomState.status === "duplicate") {
+    return (
+      <div className="mb-6 rounded-2xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-900 shadow-sm">
+        <p className="font-bold">Administrator classroom configuration issue. Please contact support.</p>
+      </div>
+    );
+  }
+
+  if (classroomState.status === "missing") {
+    return (
+      <div className="mb-6 rounded-2xl border border-blue-100 bg-blue-50/50 p-5 text-sm text-slate-700 shadow-sm">
+        <p className="text-sm font-bold uppercase tracking-wide text-blue-700">Create Assignment</p>
+        <h3 className="mt-1 text-xl font-extrabold text-slate-950">Set up your admin classroom</h3>
+        <p className="mt-2">Create your admin classroom before assigning chapters. This is a one-time setup step.</p>
+        {message ? (
+          <div className={`mt-4 rounded-xl border p-3 text-sm ${message.type === "success" ? "border-emerald-200 bg-emerald-50 text-emerald-800" : "border-rose-200 bg-rose-50 text-rose-800"}`}>
+            {message.text}
+          </div>
+        ) : null}
+        <button
+          type="button"
+          disabled={setupLoading}
+          onClick={() => void handleCreateAdminClassroom()}
+          className="mt-5 rounded-full bg-blue-600 px-5 py-2 text-sm font-bold text-white shadow hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+        >
+          {setupLoading ? "Creating..." : "Create My Admin Classroom"}
+        </button>
+      </div>
+    );
+  }
+
   return (
     <form onSubmit={handleSubmit} className="mb-6 rounded-2xl border border-blue-100 bg-blue-50/50 p-5 shadow-sm">
       <div>
         <p className="text-sm font-bold uppercase tracking-wide text-blue-700">Create Assignment</p>
         <h3 className="mt-1 text-xl font-extrabold text-slate-950">Assign chapters to your admin classroom</h3>
         <p className="mt-2 text-sm text-slate-700">
-          No classroom dropdown is shown. The system will use your configured admin classroom. If no admin classroom exists, assignment creation will stop with a setup error.
+          No classroom dropdown is shown. Assignments will be created in your admin classroom.
         </p>
       </div>
 

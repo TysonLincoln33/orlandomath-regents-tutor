@@ -536,3 +536,53 @@ export async function createAdminOwnClassroomChapterAssignments(params: {
     "Failed to create chapter assignments.",
   );
 }
+
+export type AdminOwnClassroom = {
+  id: string;
+  teacher_id: string;
+  name: string;
+  subject: string | null;
+  term: string | null;
+  class_code: string;
+  created_at?: string | null;
+};
+
+export type AdminOwnClassroomState =
+  | { status: "ready"; classroom: AdminOwnClassroom }
+  | { status: "missing"; classroom: null; message: string }
+  | {
+      status: "duplicate";
+      classroom: null;
+      message: string;
+      userMessage?: string;
+    };
+
+export type AdminOwnClassroomCreateResult = {
+  created: boolean;
+  classroom: AdminOwnClassroom;
+};
+
+export async function getAdminOwnClassroom(): Promise<AdminOwnClassroomState> {
+  const accessToken = await getAdminAssignmentMutationAccessToken();
+  const response = await fetch("/api/admin/own-classroom", {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+
+  return parseAdminAssignmentMutationResponse<AdminOwnClassroomState>(
+    response,
+    "Failed to resolve admin classroom.",
+  );
+}
+
+export async function createAdminOwnClassroom(): Promise<AdminOwnClassroomCreateResult> {
+  const accessToken = await getAdminAssignmentMutationAccessToken();
+  const response = await fetch("/api/admin/own-classroom", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+
+  return parseAdminAssignmentMutationResponse<AdminOwnClassroomCreateResult>(
+    response,
+    "Failed to create admin classroom.",
+  );
+}
