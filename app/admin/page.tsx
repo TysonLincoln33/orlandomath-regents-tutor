@@ -39,6 +39,11 @@ import {
   type AdminOwnClassroomState,
 } from "@/lib/admin/orgDashboard";
 import {
+  createAdminQuickAssign,
+  getAdminQuickAssignData,
+  type AdminQuickAssignData,
+} from "@/lib/admin/quickAssign";
+import {
   getAdminUserDirectory,
   type AdminDirectoryUser,
   type AdminUserActivationAction,
@@ -88,6 +93,7 @@ type AssignmentAddCandidate = {
 type UserDirectoryRoleFilter = "all" | "student" | "teacher" | "admin";
 type UserDirectoryApprovalFilter = "all" | "approved" | "pending" | "denied";
 type UserDirectoryActivationFilter = "all" | "active" | "inactive";
+type StudentPanelMode = "overall" | "assign";
 
 function formatPercent(value: number | null | undefined) {
   return typeof value === "number" ? `${value}%` : "No data";
@@ -651,11 +657,15 @@ function TeachersTable({ teachers }: { teachers: AdminDashboardTeacher[] }) {
 function StudentsList({
   students,
   selectedStudentId,
-  onSelectStudent,
+  selectedMode,
+  onSelectOverall,
+  onSelectAssign,
 }: {
   students: AdminDashboardStudent[];
   selectedStudentId: string | null;
-  onSelectStudent: (studentId: string) => void;
+  selectedMode: StudentPanelMode | null;
+  onSelectOverall: (studentId: string) => void;
+  onSelectAssign: (studentId: string) => void;
 }) {
   if (students.length === 0)
     return (
@@ -668,6 +678,8 @@ function StudentsList({
     <div className="max-h-[42rem] space-y-3 overflow-y-auto pr-2">
       {students.map((student) => {
         const selected = selectedStudentId === student.id;
+        const overallSelected = selected && selectedMode === "overall";
+        const assignSelected = selected && selectedMode === "assign";
 
         return (
           <article
@@ -683,13 +695,22 @@ function StudentsList({
                   {student.email ?? "No email"}
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => onSelectStudent(student.id)}
-                className="shrink-0 rounded-full bg-blue-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-blue-700"
-              >
-                Overall
-              </button>
+              <div className="flex shrink-0 flex-wrap justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => onSelectOverall(student.id)}
+                  className={`rounded-full px-3 py-1.5 text-xs font-bold shadow-sm ${overallSelected ? "bg-blue-700 text-white" : "bg-blue-600 text-white hover:bg-blue-700"}`}
+                >
+                  Overall
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onSelectAssign(student.id)}
+                  className={`rounded-full px-3 py-1.5 text-xs font-bold shadow-sm ${assignSelected ? "bg-emerald-700 text-white" : "bg-emerald-600 text-white hover:bg-emerald-700"}`}
+                >
+                  Assign
+                </button>
+              </div>
             </div>
 
             <dl className="mt-3 grid grid-cols-2 gap-2 text-xs text-slate-600">
@@ -2493,6 +2514,261 @@ function StudentDetailPanel({
   );
 }
 
+function QuickAssignPanel({
+  student,
+  onAssigned,
+}: {
+  student: AdminDashboardStudentDetail;
+  onAssigned: () => Promise<void>;
+}) {
+  const [data, setData] = useState<AdminQuickAssignData | null>(null);
+  const [selectedChapterIds, setSelectedChapterIds] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [message, setMessage] = useState<{
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
+
+  const selectedSections = useMemo(
+    () => SECTIONS.filter((section) => selectedChapterIds.includes(section.chapterId)),
+    [selectedChapterIds],
+  );
+
+  const assignedChapterLabels = useMemo(() => {
+    const chapterNumbers = new Set(
+      (data?.assignments ?? [])
+        .map((assignment) => assignment.chapterNumber)
+        .filter((chapterNumber): chapterNumber is number => typeof chapterNumber === "number"),
+    );
+
+    return [...chapterNumbers]
+      .sort((left, right) => left - right)
+      .map((chapterNumber) => `Chapter ${chapterNumber}`);
+  }, [data?.assignments]);
+
+  const loadQuickAssignData = useCallback(async () => {
+    setLoading(true);
+    try {
+      setData(await getAdminQuickAssignData(student.studentId));
+      setMessage(null);
+    } catch (error) {
+      const typedError = error as Error;
+      setMessage({
+        type: "error",
+        text: typedError.message || "Failed to load Quick Assign data.",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [student.studentId]);
+
+  useEffect(() => {
+    void loadQuickAssignData();
+  }, [loadQuickAssignData]);
+
+  function toggleChapter(chapterId: string) {
+    setSelectedChapterIds((current) =>
+      current.includes(chapterId)
+        ? current.filter((id) => id !== chapterId)
+        : [...current, chapterId],
+    );
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (selectedChapterIds.length === 0) return;
+
+    setSubmitting(true);
+    setMessage(null);
+
+    try {
+      const result = await createAdminQuickAssign({
+        studentUserId: student.studentId,
+        chapterIds: selectedChapterIds,
+      });
+      setMessage({
+        type: "success",
+        text: `Created ${result.assignmentCount} section assignments as ${result.title}.`,
+      });
+      setSelectedChapterIds([]);
+      await Promise.all([loadQuickAssignData(), onAssigned()]);
+    } catch (error) {
+      const typedError = error as Error;
+      setMessage({
+        type: "error",
+        text: typedError.message || "Failed to create Quick Assignments.",
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="space-y-5 rounded-2xl border border-emerald-100 bg-emerald-50/60 p-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-sm font-bold uppercase tracking-wide text-emerald-700">
+            Quick Assign
+          </p>
+          <h3 className="mt-1 text-2xl font-extrabold text-slate-950">
+            {displayName({ fullName: student.fullName, email: student.email })}
+          </h3>
+          <p className="text-sm text-slate-600">{student.email ?? "No email"}</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => void loadQuickAssignData()}
+          className="rounded-full bg-white px-4 py-2 text-sm font-bold text-emerald-700 shadow-sm ring-1 ring-emerald-100 hover:bg-emerald-50"
+        >
+          Refresh
+        </button>
+      </div>
+
+      {message ? (
+        <div
+          className={`rounded-xl border p-3 text-sm font-semibold ${
+            message.type === "success"
+              ? "border-emerald-200 bg-white text-emerald-800"
+              : "border-rose-200 bg-rose-50 text-rose-800"
+          }`}
+        >
+          {message.text}
+        </div>
+      ) : null}
+
+      {loading ? (
+        <p className="rounded-xl bg-white p-4 text-sm text-slate-600 shadow-sm">
+          Loading Quick Assign data...
+        </p>
+      ) : null}
+
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <DashboardCard
+          label="Quick assignments"
+          value={data?.metrics.assignmentRows ?? 0}
+        />
+        <DashboardCard
+          label="Assigned chapters"
+          value={data?.metrics.chapterCount ?? 0}
+          help={assignedChapterLabels.length ? assignedChapterLabels.join(", ") : "No quick chapters yet"}
+        />
+        <DashboardCard
+          label="Assigned sections"
+          value={data?.metrics.sectionCount ?? 0}
+        />
+        <DashboardCard
+          label="Completion"
+          value={formatPercent(data?.metrics.completionPercent)}
+        />
+        <DashboardCard
+          label="Accuracy"
+          value={formatPercent(data?.metrics.accuracyPercent)}
+        />
+        <DashboardCard
+          label="Attempts"
+          value={data?.metrics.attempts ?? 0}
+        />
+      </div>
+
+      <form onSubmit={handleSubmit} className="rounded-2xl bg-white p-4 shadow-sm">
+        <div>
+          <h4 className="font-bold text-slate-950">Assign chapters</h4>
+          <p className="mt-1 text-sm text-slate-600">
+            Select one or more chapters. The system will create section assignments
+            in Quick Class, auto-enroll this student if needed, and use no due date.
+          </p>
+        </div>
+        <div className="mt-3 grid max-h-72 gap-2 overflow-auto rounded-xl border border-slate-200 p-3">
+          {CHAPTERS.map((chapter) => (
+            <label key={chapter.id} className="flex items-start gap-3 rounded-lg p-2 hover:bg-slate-50">
+              <input
+                type="checkbox"
+                checked={selectedChapterIds.includes(chapter.id)}
+                onChange={() => toggleChapter(chapter.id)}
+                className="mt-1"
+              />
+              <span>
+                <span className="block font-semibold text-slate-950">
+                  Chapter {chapter.number}: {chapter.title}
+                </span>
+                <span className="text-xs text-slate-600">
+                  {SECTIONS.filter((section) => section.chapterId === chapter.id).length} sections
+                </span>
+              </span>
+            </label>
+          ))}
+        </div>
+        <div className="mt-4 rounded-xl border border-emerald-100 bg-emerald-50 p-3 text-sm text-slate-700">
+          <p>
+            <span className="font-bold text-slate-950">Selected chapters:</span>{" "}
+            {selectedChapterIds.length}
+          </p>
+          <p>
+            <span className="font-bold text-slate-950">Resulting sections:</span>{" "}
+            {selectedSections.length}
+          </p>
+          <p>
+            <span className="font-bold text-slate-950">Due date:</span> No date
+          </p>
+        </div>
+        <button
+          type="submit"
+          disabled={submitting || selectedChapterIds.length === 0}
+          className="mt-4 rounded-full bg-emerald-600 px-5 py-2 text-sm font-bold text-white shadow hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+        >
+          {submitting ? "Assigning..." : "Assign selected chapters"}
+        </button>
+      </form>
+
+      <div className="rounded-2xl bg-white p-4 shadow-sm">
+        <h4 className="font-bold text-slate-950">Assigned quick sections</h4>
+        {!data || data.assignments.length === 0 ? (
+          <p className="mt-3 rounded-xl bg-slate-50 p-4 text-sm text-slate-600">
+            No Quick Assignments have been created for this student yet.
+          </p>
+        ) : (
+          <div className="mt-3 overflow-x-auto">
+            <table className="min-w-full divide-y divide-slate-200 text-sm">
+              <thead className="bg-slate-50 text-left text-xs font-bold uppercase tracking-wide text-slate-500">
+                <tr>
+                  <th className="px-3 py-2">Assignment</th>
+                  <th className="px-3 py-2">Section</th>
+                  <th className="px-3 py-2">Completion</th>
+                  <th className="px-3 py-2">Accuracy</th>
+                  <th className="px-3 py-2">Attempts</th>
+                  <th className="px-3 py-2">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-slate-700">
+                {data.assignments.map((assignment) => (
+                  <tr key={assignment.id}>
+                    <td className="px-3 py-2 font-semibold text-slate-950">
+                      {assignment.title}
+                    </td>
+                    <td className="px-3 py-2">
+                      <p className="font-medium text-slate-900">
+                        {assignment.chapterNumber && assignment.sectionNumber
+                          ? `Ch ${assignment.chapterNumber} · Sec ${assignment.sectionNumber}`
+                          : assignment.sectionId}
+                      </p>
+                      <p className="text-xs text-slate-500">{assignment.sectionTitle}</p>
+                    </td>
+                    <td className="px-3 py-2">{formatPercent(assignment.completionPercent)}</td>
+                    <td className="px-3 py-2">{formatPercent(assignment.accuracyPercent)}</td>
+                    <td className="px-3 py-2">{assignment.attempts}</td>
+                    <td className="px-3 py-2">{formatAssignmentStatus(assignment.status)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function AdminDashboardPage() {
   const router = useRouter();
   const [dashboardState, setDashboardState] = useState<DashboardState>({
@@ -2524,6 +2800,8 @@ export default function AdminDashboardPage() {
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(
     null,
   );
+  const [selectedStudentMode, setSelectedStudentMode] =
+    useState<StudentPanelMode | null>(null);
   const [selectedManagedClassroomId, setSelectedManagedClassroomId] = useState<
     string | null
   >(null);
@@ -2885,6 +3163,16 @@ export default function AdminDashboardPage() {
     ? (dashboard.studentDetails[selectedStudentId] ?? null)
     : null;
 
+  const refreshDashboard = async () => {
+    const nextDashboard = await getAdminOrgDashboard();
+    setDashboardState({ status: "allowed", dashboard: nextDashboard });
+  };
+
+  const handleSelectStudentPanel = (studentId: string, mode: StudentPanelMode) => {
+    setSelectedStudentId(studentId);
+    setSelectedStudentMode(mode);
+  };
+
   return (
     <main className="mx-auto min-h-[70vh] max-w-7xl px-4 py-10">
       <div className="rounded-3xl border border-blue-100 bg-white p-8 shadow-sm">
@@ -2956,12 +3244,19 @@ export default function AdminDashboardPage() {
               <StudentsList
                 students={dashboard.students}
                 selectedStudentId={selectedStudentId}
-                onSelectStudent={setSelectedStudentId}
+                selectedMode={selectedStudentMode}
+                onSelectOverall={(studentId) => handleSelectStudentPanel(studentId, "overall")}
+                onSelectAssign={(studentId) => handleSelectStudentPanel(studentId, "assign")}
               />
             </div>
             <div>
-              {selectedStudentDetail ? (
+              {selectedStudentDetail && selectedStudentMode === "overall" ? (
                 <StudentDetailPanel detail={selectedStudentDetail} />
+              ) : selectedStudentDetail && selectedStudentMode === "assign" ? (
+                <QuickAssignPanel
+                  student={selectedStudentDetail}
+                  onAssigned={refreshDashboard}
+                />
               ) : (
                 <WholeSchoolActivityPanel
                   activities={dashboard.recentActivity}

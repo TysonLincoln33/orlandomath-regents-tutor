@@ -46,7 +46,8 @@ begin
 
   select count(*) into v_classroom_count
   from public.classrooms
-  where teacher_id = v_uid;
+  where teacher_id = v_uid
+    and classroom_kind = 'admin_assignment';
 
   if v_classroom_count > 1 then
     raise exception 'Multiple admin classrooms are configured for this administrator';
@@ -56,6 +57,7 @@ begin
     select * into v_classroom
     from public.classrooms
     where teacher_id = v_uid
+      and classroom_kind = 'admin_assignment'
     limit 1;
   else
     v_term := case
@@ -77,13 +79,15 @@ begin
       name,
       subject,
       term,
-      class_code
+      class_code,
+      classroom_kind
     ) values (
       v_uid,
       'Admin Classroom',
       'Algebra 1',
       v_term,
-      v_class_code
+      v_class_code,
+      'admin_assignment'
     )
     returning * into v_classroom;
 
