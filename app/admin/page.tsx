@@ -28,6 +28,7 @@ import {
   updateAdminAssignmentRecipientsBulk,
   type AdminAssignmentRecipientAction,
   type AdminDashboardAccessError,
+  type AdminDashboardAssignmentCandidateStudent,
   type AdminDashboardActivity,
   type AdminDashboardAssignment,
   type AdminDashboardClassroom,
@@ -1310,9 +1311,9 @@ function AdminAssignmentCreation({
   >({ status: "loading" });
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  const activeStudents = useMemo(
-    () => dashboard.students.filter((student) => student.isActive),
-    [dashboard.students],
+  const activeStudents = useMemo<AdminDashboardAssignmentCandidateStudent[]>(
+    () => dashboard.assignmentCandidateStudents,
+    [dashboard.assignmentCandidateStudents],
   );
   const selectedSections = useMemo(
     () => SECTIONS.filter((section) => selectedChapterIds.includes(section.chapterId)),
