@@ -161,7 +161,7 @@ async function getRouteContext(req: NextRequest): Promise<{
   }
 
   const isMaster = isMasterRole(profile.role);
-  const domain = profile.email_domain ?? getEmailDomain(profile.email);
+  const domain = effectiveDomain(profile);
 
   if (!isMaster && !domain) {
     throw new AdminUsersApiError(
@@ -172,6 +172,17 @@ async function getRouteContext(req: NextRequest): Promise<{
   }
 
   return { adminClient, isMaster, domain, requesterId: user.id };
+}
+
+function effectiveDomain(profile: Pick<ProfileRow, "email" | "email_domain"> | null | undefined) {
+  return profile?.email_domain ?? getEmailDomain(profile?.email);
+}
+
+function isInEffectiveDomain(
+  profile: Pick<ProfileRow, "email" | "email_domain">,
+  domain: string | null,
+) {
+  return Boolean(domain) && effectiveDomain(profile) === domain;
 }
 
 function canManageActivation(
@@ -190,7 +201,7 @@ function canManageActivation(
     );
   }
 
-  const targetDomain = row.email_domain ?? getEmailDomain(row.email);
+  const targetDomain = effectiveDomain(row);
   return (
     targetDomain === domain &&
     (row.role === "student" || row.role === "teacher")
@@ -203,7 +214,7 @@ function normalizeUser(row: ProfileRow): AdminUserDirectory["users"][number] {
     fullName: row.full_name,
     username: row.username,
     email: row.email,
-    emailDomain: row.email_domain ?? getEmailDomain(row.email),
+    emailDomain: effectiveDomain(row),
     role: row.role ?? "student",
     requestedRole: row.requested_role,
     approvalStatus: row.approval_status,
@@ -220,17 +231,13 @@ export async function GET(req: NextRequest) {
     const { adminClient, isMaster, domain, requesterId } =
       await getRouteContext(req);
 
-    let usersQuery = adminClient
+    const usersQuery = adminClient
       .from("profiles")
       .select(
         "id,email,username,full_name,role,requested_role,approval_status,email_domain,is_active,deactivated_at,created_at,updated_at",
       )
       .order("full_name", { ascending: true, nullsFirst: false })
       .order("email", { ascending: true });
-
-    if (!isMaster) {
-      usersQuery = usersQuery.eq("email_domain", domain);
-    }
 
     const { data, error } = await usersQuery;
 
@@ -249,17 +256,19 @@ export async function GET(req: NextRequest) {
           ? "Master Global User Directory"
           : `User Directory for ${domain}`,
       },
-      users: ((data ?? []) as ProfileRow[]).map((row) =>
-        normalizeUser({
-          ...row,
-          can_manage_activation: canManageActivation(
-            row,
-            requesterId,
-            isMaster,
-            domain,
-          ),
-        }),
-      ),
+      users: ((data ?? []) as ProfileRow[])
+        .filter((row) => isMaster || isInEffectiveDomain(row, domain))
+        .map((row) =>
+          normalizeUser({
+            ...row,
+            can_manage_activation: canManageActivation(
+              row,
+              requesterId,
+              isMaster,
+              domain,
+            ),
+          }),
+        ),
     } satisfies AdminUserDirectory);
   } catch (error) {
     return jsonError(error);

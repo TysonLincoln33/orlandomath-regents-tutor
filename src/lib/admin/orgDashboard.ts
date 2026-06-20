@@ -42,6 +42,14 @@ export type AdminDashboardStudent = {
   lastActivityAt: string | null;
 };
 
+export type AdminDashboardAssignmentCandidateStudent = {
+  id: string;
+  fullName: string | null;
+  email: string | null;
+  emailDomain: string | null;
+  isActive: boolean;
+};
+
 export type AdminDashboardClassroom = {
   id: string;
   name: string;
@@ -142,6 +150,7 @@ export type AdminOrgDashboard = {
   summary: AdminDashboardSummary;
   teachers: AdminDashboardTeacher[];
   students: AdminDashboardStudent[];
+  assignmentCandidateStudents: AdminDashboardAssignmentCandidateStudent[];
   classrooms: AdminDashboardClassroom[];
   assignments: AdminDashboardAssignment[];
   studentDetails: Record<string, AdminDashboardStudentDetail>;

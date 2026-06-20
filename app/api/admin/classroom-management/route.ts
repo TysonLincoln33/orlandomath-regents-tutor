@@ -22,22 +22,27 @@ function mapProfileById(profiles: ProfileRow[]) {
   return new Map(profiles.map((profile) => [profile.id, profile]));
 }
 
+function effectiveDomain(profile: Pick<ProfileRow, "email" | "email_domain"> | null | undefined) {
+  return profile?.email_domain ?? getEmailDomain(profile?.email);
+}
+
+function isInEffectiveDomain(
+  profile: Pick<ProfileRow, "email" | "email_domain">,
+  domain: string | null,
+) {
+  return Boolean(domain) && effectiveDomain(profile) === domain;
+}
+
 export async function GET(req: NextRequest) {
   try {
     const { adminClient, userId, isMaster, domain } = await getRouteContext(req);
     const selectedClassroomId = req.nextUrl.searchParams.get("classroomId") ?? "";
     const search = (req.nextUrl.searchParams.get("q") ?? "").trim();
 
-    const { data: teacherRows, error: teachersError } = isMaster
-      ? await adminClient
-          .from("profiles")
-          .select("id,email,full_name,role,requested_role,approval_status,email_domain,is_active")
-          .eq("role", "teacher")
-      : await adminClient
-          .from("profiles")
-          .select("id,email,full_name,role,requested_role,approval_status,email_domain,is_active")
-          .eq("role", "teacher")
-          .eq("email_domain", domain);
+    const { data: teacherRows, error: teachersError } = await adminClient
+      .from("profiles")
+      .select("id,email,full_name,role,requested_role,approval_status,email_domain,is_active")
+      .eq("role", "teacher");
 
     if (teachersError) {
       throw new AdminClassroomManagementApiError(
@@ -46,7 +51,11 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    const teachers = (teacherRows ?? []) as ProfileRow[];
+    const teachers = isMaster
+      ? ((teacherRows ?? []) as ProfileRow[])
+      : ((teacherRows ?? []) as ProfileRow[]).filter((teacher) =>
+          isInEffectiveDomain(teacher, domain),
+        );
     const teacherIds = teachers.map((teacher) => teacher.id);
 
     const visibleOwnerIds = [...new Set([...teacherIds, userId])];
@@ -132,7 +141,7 @@ export async function GET(req: NextRequest) {
       ? members
       : members.filter((member) => {
           const profile = memberProfileMap.get(member.user_id);
-          const memberDomain = profile?.email_domain ?? getEmailDomain(profile?.email);
+          const memberDomain = effectiveDomain(profile);
           return profile?.role === "student" && memberDomain === domain;
         });
     const membersByClassroom = new Map<string, ClassroomMemberRow[]>();
@@ -151,24 +160,14 @@ export async function GET(req: NextRequest) {
     let eligibleStudents: AdminClassroomManagement["eligibleStudents"] = [];
     if (selectedClassroomVisible && search.length >= 2) {
       const like = `%${search}%`;
-      const { data: studentsRows, error: studentsError } = isMaster
-        ? await adminClient
-            .from("profiles")
-            .select("id,email,full_name,role,requested_role,approval_status,email_domain,is_active")
-            .eq("role", "student")
-            .eq("is_active", true)
-            .or(`full_name.ilike.${like},email.ilike.${like}`)
-            .order("full_name", { ascending: true, nullsFirst: false })
-            .limit(25)
-        : await adminClient
-            .from("profiles")
-            .select("id,email,full_name,role,requested_role,approval_status,email_domain,is_active")
-            .eq("role", "student")
-            .eq("is_active", true)
-            .eq("email_domain", domain)
-            .or(`full_name.ilike.${like},email.ilike.${like}`)
-            .order("full_name", { ascending: true, nullsFirst: false })
-            .limit(25);
+      const { data: studentsRows, error: studentsError } = await adminClient
+        .from("profiles")
+        .select("id,email,full_name,role,requested_role,approval_status,email_domain,is_active")
+        .eq("role", "student")
+        .eq("is_active", true)
+        .or(`full_name.ilike.${like},email.ilike.${like}`)
+        .order("full_name", { ascending: true, nullsFirst: false })
+        .limit(isMaster ? 25 : 100);
 
       if (studentsError) {
         throw new AdminClassroomManagementApiError(
@@ -183,13 +182,16 @@ export async function GET(req: NextRequest) {
         ),
       );
 
-      eligibleStudents = ((studentsRows ?? []) as ProfileRow[]).map((student) => ({
-        id: student.id,
-        fullName: student.full_name,
-        email: student.email,
-        emailDomain: student.email_domain ?? getEmailDomain(student.email),
-        alreadyInClassroom: selectedMemberIds.has(student.id),
-      }));
+      eligibleStudents = ((studentsRows ?? []) as ProfileRow[])
+        .filter((student) => isMaster || isInEffectiveDomain(student, domain))
+        .slice(0, 25)
+        .map((student) => ({
+          id: student.id,
+          fullName: student.full_name,
+          email: student.email,
+          emailDomain: effectiveDomain(student),
+          alreadyInClassroom: selectedMemberIds.has(student.id),
+        }));
     }
 
     return NextResponse.json({
@@ -209,7 +211,7 @@ export async function GET(req: NextRequest) {
             userId: member.user_id,
             fullName: profile?.full_name ?? null,
             email: profile?.email ?? null,
-            emailDomain: profile?.email_domain ?? getEmailDomain(profile?.email),
+            emailDomain: effectiveDomain(profile),
             joinedAt: member.joined_at,
             joinedVia: member.joined_via,
             isActive: profile?.is_active ?? true,
@@ -226,7 +228,7 @@ export async function GET(req: NextRequest) {
           teacherId: classroom.teacher_id,
           teacherName: teacher?.full_name ?? null,
           teacherEmail: teacher?.email ?? null,
-          teacherEmailDomain: teacher?.email_domain ?? getEmailDomain(teacher?.email),
+          teacherEmailDomain: effectiveDomain(teacher),
           rosterCount: roster.length,
           roster,
         };

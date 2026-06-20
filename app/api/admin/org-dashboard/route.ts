@@ -129,6 +129,17 @@ function averagePercent(values: Array<number | null | undefined>) {
   );
 }
 
+function effectiveDomain(profile: Pick<ProfileRow, "email" | "email_domain"> | null | undefined) {
+  return profile?.email_domain ?? getEmailDomain(profile?.email);
+}
+
+function isInEffectiveDomain(
+  profile: Pick<ProfileRow, "email" | "email_domain">,
+  domain: string | null,
+) {
+  return Boolean(domain) && effectiveDomain(profile) === domain;
+}
+
 function latestDate(values: Array<string | null | undefined>) {
   const valid = values.filter((value): value is string => Boolean(value));
 
@@ -241,7 +252,7 @@ async function getRouteContext(req: NextRequest) {
 
   if (canAccessAdminRoute(profile.role, profile.approval_status)) {
     const isMaster = isMasterRole(profile.role);
-    const domain = profile.email_domain ?? getEmailDomain(profile.email);
+    const domain = effectiveDomain(profile);
 
     if (!isMaster && !domain) {
       throw new AdminDashboardApiError(
@@ -251,7 +262,7 @@ async function getRouteContext(req: NextRequest) {
         {
           requested_role: profile.requested_role,
           approval_status: profile.approval_status,
-          email_domain: profile.email_domain,
+          email_domain: effectiveDomain(profile),
         },
       );
     }
@@ -271,7 +282,7 @@ async function getRouteContext(req: NextRequest) {
       {
         requested_role: profile.requested_role,
         approval_status: profile.approval_status,
-        email_domain: profile.email_domain ?? getEmailDomain(profile.email),
+        email_domain: effectiveDomain(profile),
       },
     );
   }
@@ -566,7 +577,7 @@ function buildDashboard({
         id: student.id,
         fullName: student.full_name,
         email: student.email,
-        emailDomain: student.email_domain ?? getEmailDomain(student.email),
+        emailDomain: effectiveDomain(student),
         isActive: student.is_active === true,
         classroomCount: membershipsByStudent.get(student.id)?.length ?? 0,
         assignedWorkCount: recipientsByStudent.get(student.id)?.length ?? 0,
@@ -575,6 +586,17 @@ function buildDashboard({
         lastActivityAt: metrics?.lastActivityAt ?? null,
       };
     })
+    .sort((a, b) => (a.fullName ?? a.email ?? "").localeCompare(b.fullName ?? b.email ?? ""));
+
+  const assignmentCandidateStudents = students
+    .filter((student) => student.role === "student" && student.is_active === true)
+    .map((student) => ({
+      id: student.id,
+      fullName: student.full_name,
+      email: student.email,
+      emailDomain: effectiveDomain(student),
+      isActive: student.is_active === true,
+    }))
     .sort((a, b) => (a.fullName ?? a.email ?? "").localeCompare(b.fullName ?? b.email ?? ""));
 
   const classroomsPayload = classrooms
@@ -802,6 +824,7 @@ function buildDashboard({
     summary,
     teachers: teachersPayload,
     students: studentsPayload,
+    assignmentCandidateStudents,
     classrooms: classroomsPayload,
     assignments: assignmentsPayload,
     studentDetails,
@@ -813,23 +836,18 @@ export async function GET(req: NextRequest) {
   try {
     const { adminClient, profile, isMaster, domain } = await getRouteContext(req);
 
-    let teachersQuery = adminClient
+    const teachersQuery = adminClient
       .from("profiles")
       .select("id,email,full_name,role,requested_role,approval_status,email_domain,is_active")
       .eq("role", "teacher")
       .eq("approval_status", "approved")
       .order("full_name", { ascending: true });
 
-    let studentsQuery = adminClient
+    const studentsQuery = adminClient
       .from("profiles")
       .select("id,email,full_name,role,requested_role,approval_status,email_domain,is_active")
       .eq("role", "student")
       .order("full_name", { ascending: true });
-
-    if (!isMaster) {
-      teachersQuery = teachersQuery.eq("email_domain", domain);
-      studentsQuery = studentsQuery.eq("email_domain", domain);
-    }
 
     const [teachersResponse, studentsResponse] = await Promise.all([
       teachersQuery,
@@ -843,8 +861,14 @@ export async function GET(req: NextRequest) {
       throw new Error(studentsResponse.error.message || "Failed to load students.");
     }
 
-    const teachers = (teachersResponse.data ?? []) as ProfileRow[];
-    const students = (studentsResponse.data ?? []) as ProfileRow[];
+    const allTeachers = (teachersResponse.data ?? []) as ProfileRow[];
+    const allStudents = (studentsResponse.data ?? []) as ProfileRow[];
+    const teachers = isMaster
+      ? allTeachers
+      : allTeachers.filter((teacher) => isInEffectiveDomain(teacher, domain));
+    const students = isMaster
+      ? allStudents
+      : allStudents.filter((student) => isInEffectiveDomain(student, domain));
     const teacherIds = teachers.map((teacher) => teacher.id);
     const studentIds = students.map((student) => student.id);
 
