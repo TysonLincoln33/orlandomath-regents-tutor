@@ -10,6 +10,7 @@ import {
 
 type AdminOwnClassroom = ClassroomRow & {
   created_at?: string | null;
+  classroom_kind?: string | null;
 };
 
 function getAccessToken(req: NextRequest) {
@@ -34,8 +35,9 @@ export async function GET(req: NextRequest) {
 
     const { data, error } = await ctx.adminClient
       .from("classrooms")
-      .select("id,teacher_id,name,subject,term,class_code,created_at")
+      .select("id,teacher_id,name,subject,term,class_code,created_at,classroom_kind")
       .eq("teacher_id", ctx.userId)
+      .eq("classroom_kind", "admin_assignment")
       .order("created_at", { ascending: true });
 
     if (error) {

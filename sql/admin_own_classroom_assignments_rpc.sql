@@ -88,7 +88,8 @@ begin
 
   select count(*) into v_classroom_count
   from public.classrooms
-  where teacher_id = v_uid;
+  where teacher_id = v_uid
+    and classroom_kind = 'admin_assignment';
 
   if v_classroom_count = 0 then
     raise exception 'Admin classroom is not configured. Please create an administrator classroom before creating assignments';
@@ -101,6 +102,7 @@ begin
   select * into v_classroom
   from public.classrooms
   where teacher_id = v_uid
+    and classroom_kind = 'admin_assignment'
   limit 1;
 
   if exists (
