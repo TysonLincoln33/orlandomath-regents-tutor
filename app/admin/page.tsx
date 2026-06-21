@@ -39,6 +39,7 @@ import {
   type AdminOwnClassroomState,
 } from "@/lib/admin/orgDashboard";
 import {
+  archiveAdminQuickAssignChapter,
   createAdminQuickAssign,
   getAdminQuickAssignData,
   type AdminQuickAssignData,
@@ -2525,6 +2526,7 @@ function QuickAssignPanel({
   const [selectedChapterIds, setSelectedChapterIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [archivingChapterId, setArchivingChapterId] = useState<string | null>(null);
   const [message, setMessage] = useState<{
     type: "success" | "error";
     text: string;
@@ -2592,7 +2594,9 @@ function QuickAssignPanel({
         text:
           result.assignmentCount > 0
             ? `Assigned ${result.assignmentCount} new section${result.assignmentCount === 1 ? "" : "s"}.`
-            : "Selected chapters were already assigned for this student.",
+            : result.reactivatedRecipientCount > 0
+              ? `Reactivated ${result.reactivatedRecipientCount} archived section${result.reactivatedRecipientCount === 1 ? "" : "s"}.`
+              : "Selected chapters were already assigned for this student.",
       });
       setSelectedChapterIds([]);
       await Promise.all([loadQuickAssignData(), onAssigned()]);
@@ -2604,6 +2608,40 @@ function QuickAssignPanel({
       });
     } finally {
       setSubmitting(false);
+    }
+  }
+
+
+  async function handleArchiveChapter(chapterId: string, chapterLabel: string) {
+    const confirmed = window.confirm(
+      `Archive ${chapterLabel} for ${displayName({ fullName: student.fullName, email: student.email })}? This removes it from active Quick Assign metrics without deleting history.`,
+    );
+    if (!confirmed) return;
+
+    setArchivingChapterId(chapterId);
+    setMessage(null);
+
+    try {
+      const result = await archiveAdminQuickAssignChapter({
+        studentUserId: student.studentId,
+        chapterId,
+      });
+      setMessage({
+        type: "success",
+        text:
+          result.archivedRecipientCount > 0
+            ? `Archived ${chapterLabel}. History is preserved below.`
+            : `${chapterLabel} did not have active Quick Assign sections to archive.`,
+      });
+      await Promise.all([loadQuickAssignData(), onAssigned()]);
+    } catch (error) {
+      const typedError = error as Error;
+      setMessage({
+        type: "error",
+        text: typedError.message || "Failed to archive Quick Assign chapter.",
+      });
+    } finally {
+      setArchivingChapterId(null);
     }
   }
 
@@ -2741,6 +2779,110 @@ function QuickAssignPanel({
                       </p>
                       <p className="text-sm text-slate-600">
                         {chapter.sectionCount} section{chapter.sectionCount === 1 ? "" : "s"} assigned
+                      </p>
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.preventDefault();
+                          void handleArchiveChapter(
+                            chapter.chapterId,
+                            `Chapter ${chapter.chapterNumber}: ${chapter.chapterTitle}`,
+                          );
+                        }}
+                        disabled={archivingChapterId === chapter.chapterId}
+                        className="mt-3 rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-bold text-amber-800 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {archivingChapterId === chapter.chapterId ? "Archiving..." : "Archive"}
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-sm md:grid-cols-4">
+                      <span className="rounded-xl bg-white px-3 py-2 shadow-sm">
+                        <span className="block text-xs font-bold uppercase text-slate-500">Progress</span>
+                        <span className="font-bold text-slate-950">{formatPercent(chapter.completionPercent)}</span>
+                      </span>
+                      <span className="rounded-xl bg-white px-3 py-2 shadow-sm">
+                        <span className="block text-xs font-bold uppercase text-slate-500">Accuracy</span>
+                        <span className="font-bold text-slate-950">{formatPercent(chapter.accuracyPercent)}</span>
+                      </span>
+                      <span className="rounded-xl bg-white px-3 py-2 shadow-sm">
+                        <span className="block text-xs font-bold uppercase text-slate-500">Attempts</span>
+                        <span className="font-bold text-slate-950">{chapter.attempts}</span>
+                      </span>
+                      <span className="rounded-xl bg-white px-3 py-2 shadow-sm">
+                        <span className="block text-xs font-bold uppercase text-slate-500">Sections</span>
+                        <span className="font-bold text-slate-950">{chapter.sectionCount}</span>
+                      </span>
+                    </div>
+                  </div>
+                </summary>
+
+                <div className="mt-4 overflow-x-auto border-t border-slate-200 pt-4">
+                  <table className="min-w-full divide-y divide-slate-200 text-sm">
+                    <thead className="bg-slate-50 text-left text-xs font-bold uppercase tracking-wide text-slate-500">
+                      <tr>
+                        <th className="px-3 py-2">Section</th>
+                        <th className="px-3 py-2">Completion</th>
+                        <th className="px-3 py-2">Accuracy</th>
+                        <th className="px-3 py-2">Attempts</th>
+                        <th className="px-3 py-2">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 text-slate-700">
+                      {chapter.sections.map((section) => (
+                        <tr key={section.id}>
+                          <td className="px-3 py-2">
+                            <p className="font-medium text-slate-900">
+                              {section.sectionNumber ? `Section ${section.sectionNumber}` : section.sectionId}
+                            </p>
+                            <p className="text-xs text-slate-500">{section.sectionTitle}</p>
+                          </td>
+                          <td className="px-3 py-2">{formatPercent(section.completionPercent)}</td>
+                          <td className="px-3 py-2">{formatPercent(section.accuracyPercent)}</td>
+                          <td className="px-3 py-2">{section.attempts}</td>
+                          <td className="px-3 py-2">{formatAssignmentStatus(section.status)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </details>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="rounded-2xl bg-white p-4 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h4 className="font-bold text-slate-950">Archived Chapters</h4>
+            <p className="text-sm text-slate-600">Archived work is hidden from active metrics but history remains available.</p>
+          </div>
+          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-slate-600">
+            {data?.archivedMetrics.chapterCount ?? 0} archived
+          </span>
+        </div>
+        {!data || data.archivedChapters.length === 0 ? (
+          <p className="mt-3 rounded-xl bg-slate-50 p-4 text-sm text-slate-600">
+            No archived Quick Assign chapters for this student yet.
+          </p>
+        ) : (
+          <div className="mt-3 space-y-3">
+            {data.archivedChapters.map((chapter) => (
+              <details
+                key={chapter.chapterId}
+                className="rounded-2xl border border-slate-200 bg-slate-50 p-4 open:bg-white"
+              >
+                <summary className="cursor-pointer list-none">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="text-lg font-extrabold text-slate-950">
+                        Chapter {chapter.chapterNumber}: {chapter.chapterTitle}
+                      </p>
+                      <p className="text-sm text-slate-600">
+                        {chapter.sectionCount} archived section{chapter.sectionCount === 1 ? "" : "s"}
+                      </p>
+                      <p className="mt-2 inline-flex rounded-full bg-slate-200 px-3 py-1 text-xs font-bold uppercase tracking-wide text-slate-700">
+                        Archived
                       </p>
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-sm md:grid-cols-4">

@@ -29,6 +29,22 @@ type QuickAssignmentRow = {
   }>;
 };
 
+type QuickAssignmentView = {
+  id: string;
+  title: string;
+  sectionId: string | null;
+  sectionTitle: string;
+  chapterId: string | null;
+  chapterNumber: number | null;
+  sectionNumber: number | null;
+  dueDate: string | null;
+  createdAt: string;
+  status: string;
+  completionPercent: number | null;
+  accuracyPercent: number | null;
+  attempts: number;
+};
+
 type StudentProgressRow = {
   section_id: string;
   completion_percent: number | null;
@@ -173,6 +189,65 @@ async function ensureMembership(
   return true;
 }
 
+function buildQuickAssignChapters(assignments: QuickAssignmentView[]) {
+  return CHAPTERS.map((chapter) => {
+    const chapterAssignments = assignments
+      .filter((assignment) => assignment.chapterId === chapter.id)
+      .sort((left, right) => (left.sectionNumber ?? 0) - (right.sectionNumber ?? 0));
+
+    if (chapterAssignments.length === 0) return null;
+
+    const chapterCompletions = chapterAssignments
+      .map((assignment) => assignment.completionPercent)
+      .filter((value): value is number => typeof value === "number");
+    const chapterAttempts = chapterAssignments.reduce((sum, assignment) => sum + assignment.attempts, 0);
+    const chapterWeightedCorrect = chapterAssignments.reduce((sum, assignment) => {
+      if (typeof assignment.accuracyPercent !== "number" || assignment.attempts === 0) return sum;
+      return sum + (assignment.accuracyPercent / 100) * assignment.attempts;
+    }, 0);
+
+    return {
+      chapterId: chapter.id,
+      chapterNumber: chapter.number,
+      chapterTitle: chapter.title,
+      completionPercent:
+        chapterCompletions.length > 0
+          ? Math.round(chapterCompletions.reduce((sum, value) => sum + value, 0) / chapterCompletions.length)
+          : null,
+      accuracyPercent:
+        chapterAttempts > 0 ? Math.round((chapterWeightedCorrect / chapterAttempts) * 100) : null,
+      attempts: chapterAttempts,
+      sectionCount: chapterAssignments.length,
+      sections: chapterAssignments,
+    };
+  }).filter((chapter): chapter is NonNullable<typeof chapter> => Boolean(chapter));
+}
+
+function buildQuickAssignMetrics(assignments: QuickAssignmentView[]) {
+  const chapters = new Set(assignments.map((assignment) => assignment.chapterId).filter(Boolean));
+  const sectionIds = new Set(assignments.map((assignment) => assignment.sectionId).filter(Boolean));
+  const completions = assignments
+    .map((assignment) => assignment.completionPercent)
+    .filter((value): value is number => typeof value === "number");
+  const totalAttempts = assignments.reduce((sum, assignment) => sum + assignment.attempts, 0);
+  const weightedCorrect = assignments.reduce((sum, assignment) => {
+    if (typeof assignment.accuracyPercent !== "number" || assignment.attempts === 0) return sum;
+    return sum + (assignment.accuracyPercent / 100) * assignment.attempts;
+  }, 0);
+
+  return {
+    assignmentRows: assignments.length,
+    chapterCount: chapters.size,
+    sectionCount: sectionIds.size,
+    completionPercent:
+      completions.length > 0
+        ? Math.round(completions.reduce((sum, value) => sum + value, 0) / completions.length)
+        : null,
+    accuracyPercent: totalAttempts > 0 ? Math.round((weightedCorrect / totalAttempts) * 100) : null,
+    attempts: totalAttempts,
+  };
+}
+
 async function loadQuickAssignData(
   ctx: Awaited<ReturnType<typeof getRouteContext>>,
   studentUserId: string,
@@ -192,8 +267,19 @@ async function loadQuickAssignData(
         accuracyPercent: null,
         attempts: 0,
       },
+      activeChapters: [],
       chapters: [],
       assignments: [],
+      archivedMetrics: {
+        assignmentRows: 0,
+        chapterCount: 0,
+        sectionCount: 0,
+        completionPercent: null,
+        accuracyPercent: null,
+        attempts: 0,
+      },
+      archivedChapters: [],
+      archivedAssignments: [],
     };
   }
 
@@ -204,7 +290,6 @@ async function loadQuickAssignData(
     .eq("created_by", ctx.userId)
     .is("archived_at", null)
     .eq("assignment_recipients.user_id", studentUserId)
-    .neq("assignment_recipients.status", "archived")
     .order("created_at", { ascending: false });
 
   if (assignmentError) {
@@ -279,7 +364,7 @@ async function loadQuickAssignData(
     });
   }
 
-  const assignments = assignmentRows.map((assignment) => {
+  const allAssignments = assignmentRows.map((assignment): QuickAssignmentView => {
     const section = SECTIONS.find((item) => item.id === assignment.section_id);
     const progress = assignment.section_id ? progressBySection.get(assignment.section_id) : undefined;
     const attempts = assignment.section_id ? attemptBySection.get(assignment.section_id) : undefined;
@@ -304,45 +389,12 @@ async function loadQuickAssignData(
     };
   });
 
-  const chapters = new Set(assignments.map((assignment) => assignment.chapterId).filter(Boolean));
-
-  const chapterGroups = CHAPTERS.map((chapter) => {
-    const chapterAssignments = assignments
-      .filter((assignment) => assignment.chapterId === chapter.id)
-      .sort((left, right) => (left.sectionNumber ?? 0) - (right.sectionNumber ?? 0));
-
-    if (chapterAssignments.length === 0) return null;
-
-    const chapterCompletions = chapterAssignments
-      .map((assignment) => assignment.completionPercent)
-      .filter((value): value is number => typeof value === "number");
-    const chapterAttempts = chapterAssignments.reduce((sum, assignment) => sum + assignment.attempts, 0);
-    const chapterWeightedCorrect = chapterAssignments.reduce((sum, assignment) => {
-      if (typeof assignment.accuracyPercent !== "number" || assignment.attempts === 0) return sum;
-      return sum + (assignment.accuracyPercent / 100) * assignment.attempts;
-    }, 0);
-
-    return {
-      chapterId: chapter.id,
-      chapterNumber: chapter.number,
-      chapterTitle: chapter.title,
-      completionPercent:
-        chapterCompletions.length > 0
-          ? Math.round(chapterCompletions.reduce((sum, value) => sum + value, 0) / chapterCompletions.length)
-          : null,
-      accuracyPercent:
-        chapterAttempts > 0 ? Math.round((chapterWeightedCorrect / chapterAttempts) * 100) : null,
-      attempts: chapterAttempts,
-      sectionCount: chapterAssignments.length,
-      sections: chapterAssignments,
-    };
-  }).filter((chapter): chapter is NonNullable<typeof chapter> => Boolean(chapter));
-  const completions = assignments.map((assignment) => assignment.completionPercent).filter((value): value is number => typeof value === "number");
-  const totalAttempts = assignments.reduce((sum, assignment) => sum + assignment.attempts, 0);
-  const weightedCorrect = assignments.reduce((sum, assignment) => {
-    if (typeof assignment.accuracyPercent !== "number" || assignment.attempts === 0) return sum;
-    return sum + (assignment.accuracyPercent / 100) * assignment.attempts;
-  }, 0);
+  const activeAssignments = allAssignments.filter((assignment) => assignment.status !== "archived");
+  const archivedAssignments = allAssignments.filter((assignment) => assignment.status === "archived");
+  const activeMetrics = buildQuickAssignMetrics(activeAssignments);
+  const archivedMetrics = buildQuickAssignMetrics(archivedAssignments);
+  const activeChapterGroups = buildQuickAssignChapters(activeAssignments);
+  const archivedChapterGroups = buildQuickAssignChapters(archivedAssignments);
 
   return {
     student: { id: student.id, fullName: student.full_name, email: student.email },
@@ -350,19 +402,13 @@ async function loadQuickAssignData(
       id: quickClass.id,
       name: quickClass.name,
     },
-    metrics: {
-      assignmentRows: assignments.length,
-      chapterCount: chapters.size,
-      sectionCount: sectionIds.length,
-      completionPercent:
-        completions.length > 0
-          ? Math.round(completions.reduce((sum, value) => sum + value, 0) / completions.length)
-          : null,
-      accuracyPercent: totalAttempts > 0 ? Math.round((weightedCorrect / totalAttempts) * 100) : null,
-      attempts: totalAttempts,
-    },
-    chapters: chapterGroups,
-    assignments,
+    metrics: activeMetrics,
+    activeChapters: activeChapterGroups,
+    chapters: activeChapterGroups,
+    assignments: activeAssignments,
+    archivedMetrics,
+    archivedChapters: archivedChapterGroups,
+    archivedAssignments,
   };
 }
 
@@ -430,9 +476,9 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
       .select("id,section_id,assignment_recipients!inner(status)")
       .eq("classroom_id", classroom.id)
       .eq("created_by", ctx.userId)
+      .is("archived_at", null)
       .in("section_id", sectionIds)
-      .eq("assignment_recipients.user_id", studentUserId)
-      .neq("assignment_recipients.status", "archived");
+      .eq("assignment_recipients.user_id", studentUserId);
 
     if (existingAssignmentError) {
       throw new AdminClassroomManagementApiError(
@@ -441,13 +487,53 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
       );
     }
 
-    const existingSectionIds = new Set(
-      (existingAssignmentData ?? [])
+    const existingAssignments = (existingAssignmentData ?? []) as Array<{
+      id: string;
+      section_id: string | null;
+      assignment_recipients?: Array<{ status: string | null }>;
+    }>;
+    const activeSectionIds = new Set(
+      existingAssignments
+        .filter((assignment) => assignment.assignment_recipients?.[0]?.status !== "archived")
         .map((assignment) => assignment.section_id)
         .filter((sectionId): sectionId is string => Boolean(sectionId)),
     );
+    const existingSectionIds = new Set(
+      existingAssignments
+        .map((assignment) => assignment.section_id)
+        .filter((sectionId): sectionId is string => Boolean(sectionId)),
+    );
+    const archivedAssignmentIdsBySection = new Map<string, string>();
+    for (const assignment of existingAssignments) {
+      if (
+        assignment.assignment_recipients?.[0]?.status === "archived" &&
+        assignment.section_id &&
+        !activeSectionIds.has(assignment.section_id) &&
+        !archivedAssignmentIdsBySection.has(assignment.section_id)
+      ) {
+        archivedAssignmentIdsBySection.set(assignment.section_id, assignment.id);
+      }
+    }
+    const archivedAssignmentIds = [...archivedAssignmentIdsBySection.values()];
     const missingSectionIds = sectionIds.filter((sectionId) => !existingSectionIds.has(sectionId));
     const title = "Quick Assign";
+
+    const { error: reactivationError } = archivedAssignmentIds.length > 0
+      ? await ctx.adminClient
+          .from("assignment_recipients")
+          .update({ status: "assigned" })
+          .eq("classroom_id", classroom.id)
+          .eq("user_id", studentUserId)
+          .in("assignment_id", archivedAssignmentIds)
+          .eq("status", "archived")
+      : { error: null };
+
+    if (reactivationError) {
+      throw new AdminClassroomManagementApiError(
+        reactivationError.message || "Failed to reactivate archived Quick Assignments.",
+        500,
+      );
+    }
 
     const assignmentsToInsert = missingSectionIds.map((sectionId) => ({
       classroom_id: classroom.id,
@@ -497,8 +583,10 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
         classroom: { id: classroom.id, name: classroom.name, created },
         title,
         assignmentCount: assignments.length,
-        recipientCount: assignments.length,
-        skippedExistingSectionCount: sectionIds.length - missingSectionIds.length,
+        recipientCount: assignments.length + archivedAssignmentIds.length,
+        reactivatedRecipientCount: archivedAssignmentIds.length,
+        skippedExistingSectionCount:
+          sectionIds.length - missingSectionIds.length - archivedAssignmentIds.length,
         classroomMembershipCreated: membershipCreated,
         assignments,
       },

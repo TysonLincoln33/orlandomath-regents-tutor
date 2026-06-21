@@ -46,8 +46,12 @@ export type AdminQuickAssignData = {
   student: AdminQuickAssignStudent;
   quickClass: { id: string; name: string } | null;
   metrics: AdminQuickAssignMetrics;
+  activeChapters: AdminQuickAssignChapter[];
   chapters: AdminQuickAssignChapter[];
   assignments: AdminQuickAssignment[];
+  archivedMetrics: AdminQuickAssignMetrics;
+  archivedChapters: AdminQuickAssignChapter[];
+  archivedAssignments: AdminQuickAssignment[];
 };
 
 export type AdminQuickAssignCreateResult = {
@@ -55,8 +59,15 @@ export type AdminQuickAssignCreateResult = {
   title: string;
   assignmentCount: number;
   recipientCount: number;
+  reactivatedRecipientCount: number;
   skippedExistingSectionCount: number;
   classroomMembershipCreated: boolean;
+};
+
+export type AdminQuickAssignArchiveResult = {
+  studentUserId: string;
+  chapterId: string;
+  archivedRecipientCount: number;
 };
 
 async function getAccessToken() {
@@ -110,5 +121,25 @@ export async function createAdminQuickAssign(params: {
   return parseResponse<AdminQuickAssignCreateResult>(
     response,
     "Failed to create Quick Assignments.",
+  );
+}
+
+
+export async function archiveAdminQuickAssignChapter(params: {
+  studentUserId: string;
+  chapterId: string;
+}): Promise<AdminQuickAssignArchiveResult> {
+  const accessToken = await getAccessToken();
+  const response = await fetch(
+    `/api/admin/quick-assign/students/${params.studentUserId}/chapters/${params.chapterId}/archive`,
+    {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${accessToken}` },
+    },
+  );
+
+  return parseResponse<AdminQuickAssignArchiveResult>(
+    response,
+    "Failed to archive Quick Assign chapter.",
   );
 }
