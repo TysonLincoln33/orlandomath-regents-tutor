@@ -28,7 +28,7 @@ export default function ChapterCard({
       <div className="flex h-full flex-col">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
-            <div className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-300/90">
+            <div className="text-xs font-semibold tracking-[0.14em] uppercase text-slate-200">
               Chapter {chapter.number}
             </div>
             <div className="mt-2 text-2xl font-bold tracking-tight text-white">
@@ -37,7 +37,7 @@ export default function ChapterCard({
           </div>
 
           <div className="shrink-0 rounded-2xl border border-white/15 bg-[rgba(15,18,50,0.72)] px-4 py-3 text-center shadow-[0_0_18px_rgba(108,72,255,0.22)]">
-            <div className="text-[11px] font-semibold tracking-[0.16em] uppercase text-slate-300">
+            <div className="text-[11px] font-semibold tracking-[0.16em] uppercase text-slate-200">
               of exam
             </div>
             <div className="mt-1 text-xl font-bold text-white">
@@ -46,7 +46,7 @@ export default function ChapterCard({
           </div>
         </div>
 
-        <div className="mt-4 text-sm leading-7 text-slate-300">
+        <div className="mt-4 text-sm leading-7 text-slate-200">
           {chapter.dashboardBlurb}
         </div>
 
@@ -60,7 +60,7 @@ export default function ChapterCard({
         </div>
 
         <div className="mt-auto flex items-center justify-between pt-5 text-sm">
-          <span className="inline-flex items-center gap-2 text-slate-300">
+          <span className="inline-flex items-center gap-2 text-slate-200">
             <span className="h-2.5 w-2.5 rounded-full bg-cyan-300/70 shadow-[0_0_10px_rgba(103,232,249,0.75)] transition group-hover:bg-cyan-200" />
             Open chapter
           </span>

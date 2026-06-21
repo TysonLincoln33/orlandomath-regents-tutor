@@ -68,17 +68,17 @@ export default function ChapterClient({ chapterId }: Props) {
         <div className="rounded-3xl border border-white/20 bg-[rgba(10,12,35,0.55)] p-8 shadow-[0_25px_60px_rgba(0,0,0,0.55),0_0_25px_rgba(108,72,255,0.25)] backdrop-blur-xl">
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div className="min-w-0">
-              <div className="text-xs font-semibold tracking-wide text-slate-300">
+              <div className="text-xs font-semibold tracking-wide text-slate-200">
                 Chapter {chapter.number} • {chapter.percent.toFixed(1)}% of exam
               </div>
               <h1 className="mt-2 text-4xl font-bold tracking-tight text-white">{chapter.title}</h1>
               {chapter.dashboardBlurb ? (
-                <p className="mt-3 max-w-2xl text-slate-300">{chapter.dashboardBlurb}</p>
+                <p className="mt-3 max-w-2xl text-slate-200">{chapter.dashboardBlurb}</p>
               ) : null}
             </div>
 
             <div className="shrink-0 rounded-2xl border border-white/20 bg-[rgba(15,18,50,0.75)] px-6 py-4 text-center shadow-[0_0_18px_rgba(108,72,255,0.35)]">
-              <div className="text-xs tracking-widest text-slate-300">PROGRESS</div>
+              <div className="text-xs tracking-widest text-slate-200">PROGRESS</div>
               <div className="text-3xl font-bold text-white">{completionPercent}%</div>
             </div>
           </div>

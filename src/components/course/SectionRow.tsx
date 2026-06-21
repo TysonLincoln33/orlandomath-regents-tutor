@@ -42,7 +42,7 @@ export default function SectionRow({ section }: Props) {
       ? "border-emerald-400/25 bg-emerald-400/10 text-emerald-200"
       : status === "in_progress"
         ? "border-blue-400/25 bg-blue-400/10 text-blue-200"
-        : "border-white/15 bg-white/5 text-slate-300";
+        : "border-white/15 bg-white/5 text-slate-200";
 
   const onReset = () => {
     resetSectionProgress(section.id);
@@ -68,7 +68,7 @@ export default function SectionRow({ section }: Props) {
           </div>
 
           {section.standardCode ? (
-            <div className="mt-2 text-slate-300">Standard: {section.standardCode}</div>
+            <div className="mt-2 text-slate-200">Standard: {section.standardCode}</div>
           ) : null}
 
           <div className="mt-4 w-full">
@@ -82,7 +82,7 @@ export default function SectionRow({ section }: Props) {
         </div>
 
         <div className="flex flex-wrap items-center justify-start gap-2 lg:justify-end">
-          <div className="mr-1 text-sm font-medium uppercase tracking-[0.12em] text-slate-300">
+          <div className="mr-1 text-sm font-medium uppercase tracking-[0.12em] text-slate-200">
             Status
           </div>
 

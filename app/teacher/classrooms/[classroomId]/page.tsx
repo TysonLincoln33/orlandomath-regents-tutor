@@ -916,7 +916,7 @@ export default function ClassroomDetailPage({ params }: PageProps) {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-white">Classroom Detail</h1>
-          <p className="text-slate-300 mt-1">
+          <p className="text-slate-200 mt-1">
             Review class information, roster, assignments, and progress.
           </p>
         </div>
