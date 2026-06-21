@@ -55,7 +55,7 @@ export default function LoginForm() {
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-md space-y-4">
       <div>
-        <label htmlFor="email" className="mb-1 block text-sm font-medium">
+        <label htmlFor="email" className="mb-1 block text-sm font-medium text-slate-800">
           Email
         </label>
 
@@ -65,13 +65,13 @@ export default function LoginForm() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@example.com"
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-blue-500"
+          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-slate-900 placeholder:text-slate-500 outline-none focus:border-blue-500"
           autoComplete="email"
         />
       </div>
 
       <div>
-        <label htmlFor="password" className="mb-1 block text-sm font-medium">
+        <label htmlFor="password" className="mb-1 block text-sm font-medium text-slate-800">
           Password
         </label>
 
@@ -81,7 +81,7 @@ export default function LoginForm() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="Enter your password"
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-blue-500"
+          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-slate-900 placeholder:text-slate-500 outline-none focus:border-blue-500"
           autoComplete="current-password"
         />
       </div>
