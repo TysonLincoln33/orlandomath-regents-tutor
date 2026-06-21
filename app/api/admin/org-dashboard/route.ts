@@ -822,6 +822,14 @@ function buildDashboard({
         const chapterTitle = assignment?.section_id
           ? getChapterTitle(null, assignment.section_id)
           : null;
+        const sectionAttempts = assignment?.section_id
+          ? studentAttempts.filter((attempt) => attempt.section_id === assignment.section_id)
+          : [];
+        const correctAttempts = sectionAttempts.filter((attempt) => attempt.correct === true).length;
+        const incorrectAttempts = sectionAttempts.filter((attempt) => attempt.correct === false).length;
+        const metrics = assignment
+          ? assignmentMetricsForStudent(student.id, assignment.section_id)
+          : null;
         const status = recipient.status ?? "assigned";
         const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
         const detailParts = [
@@ -835,8 +843,18 @@ function buildDashboard({
           label: assignment?.title ?? sectionTitle ?? "Assignment",
           detail: detailParts.join(" · "),
           occurredAt: recipient.completed_at ?? recipient.assigned_at,
+          assignmentId: assignment?.id ?? recipient.assignment_id,
+          sectionId: assignment?.section_id ?? null,
+          sectionTitle,
+          chapterTitle,
+          status,
           assignedAt: recipient.assigned_at,
           completedAt: recipient.completed_at,
+          completionPercent: metrics?.completion ?? 0,
+          accuracyPercent: metrics?.accuracy ?? null,
+          attempts: sectionAttempts.length,
+          correctAttempts,
+          incorrectAttempts,
         };
       });
       const recentActivity = assignmentActivity

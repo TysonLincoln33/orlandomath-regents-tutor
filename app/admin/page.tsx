@@ -95,7 +95,7 @@ type AssignmentAddCandidate = {
 type UserDirectoryRoleFilter = "all" | "student" | "teacher" | "admin";
 type UserDirectoryApprovalFilter = "all" | "approved" | "pending" | "denied";
 type UserDirectoryActivationFilter = "all" | "active" | "inactive";
-type StudentPanelMode = "overall" | "assign";
+type StudentPanelMode = "overall" | "assign" | "assignment_summary";
 
 function formatPercent(value: number | null | undefined) {
   return typeof value === "number" ? `${value}%` : "No data";
@@ -680,7 +680,9 @@ function StudentsList({
     <div className="max-h-[42rem] space-y-3 overflow-y-auto pr-2">
       {students.map((student) => {
         const selected = selectedStudentId === student.id;
-        const overallSelected = selected && selectedMode === "overall";
+        const overallSelected =
+          selected &&
+          (selectedMode === "overall" || selectedMode === "assignment_summary");
         const assignSelected = selected && selectedMode === "assign";
 
         return (
@@ -2354,9 +2356,11 @@ function getActivityClassName(activity: AdminDashboardActivity) {
 function ActivityList({
   activities,
   showStudent = false,
+  onSelectAssignment,
 }: {
   activities: AdminDashboardActivity[];
   showStudent?: boolean;
+  onSelectAssignment?: (activity: AdminDashboardActivity) => void;
 }) {
   if (activities.length === 0) {
     return (
@@ -2366,38 +2370,57 @@ function ActivityList({
 
   return (
     <ul className="mt-3 max-h-[28rem] space-y-2 overflow-y-auto pr-2 text-sm">
-      {activities.map((activity, index) => (
-        <li
-          key={`${activity.type}-${activity.studentId ?? "student"}-${activity.label}-${activity.occurredAt ?? index}`}
-          className={`rounded-xl border p-3 ${getActivityClassName(activity)}`}
-        >
-          <div className="flex flex-wrap items-start justify-between gap-2">
-            <div>
-              {showStudent ? (
-                <p className="text-xs font-bold uppercase tracking-wide opacity-70">
-                  {activity.studentName || activity.studentEmail || "Student"}
-                </p>
-              ) : null}
-              <p className="font-semibold">{activity.label}</p>
+      {activities.map((activity, index) => {
+        const content = (
+          <>
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div>
+                {showStudent ? (
+                  <p className="text-xs font-bold uppercase tracking-wide opacity-70">
+                    {activity.studentName || activity.studentEmail || "Student"}
+                  </p>
+                ) : null}
+                <p className="font-semibold">{activity.label}</p>
+              </div>
+              <span className="rounded-full bg-white/70 px-2 py-0.5 text-xs font-bold uppercase tracking-wide">
+                {activity.type}
+              </span>
             </div>
-            <span className="rounded-full bg-white/70 px-2 py-0.5 text-xs font-bold uppercase tracking-wide">
-              {activity.type}
-            </span>
-          </div>
-          <p className="mt-1">{activity.detail}</p>
-          {activity.type === "assignment" ? (
-            <div className="mt-1 space-y-0.5 text-xs opacity-80">
-              <p>Assigned: {formatDateTime(activity.assignedAt)}</p>
-              {activity.completedAt ? (
-                <p>Completed: {formatDateTime(activity.completedAt)}</p>
-              ) : null}
-            </div>
-          ) : null}
-          <p className="mt-1 text-xs opacity-70">
-            {formatDateTime(activity.occurredAt)}
-          </p>
-        </li>
-      ))}
+            <p className="mt-1">{activity.detail}</p>
+            {activity.type === "assignment" ? (
+              <div className="mt-1 space-y-0.5 text-xs opacity-80">
+                <p>Assigned: {formatDateTime(activity.assignedAt)}</p>
+                {activity.completedAt ? (
+                  <p>Completed: {formatDateTime(activity.completedAt)}</p>
+                ) : null}
+              </div>
+            ) : null}
+            <p className="mt-1 text-xs opacity-70">
+              {formatDateTime(activity.occurredAt)}
+            </p>
+          </>
+        );
+        const clickable = activity.type === "assignment" && onSelectAssignment;
+
+        return (
+          <li
+            key={`${activity.type}-${activity.studentId ?? "student"}-${activity.label}-${activity.occurredAt ?? index}`}
+            className={`rounded-xl border p-3 ${getActivityClassName(activity)}`}
+          >
+            {clickable ? (
+              <button
+                type="button"
+                onClick={() => onSelectAssignment(activity)}
+                className="block w-full text-left"
+              >
+                {content}
+              </button>
+            ) : (
+              content
+            )}
+          </li>
+        );
+      })}
     </ul>
   );
 }
@@ -2460,8 +2483,10 @@ function WholeSchoolActivityPanel({
 
 function StudentDetailPanel({
   detail,
+  onSelectAssignmentActivity,
 }: {
   detail: AdminDashboardStudentDetail | null;
+  onSelectAssignmentActivity: (activity: AdminDashboardActivity) => void;
 }) {
   if (!detail) return null;
   return (
@@ -2519,7 +2544,111 @@ function StudentDetailPanel({
       </div>
       <div className="rounded-2xl bg-white p-4 shadow-sm">
         <h4 className="font-bold text-slate-950">Activity</h4>
-        <ActivityList activities={detail.recentActivity} />
+        <ActivityList
+          activities={detail.recentActivity}
+          onSelectAssignment={onSelectAssignmentActivity}
+        />
+      </div>
+    </div>
+  );
+}
+
+function StudentAssignmentSummaryPanel({
+  detail,
+  activity,
+  onBack,
+}: {
+  detail: AdminDashboardStudentDetail;
+  activity: AdminDashboardActivity;
+  onBack: () => void;
+}) {
+  return (
+    <div className="space-y-5 rounded-2xl border border-blue-100 bg-blue-50/60 p-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-sm font-bold uppercase tracking-wide text-blue-700">
+            Student Assignment Summary
+          </p>
+          <h3 className="mt-1 text-2xl font-extrabold text-slate-950">
+            {activity.label}
+          </h3>
+          <p className="text-sm text-slate-600">
+            {displayName({ fullName: detail.fullName, email: detail.email })}
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onBack}
+          className="rounded-full bg-white px-4 py-2 text-sm font-bold text-blue-700 shadow-sm ring-1 ring-blue-100 hover:bg-blue-50"
+        >
+          Back to Overall
+        </button>
+      </div>
+
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <DashboardCard label="Status" value={activity.status ?? "assigned"} />
+        <DashboardCard
+          label="Completion"
+          value={formatPercent(activity.completionPercent)}
+        />
+        <DashboardCard
+          label="Accuracy"
+          value={formatPercent(activity.accuracyPercent)}
+        />
+        <DashboardCard
+          label="Attempts"
+          value={activity.attempts ?? 0}
+          help={`${activity.correctAttempts ?? 0} correct · ${activity.incorrectAttempts ?? 0} incorrect`}
+        />
+      </div>
+
+      <div className="rounded-2xl bg-white p-4 shadow-sm">
+        <h4 className="font-bold text-slate-950">Assignment Details</h4>
+        <dl className="mt-3 grid gap-3 text-sm text-slate-700 md:grid-cols-2">
+          <div className="rounded-xl border border-slate-200 p-3">
+            <dt className="font-semibold text-slate-500">Student</dt>
+            <dd className="mt-1 text-slate-950">
+              {displayName({ fullName: detail.fullName, email: detail.email })}
+            </dd>
+          </div>
+          <div className="rounded-xl border border-slate-200 p-3">
+            <dt className="font-semibold text-slate-500">Assignment</dt>
+            <dd className="mt-1 text-slate-950">{activity.label}</dd>
+          </div>
+          <div className="rounded-xl border border-slate-200 p-3">
+            <dt className="font-semibold text-slate-500">Chapter</dt>
+            <dd className="mt-1 text-slate-950">
+              {activity.chapterTitle ?? "No chapter"}
+            </dd>
+          </div>
+          <div className="rounded-xl border border-slate-200 p-3">
+            <dt className="font-semibold text-slate-500">Section</dt>
+            <dd className="mt-1 text-slate-950">
+              {activity.sectionTitle ?? "No section"}
+            </dd>
+          </div>
+          <div className="rounded-xl border border-slate-200 p-3">
+            <dt className="font-semibold text-slate-500">Assigned</dt>
+            <dd className="mt-1 text-slate-950">
+              {formatDateTime(activity.assignedAt)}
+            </dd>
+          </div>
+          <div className="rounded-xl border border-slate-200 p-3">
+            <dt className="font-semibold text-slate-500">Completed</dt>
+            <dd className="mt-1 text-slate-950">
+              {formatDateTime(activity.completedAt)}
+            </dd>
+          </div>
+        </dl>
+      </div>
+
+      <div className="rounded-2xl bg-white p-4 shadow-sm">
+        <h4 className="font-bold text-slate-950">Question Attempt Summary</h4>
+        <p className="mt-2 text-sm text-slate-700">
+          {(activity.attempts ?? 0) > 0
+            ? `${activity.attempts ?? 0} attempts · ${activity.correctAttempts ?? 0} correct · ${activity.incorrectAttempts ?? 0} incorrect`
+            : "No question attempts found for this assignment section."}
+        </p>
       </div>
     </div>
   );
@@ -3051,6 +3180,8 @@ export default function AdminDashboardPage() {
   );
   const [selectedStudentMode, setSelectedStudentMode] =
     useState<StudentPanelMode | null>(null);
+  const [selectedAssignmentActivity, setSelectedAssignmentActivity] =
+    useState<AdminDashboardActivity | null>(null);
   const [selectedManagedClassroomId, setSelectedManagedClassroomId] = useState<
     string | null
   >(null);
@@ -3420,6 +3551,12 @@ export default function AdminDashboardPage() {
   const handleSelectStudentPanel = (studentId: string, mode: StudentPanelMode) => {
     setSelectedStudentId(studentId);
     setSelectedStudentMode(mode);
+    setSelectedAssignmentActivity(null);
+  };
+
+  const handleSelectAssignmentActivity = (activity: AdminDashboardActivity) => {
+    setSelectedAssignmentActivity(activity);
+    setSelectedStudentMode("assignment_summary");
   };
 
   return (
@@ -3500,11 +3637,22 @@ export default function AdminDashboardPage() {
             </div>
             <div>
               {selectedStudentDetail && selectedStudentMode === "overall" ? (
-                <StudentDetailPanel detail={selectedStudentDetail} />
+                <StudentDetailPanel
+                  detail={selectedStudentDetail}
+                  onSelectAssignmentActivity={handleSelectAssignmentActivity}
+                />
               ) : selectedStudentDetail && selectedStudentMode === "assign" ? (
                 <QuickAssignPanel
                   student={selectedStudentDetail}
                   onAssigned={refreshDashboard}
+                />
+              ) : selectedStudentDetail &&
+                selectedStudentMode === "assignment_summary" &&
+                selectedAssignmentActivity ? (
+                <StudentAssignmentSummaryPanel
+                  detail={selectedStudentDetail}
+                  activity={selectedAssignmentActivity}
+                  onBack={() => setSelectedStudentMode("overall")}
                 />
               ) : (
                 <WholeSchoolActivityPanel
