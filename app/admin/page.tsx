@@ -2589,7 +2589,10 @@ function QuickAssignPanel({
       });
       setMessage({
         type: "success",
-        text: `Created ${result.assignmentCount} section assignments as ${result.title}.`,
+        text:
+          result.assignmentCount > 0
+            ? `Assigned ${result.assignmentCount} new section${result.assignmentCount === 1 ? "" : "s"}.`
+            : "Selected chapters were already assigned for this student.",
       });
       setSelectedChapterIds([]);
       await Promise.all([loadQuickAssignData(), onAssigned()]);
@@ -2644,10 +2647,6 @@ function QuickAssignPanel({
       ) : null}
 
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        <DashboardCard
-          label="Quick assignments"
-          value={data?.metrics.quickAssignmentCount ?? 0}
-        />
         <DashboardCard
           label="Assigned chapters"
           value={data?.metrics.chapterCount ?? 0}
@@ -2722,46 +2721,80 @@ function QuickAssignPanel({
       </form>
 
       <div className="rounded-2xl bg-white p-4 shadow-sm">
-        <h4 className="font-bold text-slate-950">Assigned quick sections</h4>
-        {!data || data.assignments.length === 0 ? (
+        <h4 className="font-bold text-slate-950">Assigned Chapters</h4>
+        {!data || data.chapters.length === 0 ? (
           <p className="mt-3 rounded-xl bg-slate-50 p-4 text-sm text-slate-600">
-            No Quick Assignments have been created for this student yet.
+            No chapters have been assigned for this student yet.
           </p>
         ) : (
-          <div className="mt-3 overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-200 text-sm">
-              <thead className="bg-slate-50 text-left text-xs font-bold uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-3 py-2">Assignment</th>
-                  <th className="px-3 py-2">Section</th>
-                  <th className="px-3 py-2">Completion</th>
-                  <th className="px-3 py-2">Accuracy</th>
-                  <th className="px-3 py-2">Attempts</th>
-                  <th className="px-3 py-2">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 text-slate-700">
-                {data.assignments.map((assignment) => (
-                  <tr key={assignment.id}>
-                    <td className="px-3 py-2 font-semibold text-slate-950">
-                      {assignment.title}
-                    </td>
-                    <td className="px-3 py-2">
-                      <p className="font-medium text-slate-900">
-                        {assignment.chapterNumber && assignment.sectionNumber
-                          ? `Ch ${assignment.chapterNumber} · Sec ${assignment.sectionNumber}`
-                          : assignment.sectionId}
+          <div className="mt-3 space-y-3">
+            {data.chapters.map((chapter) => (
+              <details
+                key={chapter.chapterId}
+                className="rounded-2xl border border-slate-200 bg-slate-50 p-4 open:bg-white"
+              >
+                <summary className="cursor-pointer list-none">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="text-lg font-extrabold text-slate-950">
+                        Chapter {chapter.chapterNumber}: {chapter.chapterTitle}
                       </p>
-                      <p className="text-xs text-slate-500">{assignment.sectionTitle}</p>
-                    </td>
-                    <td className="px-3 py-2">{formatPercent(assignment.completionPercent)}</td>
-                    <td className="px-3 py-2">{formatPercent(assignment.accuracyPercent)}</td>
-                    <td className="px-3 py-2">{assignment.attempts}</td>
-                    <td className="px-3 py-2">{formatAssignmentStatus(assignment.status)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      <p className="text-sm text-slate-600">
+                        {chapter.sectionCount} section{chapter.sectionCount === 1 ? "" : "s"} assigned
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-sm md:grid-cols-4">
+                      <span className="rounded-xl bg-white px-3 py-2 shadow-sm">
+                        <span className="block text-xs font-bold uppercase text-slate-500">Progress</span>
+                        <span className="font-bold text-slate-950">{formatPercent(chapter.completionPercent)}</span>
+                      </span>
+                      <span className="rounded-xl bg-white px-3 py-2 shadow-sm">
+                        <span className="block text-xs font-bold uppercase text-slate-500">Accuracy</span>
+                        <span className="font-bold text-slate-950">{formatPercent(chapter.accuracyPercent)}</span>
+                      </span>
+                      <span className="rounded-xl bg-white px-3 py-2 shadow-sm">
+                        <span className="block text-xs font-bold uppercase text-slate-500">Attempts</span>
+                        <span className="font-bold text-slate-950">{chapter.attempts}</span>
+                      </span>
+                      <span className="rounded-xl bg-white px-3 py-2 shadow-sm">
+                        <span className="block text-xs font-bold uppercase text-slate-500">Sections</span>
+                        <span className="font-bold text-slate-950">{chapter.sectionCount}</span>
+                      </span>
+                    </div>
+                  </div>
+                </summary>
+
+                <div className="mt-4 overflow-x-auto border-t border-slate-200 pt-4">
+                  <table className="min-w-full divide-y divide-slate-200 text-sm">
+                    <thead className="bg-slate-50 text-left text-xs font-bold uppercase tracking-wide text-slate-500">
+                      <tr>
+                        <th className="px-3 py-2">Section</th>
+                        <th className="px-3 py-2">Completion</th>
+                        <th className="px-3 py-2">Accuracy</th>
+                        <th className="px-3 py-2">Attempts</th>
+                        <th className="px-3 py-2">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100 text-slate-700">
+                      {chapter.sections.map((section) => (
+                        <tr key={section.id}>
+                          <td className="px-3 py-2">
+                            <p className="font-medium text-slate-900">
+                              {section.sectionNumber ? `Section ${section.sectionNumber}` : section.sectionId}
+                            </p>
+                            <p className="text-xs text-slate-500">{section.sectionTitle}</p>
+                          </td>
+                          <td className="px-3 py-2">{formatPercent(section.completionPercent)}</td>
+                          <td className="px-3 py-2">{formatPercent(section.accuracyPercent)}</td>
+                          <td className="px-3 py-2">{section.attempts}</td>
+                          <td className="px-3 py-2">{formatAssignmentStatus(section.status)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </details>
+            ))}
           </div>
         )}
       </div>

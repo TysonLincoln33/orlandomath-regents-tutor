@@ -7,7 +7,6 @@ export type AdminQuickAssignStudent = {
 };
 
 export type AdminQuickAssignMetrics = {
-  quickAssignmentCount: number;
   assignmentRows: number;
   chapterCount: number;
   sectionCount: number;
@@ -32,10 +31,22 @@ export type AdminQuickAssignment = {
   attempts: number;
 };
 
+export type AdminQuickAssignChapter = {
+  chapterId: string;
+  chapterNumber: number;
+  chapterTitle: string;
+  completionPercent: number | null;
+  accuracyPercent: number | null;
+  attempts: number;
+  sectionCount: number;
+  sections: AdminQuickAssignment[];
+};
+
 export type AdminQuickAssignData = {
   student: AdminQuickAssignStudent;
   quickClass: { id: string; name: string } | null;
   metrics: AdminQuickAssignMetrics;
+  chapters: AdminQuickAssignChapter[];
   assignments: AdminQuickAssignment[];
 };
 
@@ -44,6 +55,7 @@ export type AdminQuickAssignCreateResult = {
   title: string;
   assignmentCount: number;
   recipientCount: number;
+  skippedExistingSectionCount: number;
   classroomMembershipCreated: boolean;
 };
 
