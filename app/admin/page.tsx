@@ -2,7 +2,14 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { type FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import {
+  type FormEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   type AdminApprovalRequest,
   getAdminApprovalRequests,
@@ -3192,6 +3199,20 @@ export default function AdminDashboardPage() {
     type: "success" | "error";
     text: string;
   } | null>(null);
+  const studentPanelContentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (selectedStudentMode !== "assignment_summary") return;
+
+    const animationFrameId = window.requestAnimationFrame(() => {
+      studentPanelContentRef.current?.scrollIntoView({
+        block: "start",
+        behavior: "smooth",
+      });
+    });
+
+    return () => window.cancelAnimationFrame(animationFrameId);
+  }, [selectedStudentMode, selectedAssignmentActivity?.id]);
 
   const loadClassroomManagement = useCallback(
     async (classroomId?: string | null, search?: string) => {
@@ -3641,7 +3662,7 @@ export default function AdminDashboardPage() {
                 onSelectAssign={(studentId) => handleSelectStudentPanel(studentId, "assign")}
               />
             </div>
-            <div className="space-y-4">
+            <div ref={studentPanelContentRef} className="space-y-4">
               <div className="flex justify-end">
                 <button
                   type="button"
