@@ -206,6 +206,7 @@ async function loadQuickAssignData(
       student: { id: student.id, fullName: student.full_name, email: student.email },
       quickClass: null,
       metrics: {
+        quickAssignmentCount: 0,
         assignmentRows: 0,
         chapterCount: 0,
         sectionCount: 0,
@@ -323,6 +324,7 @@ async function loadQuickAssignData(
     };
   });
 
+  const quickAssignmentTitles = new Set(assignments.map((assignment) => assignment.title).filter(Boolean));
   const chapters = new Set(assignments.map((assignment) => assignment.chapterId).filter(Boolean));
   const completions = assignments.map((assignment) => assignment.completionPercent).filter((value): value is number => typeof value === "number");
   const totalAttempts = assignments.reduce((sum, assignment) => sum + assignment.attempts, 0);
@@ -338,6 +340,7 @@ async function loadQuickAssignData(
       name: quickClass.name,
     },
     metrics: {
+      quickAssignmentCount: quickAssignmentTitles.size,
       assignmentRows: assignments.length,
       chapterCount: chapters.size,
       sectionCount: sectionIds.length,

@@ -2646,7 +2646,7 @@ function QuickAssignPanel({
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         <DashboardCard
           label="Quick assignments"
-          value={data?.metrics.assignmentRows ?? 0}
+          value={data?.metrics.quickAssignmentCount ?? 0}
         />
         <DashboardCard
           label="Assigned chapters"

@@ -7,6 +7,7 @@ export type AdminQuickAssignStudent = {
 };
 
 export type AdminQuickAssignMetrics = {
+  quickAssignmentCount: number;
   assignmentRows: number;
   chapterCount: number;
   sectionCount: number;
