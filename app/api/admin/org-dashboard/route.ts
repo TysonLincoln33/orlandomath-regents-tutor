@@ -63,6 +63,7 @@ type AttemptRow = {
   attempted_at: string | null;
 };
 
+const INACTIVE_ASSIGNMENT_RECIPIENT_STATUSES = new Set(["archived", "unassigned", "excused"]);
 const ATTEMPT_HISTORY_LIMIT_PER_STUDENT = 1000;
 const ATTEMPT_HISTORY_PAGE_SIZE = 1000;
 
@@ -403,6 +404,7 @@ function buildDashboard({
   const regentsTeachers = teachers;
   const teacherMap = new Map(regentsTeachers.map((teacher) => [teacher.id, teacher]));
   const studentMap = new Map(regentsStudents.map((student) => [student.id, student]));
+  const assignmentMap = new Map(assignments.map((assignment) => [assignment.id, assignment]));
 
   const membershipsByClassroom = new Map<string, ClassroomMemberRow[]>();
   const membershipsByStudent = new Map<string, ClassroomMemberRow[]>();
@@ -479,6 +481,31 @@ function buildDashboard({
     attemptsByStudent.set(row.user_id, [...(attemptsByStudent.get(row.user_id) ?? []), row]);
   }
 
+  const activeAssignedSectionCompletionForStudent = (studentId: string) => {
+    const studentProgressBySection = new Map(
+      (progressByStudent.get(studentId) ?? []).map((row) => [
+        row.section_id,
+        toNumber(row.completion_percent),
+      ]),
+    );
+    const completionValues = (recipientsByStudent.get(studentId) ?? [])
+      .map((recipient) => {
+        const assignment = assignmentMap.get(recipient.assignment_id);
+        if (
+          !assignment?.section_id ||
+          assignment.archived_at ||
+          INACTIVE_ASSIGNMENT_RECIPIENT_STATUSES.has(recipient.status ?? "")
+        ) {
+          return null;
+        }
+
+        return studentProgressBySection.get(assignment.section_id) ?? 0;
+      })
+      .filter((value): value is number => typeof value === "number");
+
+    return averagePercent(completionValues);
+  };
+
   const studentMetrics = new Map<
     string,
     {
@@ -497,9 +524,7 @@ function buildDashboard({
     const attempted = studentAttempts.length;
     const correct = studentAttempts.filter((attempt) => attempt.correct === true).length;
     const incorrect = studentAttempts.filter((attempt) => attempt.correct === false).length;
-    const completion = averagePercent(
-      studentProgress.map((row) => toNumber(row.completion_percent)),
-    );
+    const completion = activeAssignedSectionCompletionForStudent(student.id);
     const progressAccuracy = averagePercent(
       studentProgress.map((row) => toNumber(row.accuracy_percent)),
     );

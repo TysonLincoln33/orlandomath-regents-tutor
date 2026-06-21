@@ -2468,7 +2468,7 @@ function StudentDetailPanel({
         <p className="text-sm text-slate-600">{detail.email ?? "No email"}</p>
       </div>
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        <DashboardCard label="Assigned work" value={detail.assignedWorkCount} />
+        <DashboardCard label="Assigned Sections" value={detail.assignedWorkCount} />
         <DashboardCard
           label="Completion"
           value={formatPercent(detail.overallCompletion)}
