@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { canAccessAdminRoute, getEmailDomain, isMasterRole } from "@/lib/auth/roles";
-import { SECTIONS } from "@/lib/course/algebra1";
+import { CHAPTERS, SECTIONS } from "@/lib/course/algebra1";
 import type { AdminOrgDashboard } from "@/lib/admin/orgDashboard";
 
 type ProfileRow = {
@@ -56,11 +56,15 @@ type ProgressRow = {
 
 type AttemptRow = {
   user_id: string;
+  chapter_id: string | null;
   section_id: string | null;
   question_id: string | null;
   correct: boolean | null;
   attempted_at: string | null;
 };
+
+const ATTEMPT_HISTORY_LIMIT_PER_STUDENT = 1000;
+const ATTEMPT_HISTORY_PAGE_SIZE = 1000;
 
 class AdminDashboardApiError extends Error {
   status: number;
@@ -156,6 +160,15 @@ function getSectionTitle(sectionId: string | null | undefined) {
     : sectionId;
 }
 
+function getChapterTitle(chapterId: string | null | undefined, sectionId: string | null | undefined) {
+  const section = sectionId ? SECTIONS.find((item) => item.id === sectionId) : null;
+  const resolvedChapterId = chapterId ?? section?.chapterId;
+  if (!resolvedChapterId) return "No chapter selected";
+
+  const chapter = CHAPTERS.find((item) => item.id === resolvedChapterId);
+  return chapter ? `Chapter ${chapter.number}: ${chapter.title}` : resolvedChapterId;
+}
+
 function getAssignmentGroupKey(assignment: AssignmentRow) {
   return [
     assignment.classroom_id,
@@ -185,6 +198,47 @@ async function selectIn<T>(
   const { data, error } = await inQuery.in(column, ids);
 
   return { data: (data ?? []) as T[], error };
+}
+
+async function selectAttemptHistory(
+  adminClient: SupabaseClient,
+  studentIds: string[],
+): Promise<{ data: AttemptRow[]; error: { message?: string } | null }> {
+  if (studentIds.length === 0) {
+    return { data: [], error: null };
+  }
+
+  const attempts: AttemptRow[] = [];
+  const countsByStudent = new Map<string, number>();
+
+  for (let from = 0; ; from += ATTEMPT_HISTORY_PAGE_SIZE) {
+    const to = from + ATTEMPT_HISTORY_PAGE_SIZE - 1;
+    const { data, error } = await adminClient
+      .from("question_attempts")
+      .select("user_id,chapter_id,section_id,question_id,correct,attempted_at")
+      .eq("app_id", "regents-algebra")
+      .eq("course_id", "algebra1")
+      .in("user_id", studentIds)
+      .order("attempted_at", { ascending: false })
+      .range(from, to);
+
+    if (error) {
+      return { data: attempts, error };
+    }
+
+    const rows = (data ?? []) as AttemptRow[];
+    for (const row of rows) {
+      const studentAttemptCount = countsByStudent.get(row.user_id) ?? 0;
+      if (studentAttemptCount >= ATTEMPT_HISTORY_LIMIT_PER_STUDENT) continue;
+
+      countsByStudent.set(row.user_id, studentAttemptCount + 1);
+      attempts.push(row);
+    }
+
+    if (rows.length < ATTEMPT_HISTORY_PAGE_SIZE) {
+      return { data: attempts, error: null };
+    }
+  }
 }
 
 async function getRouteContext(req: NextRequest) {
@@ -730,6 +784,8 @@ function buildDashboard({
           new Date(right.attempted_at ?? 0).getTime() - new Date(left.attempted_at ?? 0).getTime(),
         )
         .map((attempt) => ({
+          chapterId: attempt.chapter_id,
+          chapterTitle: getChapterTitle(attempt.chapter_id, attempt.section_id),
           questionId: attempt.question_id,
           sectionId: attempt.section_id,
           sectionTitle: getSectionTitle(attempt.section_id),
@@ -942,15 +998,7 @@ export async function GET(req: NextRequest) {
           "user_id",
           studentIds,
         ),
-        selectIn<AttemptRow>(
-          adminClient
-            .from("question_attempts")
-            .select("user_id,section_id,question_id,correct,attempted_at")
-            .eq("app_id", "regents-algebra")
-            .eq("course_id", "algebra1"),
-          "user_id",
-          studentIds,
-        ),
+        selectAttemptHistory(adminClient, studentIds),
       ]);
 
     for (const response of [

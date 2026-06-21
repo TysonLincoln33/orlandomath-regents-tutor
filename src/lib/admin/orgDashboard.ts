@@ -112,6 +112,8 @@ export type AdminDashboardAssignment = {
 };
 
 export type AdminDashboardRecentAttempt = {
+  chapterId: string | null;
+  chapterTitle: string;
   questionId: string | null;
   sectionId: string | null;
   sectionTitle: string;
