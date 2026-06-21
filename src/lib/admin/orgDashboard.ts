@@ -126,6 +126,8 @@ export type AdminDashboardActivity = {
   label: string;
   detail: string;
   occurredAt: string | null;
+  assignedAt?: string | null;
+  completedAt?: string | null;
   studentId?: string;
   studentName?: string | null;
   studentEmail?: string | null;

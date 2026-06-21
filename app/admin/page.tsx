@@ -2360,7 +2360,7 @@ function ActivityList({
 }) {
   if (activities.length === 0) {
     return (
-      <p className="mt-2 text-sm text-slate-600">No recent activity found.</p>
+      <p className="mt-2 text-sm text-slate-600">No activity found.</p>
     );
   }
 
@@ -2385,6 +2385,14 @@ function ActivityList({
             </span>
           </div>
           <p className="mt-1">{activity.detail}</p>
+          {activity.type === "assignment" ? (
+            <div className="mt-1 space-y-0.5 text-xs opacity-80">
+              <p>Assigned: {formatDateTime(activity.assignedAt)}</p>
+              {activity.completedAt ? (
+                <p>Completed: {formatDateTime(activity.completedAt)}</p>
+              ) : null}
+            </div>
+          ) : null}
           <p className="mt-1 text-xs opacity-70">
             {formatDateTime(activity.occurredAt)}
           </p>
@@ -2510,7 +2518,7 @@ function StudentDetailPanel({
         <AttemptsList attempts={detail.recentQuestionAttempts} />
       </div>
       <div className="rounded-2xl bg-white p-4 shadow-sm">
-        <h4 className="font-bold text-slate-950">Recent Activity</h4>
+        <h4 className="font-bold text-slate-950">Activity</h4>
         <ActivityList activities={detail.recentActivity} />
       </div>
     </div>
