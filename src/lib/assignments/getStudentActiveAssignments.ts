@@ -1,6 +1,6 @@
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
-export type StudentAssignmentStatus = "assigned" | "completed" | "excused" | "archived";
+export type StudentAssignmentStatus = "assigned" | "completed" | "excused" | "archived" | "unassigned";
 
 export type StudentActiveAssignmentRow = {
   classroom_id: string;

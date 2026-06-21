@@ -936,7 +936,7 @@ CREATE TABLE IF NOT EXISTS "public"."assignment_recipients" (
     "assigned_at" timestamp with time zone DEFAULT "now"() NOT NULL,
     "completed_at" timestamp with time zone,
     "status" "text" DEFAULT 'assigned'::"text" NOT NULL,
-    CONSTRAINT "assignment_recipients_status_check" CHECK (("status" = ANY (ARRAY['assigned'::"text", 'completed'::"text", 'excused'::"text", 'archived'::"text"])))
+    CONSTRAINT "assignment_recipients_status_check" CHECK (("status" = ANY (ARRAY['assigned'::"text", 'completed'::"text", 'excused'::"text", 'archived'::"text", 'unassigned'::"text"])))
 );
 
 

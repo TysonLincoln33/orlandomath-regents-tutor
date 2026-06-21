@@ -42,6 +42,7 @@ import {
   archiveAdminQuickAssignChapter,
   createAdminQuickAssign,
   getAdminQuickAssignData,
+  unassignAdminQuickAssignChapter,
   type AdminQuickAssignData,
 } from "@/lib/admin/quickAssign";
 import {
@@ -1277,7 +1278,7 @@ function getOverallAssignmentSummary(assignment: AdminDashboardAssignment) {
         hasProgress: false,
         hasAttempts: false,
       };
-      const isActive = recipient.status !== "excused" && recipient.status !== "archived";
+      const isActive = recipient.status !== "excused" && recipient.status !== "archived" && recipient.status !== "unassigned";
 
       summary.statuses.push(recipient.status);
       summary.assignmentIds.push(sectionAssignment.id);
@@ -2527,6 +2528,7 @@ function QuickAssignPanel({
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [archivingChapterId, setArchivingChapterId] = useState<string | null>(null);
+  const [unassigningChapterId, setUnassigningChapterId] = useState<string | null>(null);
   const [message, setMessage] = useState<{
     type: "success" | "error";
     text: string;
@@ -2595,7 +2597,7 @@ function QuickAssignPanel({
           result.assignmentCount > 0
             ? `Assigned ${result.assignmentCount} new section${result.assignmentCount === 1 ? "" : "s"}.`
             : result.reactivatedRecipientCount > 0
-              ? `Reactivated ${result.reactivatedRecipientCount} archived section${result.reactivatedRecipientCount === 1 ? "" : "s"}.`
+              ? `Reactivated ${result.reactivatedRecipientCount} previously hidden section${result.reactivatedRecipientCount === 1 ? "" : "s"}.`
               : "Selected chapters were already assigned for this student.",
       });
       setSelectedChapterIds([]);
@@ -2614,7 +2616,12 @@ function QuickAssignPanel({
 
   async function handleArchiveChapter(chapterId: string, chapterLabel: string) {
     const confirmed = window.confirm(
-      `Archive ${chapterLabel} for ${displayName({ fullName: student.fullName, email: student.email })}? This removes it from active Quick Assign metrics without deleting history.`,
+      `Archive this chapter?
+
+The chapter will move to Archived Chapters.
+Progress and history will be preserved.
+
+${chapterLabel} for ${displayName({ fullName: student.fullName, email: student.email })}`,
     );
     if (!confirmed) return;
 
@@ -2642,6 +2649,48 @@ function QuickAssignPanel({
       });
     } finally {
       setArchivingChapterId(null);
+    }
+  }
+
+
+  async function handleUnassignChapter(chapterId: string, chapterLabel: string) {
+    const confirmed = window.confirm(
+      `Unassign this chapter?
+
+The chapter will be removed from the student's assigned Quick Assign work.
+
+Progress and attempt history will remain available.
+
+The student will stay in Quick Class.
+
+${chapterLabel} for ${displayName({ fullName: student.fullName, email: student.email })}`,
+    );
+    if (!confirmed) return;
+
+    setUnassigningChapterId(chapterId);
+    setMessage(null);
+
+    try {
+      const result = await unassignAdminQuickAssignChapter({
+        studentUserId: student.studentId,
+        chapterId,
+      });
+      setMessage({
+        type: "success",
+        text:
+          result.unassignedRecipientCount > 0
+            ? `Unassigned ${chapterLabel}. Progress and attempt history are preserved.`
+            : `${chapterLabel} did not have active Quick Assign sections to unassign.`,
+      });
+      await Promise.all([loadQuickAssignData(), onAssigned()]);
+    } catch (error) {
+      const typedError = error as Error;
+      setMessage({
+        type: "error",
+        text: typedError.message || "Failed to unassign Quick Assign chapter.",
+      });
+    } finally {
+      setUnassigningChapterId(null);
     }
   }
 
@@ -2780,20 +2829,36 @@ function QuickAssignPanel({
                       <p className="text-sm text-slate-600">
                         {chapter.sectionCount} section{chapter.sectionCount === 1 ? "" : "s"} assigned
                       </p>
-                      <button
-                        type="button"
-                        onClick={(event) => {
-                          event.preventDefault();
-                          void handleArchiveChapter(
-                            chapter.chapterId,
-                            `Chapter ${chapter.chapterNumber}: ${chapter.chapterTitle}`,
-                          );
-                        }}
-                        disabled={archivingChapterId === chapter.chapterId}
-                        className="mt-3 rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-bold text-amber-800 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        {archivingChapterId === chapter.chapterId ? "Archiving..." : "Archive"}
-                      </button>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.preventDefault();
+                            void handleArchiveChapter(
+                              chapter.chapterId,
+                              `Chapter ${chapter.chapterNumber}: ${chapter.chapterTitle}`,
+                            );
+                          }}
+                          disabled={archivingChapterId === chapter.chapterId}
+                          className="rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-sm font-bold text-amber-800 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {archivingChapterId === chapter.chapterId ? "Archiving..." : "Archive"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.preventDefault();
+                            void handleUnassignChapter(
+                              chapter.chapterId,
+                              `Chapter ${chapter.chapterNumber}: ${chapter.chapterTitle}`,
+                            );
+                          }}
+                          disabled={unassigningChapterId === chapter.chapterId}
+                          className="rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-bold text-rose-800 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {unassigningChapterId === chapter.chapterId ? "Unassigning..." : "Unassign"}
+                        </button>
+                      </div>
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-sm md:grid-cols-4">
                       <span className="rounded-xl bg-white px-3 py-2 shadow-sm">

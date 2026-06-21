@@ -70,6 +70,12 @@ export type AdminQuickAssignArchiveResult = {
   archivedRecipientCount: number;
 };
 
+export type AdminQuickAssignUnassignResult = {
+  studentUserId: string;
+  chapterId: string;
+  unassignedRecipientCount: number;
+};
+
 async function getAccessToken() {
   const supabase = getSupabaseBrowserClient();
   const {
@@ -141,5 +147,25 @@ export async function archiveAdminQuickAssignChapter(params: {
   return parseResponse<AdminQuickAssignArchiveResult>(
     response,
     "Failed to archive Quick Assign chapter.",
+  );
+}
+
+
+export async function unassignAdminQuickAssignChapter(params: {
+  studentUserId: string;
+  chapterId: string;
+}): Promise<AdminQuickAssignUnassignResult> {
+  const accessToken = await getAccessToken();
+  const response = await fetch(
+    `/api/admin/quick-assign/students/${params.studentUserId}/chapters/${params.chapterId}/unassign`,
+    {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${accessToken}` },
+    },
+  );
+
+  return parseResponse<AdminQuickAssignUnassignResult>(
+    response,
+    "Failed to unassign Quick Assign chapter.",
   );
 }

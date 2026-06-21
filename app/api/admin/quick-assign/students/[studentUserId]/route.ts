@@ -10,6 +10,8 @@ import {
 } from "../../../classroom-management/_utils";
 
 const VALID_CHAPTER_IDS = new Set(CHAPTERS.map((chapter) => chapter.id));
+const ACTIVE_QUICK_ASSIGN_STATUSES = new Set(["assigned", "completed", "excused"]);
+const RESTORABLE_QUICK_ASSIGN_STATUSES = new Set(["archived", "unassigned"]);
 
 type RouteContext = {
   params: Promise<{ studentUserId: string }>;
@@ -389,7 +391,9 @@ async function loadQuickAssignData(
     };
   });
 
-  const activeAssignments = allAssignments.filter((assignment) => assignment.status !== "archived");
+  const activeAssignments = allAssignments.filter((assignment) =>
+    ACTIVE_QUICK_ASSIGN_STATUSES.has(assignment.status),
+  );
   const activeSectionIds = new Set(
     activeAssignments
       .map((assignment) => assignment.sectionId)
@@ -503,7 +507,9 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
     }>;
     const activeSectionIds = new Set(
       existingAssignments
-        .filter((assignment) => assignment.assignment_recipients?.[0]?.status !== "archived")
+        .filter((assignment) =>
+          ACTIVE_QUICK_ASSIGN_STATUSES.has(assignment.assignment_recipients?.[0]?.status ?? ""),
+        )
         .map((assignment) => assignment.section_id)
         .filter((sectionId): sectionId is string => Boolean(sectionId)),
     );
@@ -512,34 +518,34 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
         .map((assignment) => assignment.section_id)
         .filter((sectionId): sectionId is string => Boolean(sectionId)),
     );
-    const archivedAssignmentIdsBySection = new Map<string, string>();
+    const restorableAssignmentIdsBySection = new Map<string, string>();
     for (const assignment of existingAssignments) {
       if (
-        assignment.assignment_recipients?.[0]?.status === "archived" &&
+        RESTORABLE_QUICK_ASSIGN_STATUSES.has(assignment.assignment_recipients?.[0]?.status ?? "") &&
         assignment.section_id &&
         !activeSectionIds.has(assignment.section_id) &&
-        !archivedAssignmentIdsBySection.has(assignment.section_id)
+        !restorableAssignmentIdsBySection.has(assignment.section_id)
       ) {
-        archivedAssignmentIdsBySection.set(assignment.section_id, assignment.id);
+        restorableAssignmentIdsBySection.set(assignment.section_id, assignment.id);
       }
     }
-    const archivedAssignmentIds = [...archivedAssignmentIdsBySection.values()];
+    const restorableAssignmentIds = [...restorableAssignmentIdsBySection.values()];
     const missingSectionIds = sectionIds.filter((sectionId) => !existingSectionIds.has(sectionId));
     const title = "Quick Assign";
 
-    const { error: reactivationError } = archivedAssignmentIds.length > 0
+    const { error: reactivationError } = restorableAssignmentIds.length > 0
       ? await ctx.adminClient
           .from("assignment_recipients")
           .update({ status: "assigned" })
           .eq("classroom_id", classroom.id)
           .eq("user_id", studentUserId)
-          .in("assignment_id", archivedAssignmentIds)
-          .eq("status", "archived")
+          .in("assignment_id", restorableAssignmentIds)
+          .in("status", ["archived", "unassigned"])
       : { error: null };
 
     if (reactivationError) {
       throw new AdminClassroomManagementApiError(
-        reactivationError.message || "Failed to reactivate archived Quick Assignments.",
+        reactivationError.message || "Failed to reactivate Quick Assignments.",
         500,
       );
     }
@@ -592,10 +598,10 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
         classroom: { id: classroom.id, name: classroom.name, created },
         title,
         assignmentCount: assignments.length,
-        recipientCount: assignments.length + archivedAssignmentIds.length,
-        reactivatedRecipientCount: archivedAssignmentIds.length,
+        recipientCount: assignments.length + restorableAssignmentIds.length,
+        reactivatedRecipientCount: restorableAssignmentIds.length,
         skippedExistingSectionCount:
-          sectionIds.length - missingSectionIds.length - archivedAssignmentIds.length,
+          sectionIds.length - missingSectionIds.length - restorableAssignmentIds.length,
         classroomMembershipCreated: membershipCreated,
         assignments,
       },

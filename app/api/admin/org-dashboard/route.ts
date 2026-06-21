@@ -501,7 +501,7 @@ function buildDashboard({
     for (const assignment of assignmentsForGroup) {
       const assignmentRecipients = recipientsByAssignment.get(assignment.id) ?? [];
       const activeRecipients = assignmentRecipients.filter(
-        (recipient) => recipient.status !== "excused" && recipient.status !== "archived",
+        (recipient) => recipient.status !== "excused" && recipient.status !== "archived" && recipient.status !== "unassigned",
       );
 
       for (const recipient of activeRecipients) {
