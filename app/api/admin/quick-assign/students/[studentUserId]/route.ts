@@ -173,27 +173,6 @@ async function ensureMembership(
   return true;
 }
 
-async function getNextQuickAssignmentTitle(
-  ctx: Awaited<ReturnType<typeof getRouteContext>>,
-  classroomId: string,
-) {
-  const { count, error } = await ctx.adminClient
-    .from("assignments")
-    .select("title", { count: "exact", head: true })
-    .eq("classroom_id", classroomId)
-    .eq("created_by", ctx.userId)
-    .ilike("title", "Quick Assignment %");
-
-  if (error) {
-    throw new AdminClassroomManagementApiError(
-      error.message || "Failed to count Quick Assignments.",
-      500,
-    );
-  }
-
-  return `Quick Assignment ${(count ?? 0) + 1}`;
-}
-
 async function loadQuickAssignData(
   ctx: Awaited<ReturnType<typeof getRouteContext>>,
   studentUserId: string,
@@ -206,7 +185,6 @@ async function loadQuickAssignData(
       student: { id: student.id, fullName: student.full_name, email: student.email },
       quickClass: null,
       metrics: {
-        quickAssignmentCount: 0,
         assignmentRows: 0,
         chapterCount: 0,
         sectionCount: 0,
@@ -214,6 +192,7 @@ async function loadQuickAssignData(
         accuracyPercent: null,
         attempts: 0,
       },
+      chapters: [],
       assignments: [],
     };
   }
@@ -225,6 +204,7 @@ async function loadQuickAssignData(
     .eq("created_by", ctx.userId)
     .is("archived_at", null)
     .eq("assignment_recipients.user_id", studentUserId)
+    .neq("assignment_recipients.status", "archived")
     .order("created_at", { ascending: false });
 
   if (assignmentError) {
@@ -324,8 +304,39 @@ async function loadQuickAssignData(
     };
   });
 
-  const quickAssignmentTitles = new Set(assignments.map((assignment) => assignment.title).filter(Boolean));
   const chapters = new Set(assignments.map((assignment) => assignment.chapterId).filter(Boolean));
+
+  const chapterGroups = CHAPTERS.map((chapter) => {
+    const chapterAssignments = assignments
+      .filter((assignment) => assignment.chapterId === chapter.id)
+      .sort((left, right) => (left.sectionNumber ?? 0) - (right.sectionNumber ?? 0));
+
+    if (chapterAssignments.length === 0) return null;
+
+    const chapterCompletions = chapterAssignments
+      .map((assignment) => assignment.completionPercent)
+      .filter((value): value is number => typeof value === "number");
+    const chapterAttempts = chapterAssignments.reduce((sum, assignment) => sum + assignment.attempts, 0);
+    const chapterWeightedCorrect = chapterAssignments.reduce((sum, assignment) => {
+      if (typeof assignment.accuracyPercent !== "number" || assignment.attempts === 0) return sum;
+      return sum + (assignment.accuracyPercent / 100) * assignment.attempts;
+    }, 0);
+
+    return {
+      chapterId: chapter.id,
+      chapterNumber: chapter.number,
+      chapterTitle: chapter.title,
+      completionPercent:
+        chapterCompletions.length > 0
+          ? Math.round(chapterCompletions.reduce((sum, value) => sum + value, 0) / chapterCompletions.length)
+          : null,
+      accuracyPercent:
+        chapterAttempts > 0 ? Math.round((chapterWeightedCorrect / chapterAttempts) * 100) : null,
+      attempts: chapterAttempts,
+      sectionCount: chapterAssignments.length,
+      sections: chapterAssignments,
+    };
+  }).filter((chapter): chapter is NonNullable<typeof chapter> => Boolean(chapter));
   const completions = assignments.map((assignment) => assignment.completionPercent).filter((value): value is number => typeof value === "number");
   const totalAttempts = assignments.reduce((sum, assignment) => sum + assignment.attempts, 0);
   const weightedCorrect = assignments.reduce((sum, assignment) => {
@@ -340,7 +351,6 @@ async function loadQuickAssignData(
       name: quickClass.name,
     },
     metrics: {
-      quickAssignmentCount: quickAssignmentTitles.size,
       assignmentRows: assignments.length,
       chapterCount: chapters.size,
       sectionCount: sectionIds.length,
@@ -351,6 +361,7 @@ async function loadQuickAssignData(
       accuracyPercent: totalAttempts > 0 ? Math.round((weightedCorrect / totalAttempts) * 100) : null,
       attempts: totalAttempts,
     },
+    chapters: chapterGroups,
     assignments,
   };
 }
@@ -413,9 +424,32 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
 
     const { classroom, created } = await getOrCreateQuickClass(ctx);
     const membershipCreated = await ensureMembership(ctx, classroom.id, studentUserId);
-    const title = await getNextQuickAssignmentTitle(ctx, classroom.id);
 
-    const assignmentsToInsert = sectionIds.map((sectionId) => ({
+    const { data: existingAssignmentData, error: existingAssignmentError } = await ctx.adminClient
+      .from("assignments")
+      .select("id,section_id,assignment_recipients!inner(status)")
+      .eq("classroom_id", classroom.id)
+      .eq("created_by", ctx.userId)
+      .in("section_id", sectionIds)
+      .eq("assignment_recipients.user_id", studentUserId)
+      .neq("assignment_recipients.status", "archived");
+
+    if (existingAssignmentError) {
+      throw new AdminClassroomManagementApiError(
+        existingAssignmentError.message || "Failed to check existing Quick Assign sections.",
+        500,
+      );
+    }
+
+    const existingSectionIds = new Set(
+      (existingAssignmentData ?? [])
+        .map((assignment) => assignment.section_id)
+        .filter((sectionId): sectionId is string => Boolean(sectionId)),
+    );
+    const missingSectionIds = sectionIds.filter((sectionId) => !existingSectionIds.has(sectionId));
+    const title = "Quick Assign";
+
+    const assignmentsToInsert = missingSectionIds.map((sectionId) => ({
       classroom_id: classroom.id,
       title,
       description: null,
@@ -424,10 +458,12 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
       created_by: ctx.userId,
     }));
 
-    const { data: insertedAssignments, error: assignmentError } = await ctx.adminClient
-      .from("assignments")
-      .insert(assignmentsToInsert)
-      .select("id,classroom_id,title,description,due_date,section_id,created_by,created_at");
+    const { data: insertedAssignments, error: assignmentError } = assignmentsToInsert.length > 0
+      ? await ctx.adminClient
+          .from("assignments")
+          .insert(assignmentsToInsert)
+          .select("id,classroom_id,title,description,due_date,section_id,created_by,created_at")
+      : { data: [], error: null };
 
     if (assignmentError) {
       throw new AdminClassroomManagementApiError(
@@ -437,15 +473,17 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
     }
 
     const assignments = insertedAssignments ?? [];
-    const { error: recipientError } = await ctx.adminClient.from("assignment_recipients").insert(
-      assignments.map((assignment) => ({
-        assignment_id: assignment.id,
-        classroom_id: classroom.id,
-        user_id: studentUserId,
-        assigned_by: ctx.userId,
-        status: "assigned",
-      })),
-    );
+    const { error: recipientError } = assignments.length > 0
+      ? await ctx.adminClient.from("assignment_recipients").insert(
+          assignments.map((assignment) => ({
+            assignment_id: assignment.id,
+            classroom_id: classroom.id,
+            user_id: studentUserId,
+            assigned_by: ctx.userId,
+            status: "assigned",
+          })),
+        )
+      : { error: null };
 
     if (recipientError) {
       throw new AdminClassroomManagementApiError(
@@ -460,6 +498,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
         title,
         assignmentCount: assignments.length,
         recipientCount: assignments.length,
+        skippedExistingSectionCount: sectionIds.length - missingSectionIds.length,
         classroomMembershipCreated: membershipCreated,
         assignments,
       },
