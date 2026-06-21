@@ -54,7 +54,7 @@ as $$
      and sp.app_id = 'regents-algebra'
      and sp.course_id = 'algebra1'
     where ar.user_id = auth.uid()
-      and ar.status not in ('archived', 'excused')
+      and ar.status in ('assigned', 'completed')
       and a.archived_at is null
       and a.section_id ~ '^ch[0-9]+_s[0-9]+$'
   )

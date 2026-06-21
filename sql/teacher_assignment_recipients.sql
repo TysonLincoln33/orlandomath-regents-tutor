@@ -15,7 +15,7 @@ create table if not exists public.assignment_recipients (
   completed_at timestamptz null,
   status text not null default 'assigned',
   constraint assignment_recipients_status_check check (
-    status in ('assigned', 'completed', 'excused', 'archived')
+    status in ('assigned', 'completed', 'excused', 'archived', 'unassigned')
   ),
   constraint assignment_recipients_assignment_user_key unique (assignment_id, user_id)
 );
