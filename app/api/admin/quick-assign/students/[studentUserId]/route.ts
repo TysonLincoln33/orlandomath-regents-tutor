@@ -1,3 +1,6 @@
+import fs from "fs";
+import path from "path";
+
 import { NextRequest, NextResponse } from "next/server";
 
 import { CHAPTERS, SECTIONS } from "@/lib/course/algebra1";
@@ -45,6 +48,8 @@ type QuickAssignmentView = {
   completionPercent: number | null;
   accuracyPercent: number | null;
   attempts: number;
+  assignedQuestionCount: number;
+  completedQuestionCount: number;
 };
 
 type StudentProgressRow = {
@@ -60,6 +65,59 @@ type AttemptAggregate = {
   attempt_count: number;
   correct_count: number;
 };
+
+type QuestionAttemptRow = {
+  section_id: string;
+  question_id: string;
+  correct: boolean;
+  attempted_at: string;
+};
+
+type SectionQuestionInfo = {
+  questionIds: Set<string>;
+  totalQuestions: number;
+};
+
+function loadSectionQuestionInfo(sectionIds: string[]) {
+  const questionInfoBySection = new Map<string, SectionQuestionInfo>();
+
+  for (const sectionId of sectionIds) {
+    const filePath = path.join(
+      process.cwd(),
+      "public",
+      "questions",
+      "sections",
+      `${sectionId}.json`,
+    );
+
+    if (!fs.existsSync(filePath)) {
+      questionInfoBySection.set(sectionId, { questionIds: new Set(), totalQuestions: 0 });
+      continue;
+    }
+
+    const parsed = JSON.parse(fs.readFileSync(filePath, "utf8")) as {
+      questions?: Array<{ id?: unknown }>;
+    };
+    const questionIds = new Set(
+      (parsed.questions ?? [])
+        .map((question) => (typeof question.id === "string" ? question.id : null))
+        .filter((questionId): questionId is string => Boolean(questionId)),
+    );
+
+    questionInfoBySection.set(sectionId, {
+      questionIds,
+      totalQuestions: parsed.questions?.length ?? 0,
+    });
+  }
+
+  return questionInfoBySection;
+}
+
+function calculateCompletionPercent(completedQuestionCount: number, assignedQuestionCount: number) {
+  return assignedQuestionCount > 0
+    ? Math.round((completedQuestionCount / assignedQuestionCount) * 100)
+    : null;
+}
 
 function normalizeStringArray(value: unknown) {
   if (!Array.isArray(value)) return [];
@@ -199,8 +257,13 @@ function buildQuickAssignChapters(assignments: QuickAssignmentView[]) {
 
     if (chapterAssignments.length === 0) return null;
 
-    const chapterCompletions = chapterAssignments.map(
-      (assignment) => assignment.completionPercent ?? 0,
+    const assignedQuestionCount = chapterAssignments.reduce(
+      (sum, assignment) => sum + assignment.assignedQuestionCount,
+      0,
+    );
+    const completedQuestionCount = chapterAssignments.reduce(
+      (sum, assignment) => sum + assignment.completedQuestionCount,
+      0,
     );
     const chapterAttempts = chapterAssignments.reduce((sum, assignment) => sum + assignment.attempts, 0);
     const chapterWeightedCorrect = chapterAssignments.reduce((sum, assignment) => {
@@ -212,10 +275,7 @@ function buildQuickAssignChapters(assignments: QuickAssignmentView[]) {
       chapterId: chapter.id,
       chapterNumber: chapter.number,
       chapterTitle: chapter.title,
-      completionPercent:
-        chapterCompletions.length > 0
-          ? Math.round(chapterCompletions.reduce((sum, value) => sum + value, 0) / chapterCompletions.length)
-          : null,
+      completionPercent: calculateCompletionPercent(completedQuestionCount, assignedQuestionCount),
       accuracyPercent:
         chapterAttempts > 0 ? Math.round((chapterWeightedCorrect / chapterAttempts) * 100) : null,
       attempts: chapterAttempts,
@@ -228,7 +288,14 @@ function buildQuickAssignChapters(assignments: QuickAssignmentView[]) {
 function buildQuickAssignMetrics(assignments: QuickAssignmentView[]) {
   const chapters = new Set(assignments.map((assignment) => assignment.chapterId).filter(Boolean));
   const sectionIds = new Set(assignments.map((assignment) => assignment.sectionId).filter(Boolean));
-  const completions = assignments.map((assignment) => assignment.completionPercent ?? 0);
+  const assignedQuestionCount = assignments.reduce(
+    (sum, assignment) => sum + assignment.assignedQuestionCount,
+    0,
+  );
+  const completedQuestionCount = assignments.reduce(
+    (sum, assignment) => sum + assignment.completedQuestionCount,
+    0,
+  );
   const totalAttempts = assignments.reduce((sum, assignment) => sum + assignment.attempts, 0);
   const weightedCorrect = assignments.reduce((sum, assignment) => {
     if (typeof assignment.accuracyPercent !== "number" || assignment.attempts === 0) return sum;
@@ -239,10 +306,7 @@ function buildQuickAssignMetrics(assignments: QuickAssignmentView[]) {
     assignmentRows: assignments.length,
     chapterCount: chapters.size,
     sectionCount: sectionIds.size,
-    completionPercent:
-      completions.length > 0
-        ? Math.round(completions.reduce((sum, value) => sum + value, 0) / completions.length)
-        : null,
+    completionPercent: calculateCompletionPercent(completedQuestionCount, assignedQuestionCount),
     accuracyPercent: totalAttempts > 0 ? Math.round((weightedCorrect / totalAttempts) * 100) : null,
     attempts: totalAttempts,
   };
@@ -301,6 +365,7 @@ async function loadQuickAssignData(
 
   const assignmentRows = (assignmentData ?? []) as QuickAssignmentRow[];
   const sectionIds = [...new Set(assignmentRows.map((row) => row.section_id).filter(Boolean) as string[])];
+  const questionInfoBySection = loadSectionQuestionInfo(sectionIds);
 
   const progressBySection = new Map<string, StudentProgressRow>();
   if (sectionIds.length > 0) {
@@ -325,14 +390,22 @@ async function loadQuickAssignData(
   }
 
   const attemptBySection = new Map<string, AttemptAggregate>();
+  const latestCorrectQuestionsBySection = new Map<string, Set<string>>();
   for (const sectionId of sectionIds) {
-    const { count: attemptCount, error: attemptError } = await ctx.adminClient
+    attemptBySection.set(sectionId, { section_id: sectionId, attempt_count: 0, correct_count: 0 });
+    latestCorrectQuestionsBySection.set(sectionId, new Set());
+  }
+
+  if (sectionIds.length > 0) {
+    const { data: attemptData, error: attemptError } = await ctx.adminClient
       .from("question_attempts")
-      .select("id", { count: "exact", head: true })
+      .select("section_id,question_id,correct,attempted_at")
       .eq("user_id", studentUserId)
       .eq("app_id", "regents-algebra")
       .eq("course_id", "algebra1")
-      .eq("section_id", sectionId);
+      .in("section_id", sectionIds)
+      .order("attempted_at", { ascending: false })
+      .limit(100000);
 
     if (attemptError) {
       throw new AdminClassroomManagementApiError(
@@ -341,27 +414,25 @@ async function loadQuickAssignData(
       );
     }
 
-    const { count: correctCount, error: correctError } = await ctx.adminClient
-      .from("question_attempts")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", studentUserId)
-      .eq("app_id", "regents-algebra")
-      .eq("course_id", "algebra1")
-      .eq("section_id", sectionId)
-      .eq("correct", true);
+    const latestSeenQuestions = new Set<string>();
+    for (const attempt of (attemptData ?? []) as QuestionAttemptRow[]) {
+      const sectionAttempts = attemptBySection.get(attempt.section_id);
+      if (sectionAttempts) {
+        sectionAttempts.attempt_count += 1;
+        if (attempt.correct) sectionAttempts.correct_count += 1;
+      }
 
-    if (correctError) {
-      throw new AdminClassroomManagementApiError(
-        correctError.message || "Failed to load Quick Assignment accuracy.",
-        500,
-      );
+      const sectionQuestionInfo = questionInfoBySection.get(attempt.section_id);
+      if (!sectionQuestionInfo?.questionIds.has(attempt.question_id)) continue;
+
+      const latestKey = `${attempt.section_id}:${attempt.question_id}`;
+      if (latestSeenQuestions.has(latestKey)) continue;
+      latestSeenQuestions.add(latestKey);
+
+      if (attempt.correct) {
+        latestCorrectQuestionsBySection.get(attempt.section_id)?.add(attempt.question_id);
+      }
     }
-
-    attemptBySection.set(sectionId, {
-      section_id: sectionId,
-      attempt_count: attemptCount ?? 0,
-      correct_count: correctCount ?? 0,
-    });
   }
 
   const allAssignments = assignmentRows.map((assignment): QuickAssignmentView => {
@@ -370,6 +441,12 @@ async function loadQuickAssignData(
     const attempts = assignment.section_id ? attemptBySection.get(assignment.section_id) : undefined;
     const attemptCount = attempts?.attempt_count ?? progress?.questions_attempted ?? 0;
     const correctCount = attempts?.correct_count ?? progress?.questions_correct ?? 0;
+    const assignedQuestionCount = assignment.section_id
+      ? questionInfoBySection.get(assignment.section_id)?.totalQuestions ?? 0
+      : 0;
+    const completedQuestionCount = assignment.section_id
+      ? latestCorrectQuestionsBySection.get(assignment.section_id)?.size ?? 0
+      : 0;
 
     return {
       id: assignment.id,
@@ -382,10 +459,12 @@ async function loadQuickAssignData(
       dueDate: assignment.due_date,
       createdAt: assignment.created_at,
       status: assignment.assignment_recipients?.[0]?.status ?? "assigned",
-      completionPercent: progress?.completion_percent ?? 0,
+      completionPercent: calculateCompletionPercent(completedQuestionCount, assignedQuestionCount),
       accuracyPercent:
         attemptCount > 0 ? Math.round((correctCount / attemptCount) * 100) : progress?.accuracy_percent ?? null,
       attempts: attemptCount,
+      assignedQuestionCount,
+      completedQuestionCount,
     };
   });
 
