@@ -97,7 +97,7 @@ export default function SignupForm() {
       <div>
         <label
           htmlFor="fullName"
-          className="mb-1 block text-sm font-medium text-black"
+          className="mb-1 block text-sm font-medium text-slate-800"
         >
           Full Name
         </label>
@@ -108,7 +108,7 @@ export default function SignupForm() {
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
           placeholder="Jane Doe"
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-black outline-none focus:border-blue-500"
+          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-slate-900 placeholder:text-slate-500 outline-none focus:border-blue-500"
           autoComplete="name"
         />
       </div>
@@ -116,7 +116,7 @@ export default function SignupForm() {
       <div>
         <label
           htmlFor="email"
-          className="mb-1 block text-sm font-medium text-black"
+          className="mb-1 block text-sm font-medium text-slate-800"
         >
           Email
         </label>
@@ -127,7 +127,7 @@ export default function SignupForm() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@example.com"
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-black outline-none focus:border-blue-500"
+          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-slate-900 placeholder:text-slate-500 outline-none focus:border-blue-500"
           autoComplete="email"
         />
       </div>
@@ -135,7 +135,7 @@ export default function SignupForm() {
       <div>
         <label
           htmlFor="password"
-          className="mb-1 block text-sm font-medium text-black"
+          className="mb-1 block text-sm font-medium text-slate-800"
         >
           Password
         </label>
@@ -146,18 +146,18 @@ export default function SignupForm() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="At least 6 characters"
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-black outline-none focus:border-blue-500"
+          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-slate-900 placeholder:text-slate-500 outline-none focus:border-blue-500"
           autoComplete="new-password"
         />
       </div>
 
       <div>
-        <label className="mb-2 block text-sm font-medium text-black">
+        <label className="mb-2 block text-sm font-medium text-slate-800">
           Account Type
         </label>
 
         <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
-          <label className="flex items-center gap-2 text-sm text-black">
+          <label className="flex items-center gap-2 text-sm text-slate-800">
             <input
               type="radio"
               name="accountType"
@@ -168,7 +168,7 @@ export default function SignupForm() {
             Student
           </label>
 
-          <label className="flex items-center gap-2 text-sm text-black">
+          <label className="flex items-center gap-2 text-sm text-slate-800">
             <input
               type="radio"
               name="accountType"
@@ -179,7 +179,7 @@ export default function SignupForm() {
             Teacher (requires approval)
           </label>
 
-          <label className="flex items-center gap-2 text-sm text-black">
+          <label className="flex items-center gap-2 text-sm text-slate-800">
             <input
               type="radio"
               name="accountType"

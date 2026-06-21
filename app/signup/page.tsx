@@ -5,16 +5,16 @@ import SignupForm from "../../src/components/auth/SignupForm";
 export default function SignupPage() {
   return (
     <main className="mx-auto flex min-h-[80vh] max-w-6xl items-center justify-center px-4 py-12">
-      <div className="w-full max-w-lg rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
-        <h1 className="mb-2 text-3xl font-bold">Create Your Account</h1>
+      <div className="w-full max-w-lg rounded-2xl border border-gray-200 bg-white p-8 text-slate-900 shadow-sm">
+        <h1 className="mb-2 text-3xl font-bold text-slate-900">Create Your Account</h1>
 
-        <p className="mb-6 text-sm text-gray-600">
+        <p className="mb-6 text-sm text-slate-700">
           Sign up for OrlandoMath Regents Tutor.
         </p>
 
         <SignupForm />
 
-        <p className="mt-6 text-sm text-gray-600">
+        <p className="mt-6 text-sm text-slate-700">
           Already have an account?{" "}
           <Link
             href="/login"
