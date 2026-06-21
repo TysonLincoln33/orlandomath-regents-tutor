@@ -95,7 +95,7 @@ type AssignmentAddCandidate = {
 type UserDirectoryRoleFilter = "all" | "student" | "teacher" | "admin";
 type UserDirectoryApprovalFilter = "all" | "approved" | "pending" | "denied";
 type UserDirectoryActivationFilter = "all" | "active" | "inactive";
-type StudentPanelMode = "overall" | "assign" | "assignment_summary";
+type StudentPanelMode = "whole_school" | "overall" | "assign" | "assignment_summary";
 
 function formatPercent(value: number | null | undefined) {
   return typeof value === "number" ? `${value}%` : "No data";
@@ -2467,7 +2467,7 @@ function WholeSchoolActivityPanel({
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <p className="text-sm font-bold uppercase tracking-wide text-blue-700">
-        Whole-school activity
+        Whole-School Activity
       </p>
       <h3 className="mt-1 text-2xl font-extrabold text-slate-950">
         Recent Regents Algebra 1 activity
@@ -3179,7 +3179,7 @@ export default function AdminDashboardPage() {
     null,
   );
   const [selectedStudentMode, setSelectedStudentMode] =
-    useState<StudentPanelMode | null>(null);
+    useState<StudentPanelMode>("whole_school");
   const [selectedAssignmentActivity, setSelectedAssignmentActivity] =
     useState<AdminDashboardActivity | null>(null);
   const [selectedManagedClassroomId, setSelectedManagedClassroomId] = useState<
@@ -3559,6 +3559,12 @@ export default function AdminDashboardPage() {
     setSelectedStudentMode("assignment_summary");
   };
 
+  const handleSelectWholeSchoolActivity = () => {
+    setSelectedStudentId(null);
+    setSelectedStudentMode("whole_school");
+    setSelectedAssignmentActivity(null);
+  };
+
   return (
     <main className="mx-auto min-h-[70vh] max-w-7xl px-4 py-10">
       <div className="rounded-3xl border border-blue-100 bg-white p-8 shadow-sm">
@@ -3635,7 +3641,16 @@ export default function AdminDashboardPage() {
                 onSelectAssign={(studentId) => handleSelectStudentPanel(studentId, "assign")}
               />
             </div>
-            <div>
+            <div className="space-y-4">
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={handleSelectWholeSchoolActivity}
+                  className="rounded-full bg-blue-600 px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-blue-700"
+                >
+                  Whole-School Activity
+                </button>
+              </div>
               {selectedStudentDetail && selectedStudentMode === "overall" ? (
                 <StudentDetailPanel
                   detail={selectedStudentDetail}
