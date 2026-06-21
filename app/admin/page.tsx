@@ -2415,8 +2415,9 @@ function AttemptsList({
           <p
             className={`font-semibold ${attempt.correct ? "text-emerald-950" : "text-rose-950"}`}
           >
-            {attempt.correct ? "Correct" : "Incorrect"} · {attempt.sectionTitle}
+            {attempt.correct ? "Correct" : "Incorrect"} · {attempt.chapterTitle}
           </p>
+          <p className="text-xs text-slate-600">{attempt.sectionTitle}</p>
           <p className="text-xs text-slate-500">
             {attempt.questionId ? `Question ${attempt.questionId} · ` : ""}
             {formatDateTime(attempt.attemptedAt)}
@@ -2505,7 +2506,7 @@ function StudentDetailPanel({
         )}
       </div>
       <div className="rounded-2xl bg-white p-4 shadow-sm">
-        <h4 className="font-bold text-slate-950">Recent Attempts</h4>
+        <h4 className="font-bold text-slate-950">Attempt History</h4>
         <AttemptsList attempts={detail.recentQuestionAttempts} />
       </div>
       <div className="rounded-2xl bg-white p-4 shadow-sm">
