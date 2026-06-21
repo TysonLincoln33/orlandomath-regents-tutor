@@ -66,7 +66,6 @@ type AttemptRow = {
   attempted_at: string | null;
 };
 
-const ACTIVE_ASSIGNMENT_RECIPIENT_STATUSES = new Set(["assigned", "completed", "excused"]);
 const ATTEMPT_HISTORY_LIMIT_PER_STUDENT = 1000;
 const ATTEMPT_HISTORY_PAGE_SIZE = 1000;
 
@@ -174,35 +173,41 @@ function getChapterTitle(chapterId: string | null | undefined, sectionId: string
 }
 
 
-function loadSectionQuestionCounts(sectionIds: string[]) {
-  const countsBySection = new Map<string, number>();
+function getQuestionKey(sectionId: string, questionId: string) {
+  return `${sectionId}:${questionId}`;
+}
 
-  for (const sectionId of sectionIds) {
+function loadCourseQuestionKeys() {
+  const questionKeys = new Set<string>();
+
+  for (const section of SECTIONS) {
     const filePath = path.join(
       process.cwd(),
       "public",
       "questions",
       "sections",
-      `${sectionId}.json`,
+      `${section.id}.json`,
     );
 
-    if (!fs.existsSync(filePath)) {
-      countsBySection.set(sectionId, 0);
-      continue;
-    }
+    if (!fs.existsSync(filePath)) continue;
 
     const parsed = JSON.parse(fs.readFileSync(filePath, "utf8")) as {
       questions?: Array<{ id?: unknown }>;
     };
-    countsBySection.set(sectionId, parsed.questions?.length ?? 0);
+
+    for (const question of parsed.questions ?? []) {
+      if (typeof question.id === "string" && question.id.trim()) {
+        questionKeys.add(getQuestionKey(section.id, question.id));
+      }
+    }
   }
 
-  return countsBySection;
+  return questionKeys;
 }
 
-function buildLatestCorrectQuestionsBySection(attemptRows: AttemptRow[]) {
+function countLatestCorrectCourseQuestions(attemptRows: AttemptRow[], courseQuestionKeys: Set<string>) {
   const latestSeenQuestions = new Set<string>();
-  const latestCorrectQuestionsBySection = new Map<string, Set<string>>();
+  let completedQuestionCount = 0;
 
   for (const attempt of [...attemptRows].sort(
     (left, right) =>
@@ -210,23 +215,19 @@ function buildLatestCorrectQuestionsBySection(attemptRows: AttemptRow[]) {
   )) {
     if (!attempt.section_id || !attempt.question_id) continue;
 
-    const latestKey = `${attempt.section_id}:${attempt.question_id}`;
-    if (latestSeenQuestions.has(latestKey)) continue;
-    latestSeenQuestions.add(latestKey);
+    const questionKey = getQuestionKey(attempt.section_id, attempt.question_id);
+    if (!courseQuestionKeys.has(questionKey) || latestSeenQuestions.has(questionKey)) continue;
 
-    if (attempt.correct === true) {
-      const sectionCorrect = latestCorrectQuestionsBySection.get(attempt.section_id) ?? new Set<string>();
-      sectionCorrect.add(attempt.question_id);
-      latestCorrectQuestionsBySection.set(attempt.section_id, sectionCorrect);
-    }
+    latestSeenQuestions.add(questionKey);
+    if (attempt.correct === true) completedQuestionCount += 1;
   }
 
-  return latestCorrectQuestionsBySection;
+  return completedQuestionCount;
 }
 
-function calculateQuestionCompletionPercent(completedQuestionCount: number, assignedQuestionCount: number) {
-  return assignedQuestionCount > 0
-    ? percentOrNull((completedQuestionCount / assignedQuestionCount) * 100)
+function calculateQuestionCompletionPercent(completedQuestionCount: number, totalQuestionCount: number) {
+  return totalQuestionCount > 0
+    ? percentOrNull((completedQuestionCount / totalQuestionCount) * 100)
     : null;
 }
 
@@ -295,6 +296,40 @@ async function selectAttemptHistory(
       countsByStudent.set(row.user_id, studentAttemptCount + 1);
       attempts.push(row);
     }
+
+    if (rows.length < ATTEMPT_HISTORY_PAGE_SIZE) {
+      return { data: attempts, error: null };
+    }
+  }
+}
+
+async function selectCompletionAttempts(
+  adminClient: SupabaseClient,
+  studentIds: string[],
+): Promise<{ data: AttemptRow[]; error: { message?: string } | null }> {
+  if (studentIds.length === 0) {
+    return { data: [], error: null };
+  }
+
+  const attempts: AttemptRow[] = [];
+
+  for (let from = 0; ; from += ATTEMPT_HISTORY_PAGE_SIZE) {
+    const to = from + ATTEMPT_HISTORY_PAGE_SIZE - 1;
+    const { data, error } = await adminClient
+      .from("question_attempts")
+      .select("user_id,chapter_id,section_id,question_id,correct,attempted_at")
+      .eq("app_id", "regents-algebra")
+      .eq("course_id", "algebra1")
+      .in("user_id", studentIds)
+      .order("attempted_at", { ascending: false })
+      .range(from, to);
+
+    if (error) {
+      return { data: attempts, error };
+    }
+
+    const rows = (data ?? []) as AttemptRow[];
+    attempts.push(...rows);
 
     if (rows.length < ATTEMPT_HISTORY_PAGE_SIZE) {
       return { data: attempts, error: null };
@@ -420,6 +455,7 @@ function buildDashboard({
   recipients,
   progressRows,
   attemptRows,
+  completionAttemptRows,
 }: {
   isMaster: boolean;
   domain: string | null;
@@ -431,6 +467,7 @@ function buildDashboard({
   recipients: AssignmentRecipientRow[];
   progressRows: ProgressRow[];
   attemptRows: AttemptRow[];
+  completionAttemptRows: AttemptRow[];
 }): AdminOrgDashboard {
   const classroomMap = new Map(classrooms.map((classroom) => [classroom.id, classroom]));
   const domainStudentIds = new Set(students.map((student) => student.id));
@@ -447,12 +484,14 @@ function buildDashboard({
   );
   const orgProgressRows = progressRows.filter((row) => domainStudentIds.has(row.user_id));
   const orgAttemptRows = attemptRows.filter((row) => domainStudentIds.has(row.user_id));
+  const orgCompletionAttemptRows = completionAttemptRows.filter((row) => domainStudentIds.has(row.user_id));
 
   const regentsStudentIds = new Set<string>();
   orgMemberships.forEach((membership) => regentsStudentIds.add(membership.user_id));
   orgRecipients.forEach((recipient) => regentsStudentIds.add(recipient.user_id));
   orgProgressRows.forEach((row) => regentsStudentIds.add(row.user_id));
   orgAttemptRows.forEach((row) => regentsStudentIds.add(row.user_id));
+  orgCompletionAttemptRows.forEach((row) => regentsStudentIds.add(row.user_id));
 
   const regentsStudents = students.filter((student) => regentsStudentIds.has(student.id));
   const studentIds = new Set(regentsStudents.map((student) => student.id));
@@ -460,6 +499,7 @@ function buildDashboard({
   const filteredRecipients = orgRecipients.filter((recipient) => studentIds.has(recipient.user_id));
   const filteredProgressRows = orgProgressRows.filter((row) => studentIds.has(row.user_id));
   const filteredAttemptRows = orgAttemptRows.filter((row) => studentIds.has(row.user_id));
+  const filteredCompletionAttemptRows = orgCompletionAttemptRows.filter((row) => studentIds.has(row.user_id));
 
   const regentsTeachers = teachers;
   const teacherMap = new Map(regentsTeachers.map((teacher) => [teacher.id, teacher]));
@@ -532,6 +572,7 @@ function buildDashboard({
 
   const progressByStudent = new Map<string, ProgressRow[]>();
   const attemptsByStudent = new Map<string, AttemptRow[]>();
+  const completionAttemptsByStudent = new Map<string, AttemptRow[]>();
 
   for (const row of filteredProgressRows) {
     progressByStudent.set(row.user_id, [...(progressByStudent.get(row.user_id) ?? []), row]);
@@ -541,48 +582,23 @@ function buildDashboard({
     attemptsByStudent.set(row.user_id, [...(attemptsByStudent.get(row.user_id) ?? []), row]);
   }
 
-  const assignedSectionIds = [
-    ...new Set(
-      assignments
-        .map((assignment) => assignment.section_id)
-        .filter((sectionId): sectionId is string => Boolean(sectionId)),
-    ),
-  ];
-  const questionCountsBySection = loadSectionQuestionCounts(assignedSectionIds);
-  const latestCorrectQuestionsByStudent = new Map<string, Map<string, Set<string>>>();
-
-  for (const student of regentsStudents) {
-    latestCorrectQuestionsByStudent.set(
-      student.id,
-      buildLatestCorrectQuestionsBySection(attemptsByStudent.get(student.id) ?? []),
-    );
+  for (const row of filteredCompletionAttemptRows) {
+    completionAttemptsByStudent.set(row.user_id, [
+      ...(completionAttemptsByStudent.get(row.user_id) ?? []),
+      row,
+    ]);
   }
 
-  const activeRecipientsForStudent = (studentId: string) =>
-    (recipientsByStudent.get(studentId) ?? []).filter((recipient) => {
-      const assignment = assignmentMap.get(recipient.assignment_id);
-      return Boolean(
-        assignment?.section_id &&
-          !assignment.archived_at &&
-          ACTIVE_ASSIGNMENT_RECIPIENT_STATUSES.has(recipient.status ?? "assigned"),
-      );
-    });
-
-  const activeAssignedQuestionCompletionForStudent = (studentId: string) => {
-    const latestCorrectQuestionsBySection = latestCorrectQuestionsByStudent.get(studentId) ?? new Map();
-    let assignedQuestionCount = 0;
-    let completedQuestionCount = 0;
-
-    for (const recipient of activeRecipientsForStudent(studentId)) {
-      const assignment = assignmentMap.get(recipient.assignment_id);
-      if (!assignment?.section_id) continue;
-
-      assignedQuestionCount += questionCountsBySection.get(assignment.section_id) ?? 0;
-      completedQuestionCount += latestCorrectQuestionsBySection.get(assignment.section_id)?.size ?? 0;
-    }
-
-    return calculateQuestionCompletionPercent(completedQuestionCount, assignedQuestionCount);
-  };
+  const courseQuestionKeys = loadCourseQuestionKeys();
+  const totalCourseQuestionCount = courseQuestionKeys.size;
+  const courseCompletionForStudent = (studentId: string) =>
+    calculateQuestionCompletionPercent(
+      countLatestCorrectCourseQuestions(
+        completionAttemptsByStudent.get(studentId) ?? [],
+        courseQuestionKeys,
+      ),
+      totalCourseQuestionCount,
+    );
 
   const studentMetrics = new Map<
     string,
@@ -602,7 +618,7 @@ function buildDashboard({
     const attempted = studentAttempts.length;
     const correct = studentAttempts.filter((attempt) => attempt.correct === true).length;
     const incorrect = studentAttempts.filter((attempt) => attempt.correct === false).length;
-    const completion = activeAssignedQuestionCompletionForStudent(student.id);
+    const completion = courseCompletionForStudent(student.id);
     const progressAccuracy = averagePercent(
       studentProgress.map((row) => toNumber(row.accuracy_percent)),
     );
@@ -737,7 +753,7 @@ function buildDashboard({
         emailDomain: effectiveDomain(student),
         isActive: student.is_active === true,
         classroomCount: membershipsByStudent.get(student.id)?.length ?? 0,
-        assignedWorkCount: activeRecipientsForStudent(student.id).length,
+        assignedWorkCount: recipientsByStudent.get(student.id)?.length ?? 0,
         completionPercent: metrics?.completion ?? null,
         accuracyPercent: metrics?.accuracy ?? null,
         lastActivityAt: metrics?.lastActivityAt ?? null,
@@ -867,7 +883,6 @@ function buildDashboard({
       const metrics = studentMetrics.get(student.id);
       const studentMemberships = membershipsByStudent.get(student.id) ?? [];
       const studentRecipients = recipientsByStudent.get(student.id) ?? [];
-      const activeStudentRecipients = activeRecipientsForStudent(student.id);
       const studentAttempts = attemptsByStudent.get(student.id) ?? [];
       const detailClassrooms = studentMemberships
         .map((membership) => {
@@ -948,7 +963,7 @@ function buildDashboard({
           fullName: student.full_name,
           email: student.email,
           classrooms: detailClassrooms,
-          assignedWorkCount: activeStudentRecipients.length,
+          assignedWorkCount: studentRecipients.length,
           overallCompletion: metrics?.completion ?? null,
           overallAccuracy: metrics?.accuracy ?? null,
           totalQuestionAttempts: metrics?.totalAttempts ?? 0,
@@ -1103,8 +1118,13 @@ export async function GET(req: NextRequest) {
       visibleTeachers = [...teachers, ...data];
     }
 
-    const [membershipsResponse, assignmentsResponse, progressResponse, attemptsResponse] =
-      await Promise.all([
+    const [
+      membershipsResponse,
+      assignmentsResponse,
+      progressResponse,
+      attemptsResponse,
+      completionAttemptsResponse,
+    ] = await Promise.all([
         selectIn<ClassroomMemberRow>(
           adminClient.from("classroom_members").select("classroom_id,user_id"),
           "classroom_id",
@@ -1128,6 +1148,7 @@ export async function GET(req: NextRequest) {
           studentIds,
         ),
         selectAttemptHistory(adminClient, studentIds),
+        selectCompletionAttempts(adminClient, studentIds),
       ]);
 
     for (const response of [
@@ -1135,6 +1156,7 @@ export async function GET(req: NextRequest) {
       assignmentsResponse,
       progressResponse,
       attemptsResponse,
+      completionAttemptsResponse,
     ]) {
       if (response.error) {
         throw new Error(response.error.message || "Failed to load dashboard data.");
@@ -1169,6 +1191,7 @@ export async function GET(req: NextRequest) {
       recipients,
       progressRows: progressResponse.data,
       attemptRows: attemptsResponse.data,
+      completionAttemptRows: completionAttemptsResponse.data,
     });
 
     return NextResponse.json(payload);
