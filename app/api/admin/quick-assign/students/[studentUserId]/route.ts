@@ -390,7 +390,16 @@ async function loadQuickAssignData(
   });
 
   const activeAssignments = allAssignments.filter((assignment) => assignment.status !== "archived");
-  const archivedAssignments = allAssignments.filter((assignment) => assignment.status === "archived");
+  const activeSectionIds = new Set(
+    activeAssignments
+      .map((assignment) => assignment.sectionId)
+      .filter((sectionId): sectionId is string => Boolean(sectionId)),
+  );
+  const archivedAssignments = allAssignments.filter(
+    (assignment) =>
+      assignment.status === "archived" &&
+      (!assignment.sectionId || !activeSectionIds.has(assignment.sectionId)),
+  );
   const activeMetrics = buildQuickAssignMetrics(activeAssignments);
   const archivedMetrics = buildQuickAssignMetrics(archivedAssignments);
   const activeChapterGroups = buildQuickAssignChapters(activeAssignments);
