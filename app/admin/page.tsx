@@ -3212,7 +3212,7 @@ export default function AdminDashboardPage() {
     });
 
     return () => window.cancelAnimationFrame(animationFrameId);
-  }, [selectedStudentMode, selectedAssignmentActivity?.id]);
+  }, [selectedStudentMode, selectedAssignmentActivity]);
 
   const loadClassroomManagement = useCallback(
     async (classroomId?: string | null, search?: string) => {
