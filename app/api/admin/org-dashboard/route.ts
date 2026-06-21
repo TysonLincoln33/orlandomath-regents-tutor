@@ -63,6 +63,7 @@ type AttemptRow = {
   attempted_at: string | null;
 };
 
+const INACTIVE_ASSIGNMENT_RECIPIENT_STATUSES = new Set(["archived", "unassigned", "excused"]);
 const ATTEMPT_HISTORY_LIMIT_PER_STUDENT = 1000;
 const ATTEMPT_HISTORY_PAGE_SIZE = 1000;
 
@@ -403,6 +404,7 @@ function buildDashboard({
   const regentsTeachers = teachers;
   const teacherMap = new Map(regentsTeachers.map((teacher) => [teacher.id, teacher]));
   const studentMap = new Map(regentsStudents.map((student) => [student.id, student]));
+  const assignmentMap = new Map(assignments.map((assignment) => [assignment.id, assignment]));
 
   const membershipsByClassroom = new Map<string, ClassroomMemberRow[]>();
   const membershipsByStudent = new Map<string, ClassroomMemberRow[]>();
@@ -479,6 +481,31 @@ function buildDashboard({
     attemptsByStudent.set(row.user_id, [...(attemptsByStudent.get(row.user_id) ?? []), row]);
   }
 
+  const activeAssignedSectionCompletionForStudent = (studentId: string) => {
+    const studentProgressBySection = new Map(
+      (progressByStudent.get(studentId) ?? []).map((row) => [
+        row.section_id,
+        toNumber(row.completion_percent),
+      ]),
+    );
+    const completionValues = (recipientsByStudent.get(studentId) ?? [])
+      .map((recipient) => {
+        const assignment = assignmentMap.get(recipient.assignment_id);
+        if (
+          !assignment?.section_id ||
+          assignment.archived_at ||
+          INACTIVE_ASSIGNMENT_RECIPIENT_STATUSES.has(recipient.status ?? "")
+        ) {
+          return null;
+        }
+
+        return studentProgressBySection.get(assignment.section_id) ?? 0;
+      })
+      .filter((value): value is number => typeof value === "number");
+
+    return averagePercent(completionValues);
+  };
+
   const studentMetrics = new Map<
     string,
     {
@@ -497,9 +524,7 @@ function buildDashboard({
     const attempted = studentAttempts.length;
     const correct = studentAttempts.filter((attempt) => attempt.correct === true).length;
     const incorrect = studentAttempts.filter((attempt) => attempt.correct === false).length;
-    const completion = averagePercent(
-      studentProgress.map((row) => toNumber(row.completion_percent)),
-    );
+    const completion = activeAssignedSectionCompletionForStudent(student.id);
     const progressAccuracy = averagePercent(
       studentProgress.map((row) => toNumber(row.accuracy_percent)),
     );
@@ -764,7 +789,6 @@ function buildDashboard({
       const metrics = studentMetrics.get(student.id);
       const studentMemberships = membershipsByStudent.get(student.id) ?? [];
       const studentRecipients = recipientsByStudent.get(student.id) ?? [];
-      const studentProgress = progressByStudent.get(student.id) ?? [];
       const studentAttempts = attemptsByStudent.get(student.id) ?? [];
       const detailClassrooms = studentMemberships
         .map((membership) => {
@@ -793,21 +817,47 @@ function buildDashboard({
           attemptedAt: attempt.attempted_at,
         }));
       const assignmentActivity = studentRecipients.map((recipient) => {
-        const assignment = assignments.find((item) => item.id === recipient.assignment_id);
+        const assignment = assignmentMap.get(recipient.assignment_id);
+        const sectionTitle = assignment?.section_id ? getSectionTitle(assignment.section_id) : null;
+        const chapterTitle = assignment?.section_id
+          ? getChapterTitle(null, assignment.section_id)
+          : null;
+        const sectionAttempts = assignment?.section_id
+          ? studentAttempts.filter((attempt) => attempt.section_id === assignment.section_id)
+          : [];
+        const correctAttempts = sectionAttempts.filter((attempt) => attempt.correct === true).length;
+        const incorrectAttempts = sectionAttempts.filter((attempt) => attempt.correct === false).length;
+        const metrics = assignment
+          ? assignmentMetricsForStudent(student.id, assignment.section_id)
+          : null;
+        const status = recipient.status ?? "assigned";
+        const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
+        const detailParts = [
+          statusLabel,
+          chapterTitle,
+          sectionTitle,
+        ].filter(Boolean);
+
         return {
           type: "assignment" as const,
-          label: assignment?.title ?? "Assignment",
-          detail: `${recipient.status ?? "assigned"}${assignment?.section_id ? ` · ${getSectionTitle(assignment.section_id)}` : ""}`,
-          occurredAt: recipient.assigned_at,
+          label: assignment?.title ?? sectionTitle ?? "Assignment",
+          detail: detailParts.join(" · "),
+          occurredAt: recipient.completed_at ?? recipient.assigned_at,
+          assignmentId: assignment?.id ?? recipient.assignment_id,
+          sectionId: assignment?.section_id ?? null,
+          sectionTitle,
+          chapterTitle,
+          status,
+          assignedAt: recipient.assigned_at,
+          completedAt: recipient.completed_at,
+          completionPercent: metrics?.completion ?? 0,
+          accuracyPercent: metrics?.accuracy ?? null,
+          attempts: sectionAttempts.length,
+          correctAttempts,
+          incorrectAttempts,
         };
       });
-      const progressActivity = studentProgress.map((progress) => ({
-        type: "progress" as const,
-        label: getSectionTitle(progress.section_id),
-        detail: `${percentOrNull(toNumber(progress.completion_percent)) ?? 0}% complete`,
-        occurredAt: progress.last_active_at,
-      }));
-      const recentActivity = [...assignmentActivity, ...progressActivity]
+      const recentActivity = assignmentActivity
         .sort((left, right) =>
           new Date(right.occurredAt ?? 0).getTime() - new Date(left.occurredAt ?? 0).getTime(),
         );

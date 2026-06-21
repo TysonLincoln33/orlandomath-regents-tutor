@@ -126,6 +126,18 @@ export type AdminDashboardActivity = {
   label: string;
   detail: string;
   occurredAt: string | null;
+  assignmentId?: string | null;
+  sectionId?: string | null;
+  sectionTitle?: string | null;
+  chapterTitle?: string | null;
+  status?: string | null;
+  assignedAt?: string | null;
+  completedAt?: string | null;
+  completionPercent?: number | null;
+  accuracyPercent?: number | null;
+  attempts?: number;
+  correctAttempts?: number;
+  incorrectAttempts?: number;
   studentId?: string;
   studentName?: string | null;
   studentEmail?: string | null;

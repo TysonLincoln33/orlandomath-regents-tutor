@@ -199,9 +199,9 @@ function buildQuickAssignChapters(assignments: QuickAssignmentView[]) {
 
     if (chapterAssignments.length === 0) return null;
 
-    const chapterCompletions = chapterAssignments
-      .map((assignment) => assignment.completionPercent)
-      .filter((value): value is number => typeof value === "number");
+    const chapterCompletions = chapterAssignments.map(
+      (assignment) => assignment.completionPercent ?? 0,
+    );
     const chapterAttempts = chapterAssignments.reduce((sum, assignment) => sum + assignment.attempts, 0);
     const chapterWeightedCorrect = chapterAssignments.reduce((sum, assignment) => {
       if (typeof assignment.accuracyPercent !== "number" || assignment.attempts === 0) return sum;
@@ -228,9 +228,7 @@ function buildQuickAssignChapters(assignments: QuickAssignmentView[]) {
 function buildQuickAssignMetrics(assignments: QuickAssignmentView[]) {
   const chapters = new Set(assignments.map((assignment) => assignment.chapterId).filter(Boolean));
   const sectionIds = new Set(assignments.map((assignment) => assignment.sectionId).filter(Boolean));
-  const completions = assignments
-    .map((assignment) => assignment.completionPercent)
-    .filter((value): value is number => typeof value === "number");
+  const completions = assignments.map((assignment) => assignment.completionPercent ?? 0);
   const totalAttempts = assignments.reduce((sum, assignment) => sum + assignment.attempts, 0);
   const weightedCorrect = assignments.reduce((sum, assignment) => {
     if (typeof assignment.accuracyPercent !== "number" || assignment.attempts === 0) return sum;
@@ -384,7 +382,7 @@ async function loadQuickAssignData(
       dueDate: assignment.due_date,
       createdAt: assignment.created_at,
       status: assignment.assignment_recipients?.[0]?.status ?? "assigned",
-      completionPercent: progress?.completion_percent ?? null,
+      completionPercent: progress?.completion_percent ?? 0,
       accuracyPercent:
         attemptCount > 0 ? Math.round((correctCount / attemptCount) * 100) : progress?.accuracy_percent ?? null,
       attempts: attemptCount,
