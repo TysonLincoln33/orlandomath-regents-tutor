@@ -13,13 +13,16 @@ export default function LoginForm() {
   const [password, setPassword] = useState("");
 
   const [loading, setLoading] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
     setLoading(true);
     setError("");
+    setSuccess("");
 
     try {
       const trimmedEmail = email.trim().toLowerCase();
@@ -52,6 +55,43 @@ export default function LoginForm() {
     }
   }
 
+  async function handlePasswordReset() {
+    setResetLoading(true);
+    setError("");
+    setSuccess("");
+
+    try {
+      const trimmedEmail = email.trim().toLowerCase();
+
+      if (!trimmedEmail) {
+        throw new Error("Please enter your email before requesting a password reset.");
+      }
+
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(
+        trimmedEmail,
+        {
+          redirectTo: `${window.location.origin}/reset-password`,
+        }
+      );
+
+      if (resetError) {
+        throw resetError;
+      }
+
+      setSuccess(
+        "If an account exists for that email, a password reset link has been sent."
+      );
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Something went wrong while requesting a password reset.";
+      setError(message);
+    } finally {
+      setResetLoading(false);
+    }
+  }
+
   return (
     <form onSubmit={handleSubmit} className="w-full max-w-md space-y-4">
       <div>
@@ -71,9 +111,20 @@ export default function LoginForm() {
       </div>
 
       <div>
-        <label htmlFor="password" className="mb-1 block text-sm font-medium text-slate-800">
-          Password
-        </label>
+        <div className="mb-1 flex items-center justify-between gap-3">
+          <label htmlFor="password" className="block text-sm font-medium text-slate-800">
+            Password
+          </label>
+
+          <button
+            type="button"
+            onClick={handlePasswordReset}
+            disabled={resetLoading || loading}
+            className="text-sm font-medium text-blue-600 hover:underline disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {resetLoading ? "Sending..." : "Forgot password?"}
+          </button>
+        </div>
 
         <input
           id="password"
@@ -85,6 +136,12 @@ export default function LoginForm() {
           autoComplete="current-password"
         />
       </div>
+
+      {success && (
+        <div className="rounded-lg border border-green-300 bg-green-50 px-3 py-2 text-sm text-green-700">
+          {success}
+        </div>
+      )}
 
       {error && (
         <div className="rounded-lg border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700">
