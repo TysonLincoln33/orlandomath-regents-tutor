@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
-import BookTutoringCTA from '@/components/BookTutoringCTA';
 import SaveProgressModal from '@/components/SaveProgressModal';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import {
@@ -149,10 +148,7 @@ export default function TopNav() {
 
               <div className="hidden md:flex items-center justify-end gap-3 lg:gap-4 xl:gap-5">
 
-                <BookTutoringCTA
-                  variant="secondary"
-                  className="!px-5 !py-3 !text-lg !font-bold shadow-lg"
-                />
+                {/* Book Tutoring temporarily hidden during school rollout. Restore after commercial relaunch. */}
 
                 {isAuthenticated && (
                   <span className="om-navlink whitespace-nowrap">
@@ -239,10 +235,7 @@ export default function TopNav() {
 
               <div className="flex md:hidden items-center gap-2">
 
-                <BookTutoringCTA
-                  variant="secondary"
-                  className="!px-4 !py-2.5 !text-sm !font-bold shadow-lg whitespace-nowrap"
-                />
+                {/* Book Tutoring temporarily hidden during school rollout. Restore after commercial relaunch. */}
 
                 <button
                   type="button"
