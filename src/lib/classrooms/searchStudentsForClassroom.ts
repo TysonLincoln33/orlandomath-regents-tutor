@@ -1,6 +1,10 @@
 // src/lib/classrooms/searchStudentsForClassroom.ts
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import { isTeacherLikeRole } from "@/lib/auth/roles";
+import {
+  getEmailDomain,
+  isMasterRole,
+  isTeacherLikeRole,
+} from "@/lib/auth/roles";
 
 export type SearchStudentResult = {
   id: string;
@@ -15,6 +19,8 @@ type ProfileRow = {
   full_name: string | null;
   email: string | null;
   role: string | null;
+  email_domain?: string | null;
+  is_active?: boolean | null;
 };
 
 type ClassroomMemberRow = {
@@ -48,7 +54,7 @@ export async function searchStudentsForClassroom(
 
   const { data: teacherProfile, error: teacherProfileError } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, email, email_domain")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -80,20 +86,33 @@ export async function searchStudentsForClassroom(
   }
 
   const likeTerm = `%${searchTerm}%`;
+  const teacherDomain =
+    teacherProfile.email_domain ?? getEmailDomain(teacherProfile.email);
+  const isMaster = isMasterRole(teacherProfile.role);
 
-  const { data: profiles, error: profilesError } = await supabase
+  const profilesQuery = supabase
     .from("profiles")
-    .select("id, full_name, email, role")
+    .select("id, full_name, email, role, email_domain, is_active")
     .eq("role", "student")
+    .eq("is_active", true)
     .or(`full_name.ilike.${likeTerm},email.ilike.${likeTerm}`)
     .order("full_name", { ascending: true })
-    .limit(25);
+    .limit(isMaster ? 25 : 100);
+
+  const { data: profiles, error: profilesError } = await profilesQuery;
 
   if (profilesError) {
     throw new Error(profilesError.message || "Failed to search students.");
   }
 
-  const students = (profiles ?? []) as ProfileRow[];
+  const students = ((profiles ?? []) as ProfileRow[])
+    .filter((student) => {
+      if (isMaster) return true;
+      return (
+        (student.email_domain ?? getEmailDomain(student.email)) === teacherDomain
+      );
+    })
+    .slice(0, 25);
 
   if (students.length === 0) {
     return [];

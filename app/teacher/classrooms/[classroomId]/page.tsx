@@ -47,6 +47,7 @@ import {
   type TeacherStudentAssignment,
   type TeacherStudentAssignmentGroups,
 } from "@/lib/classrooms/getTeacherStudentAssignments";
+import { groupMasterAssignmentRows } from "@/lib/master/masterAssignments";
 import type { Classroom } from "@/types/classroom";
 
 type PageProps = {
@@ -332,6 +333,30 @@ export default function ClassroomDetailPage({ params }: PageProps) {
   const archivedAssignments = useMemo(
     () => assignments.filter((assignment) => assignment.archived_at),
     [assignments],
+  );
+
+  const activeAssignmentGroupCount = useMemo(
+    () =>
+      groupMasterAssignmentRows(
+        activeAssignments.map((assignment) => ({
+          ...assignment,
+          updated_at: assignment.updated_at ?? null,
+          archived_at: assignment.archived_at ?? null,
+        })),
+      ).length,
+    [activeAssignments],
+  );
+
+  const archivedAssignmentGroupCount = useMemo(
+    () =>
+      groupMasterAssignmentRows(
+        archivedAssignments.map((assignment) => ({
+          ...assignment,
+          updated_at: assignment.updated_at ?? null,
+          archived_at: assignment.archived_at ?? null,
+        })),
+      ).length,
+    [archivedAssignments],
   );
 
   const handleCopy = async (value: string, type: "code" | "link") => {
@@ -962,55 +987,66 @@ export default function ClassroomDetailPage({ params }: PageProps) {
 
       {!loading && !error && classroom && (
         <>
-          <section className="bg-white rounded-xl shadow border border-gray-200 p-6 space-y-6">
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-              <div>
-                <p className="text-sm font-medium uppercase tracking-wide text-blue-700">
-                  {classroom.subject || "Subject not set"}
-                </p>
-                <h2 className="mt-1 text-3xl font-bold text-gray-900">
-                  {classroom.name}
-                </h2>
-                <p className="mt-2 text-sm text-gray-600">
-                  Term: {classroom.term || "Not set"}
-                </p>
-              </div>
-
-              <div className="grid gap-3 sm:grid-cols-2 lg:min-w-[420px]">
-                <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    Class Code
-                  </p>
-                  <div className="mt-2 flex items-center gap-2">
-                    <span className="font-mono text-lg font-bold text-gray-900">
-                      {classroom.class_code}
+          <section className="overflow-hidden rounded-2xl border border-blue-100 bg-white shadow-xl shadow-blue-950/10">
+            <div className="border-b border-blue-100 bg-gradient-to-r from-blue-50 via-white to-cyan-50 px-6 py-5">
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-700">
+                Classroom identity
+              </p>
+              <div className="mt-3 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+                <div>
+                  <h2 className="text-3xl font-black tracking-tight text-gray-950">
+                    {classroom.name}
+                  </h2>
+                  <div className="mt-3 flex flex-wrap gap-2 text-sm font-semibold">
+                    <span className="rounded-full bg-blue-100 px-3 py-1 text-blue-800">
+                      {classroom.subject || "Subject not set"}
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => handleCopy(classroom.class_code, "code")}
-                      className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100"
-                    >
-                      {copied === "code" ? "Copied" : "Copy"}
-                    </button>
+                    <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-700">
+                      Term: {classroom.term || "Not set"}
+                    </span>
                   </div>
                 </div>
+                <p className="max-w-xl text-sm leading-6 text-slate-600">
+                  Share the class code or join link with registered students so
+                  they can enter this classroom.
+                </p>
+              </div>
+            </div>
 
-                <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    Join Link
+            <div className="grid gap-4 p-6 lg:grid-cols-[0.8fr_1.2fr]">
+              <div className="rounded-2xl border-2 border-blue-200 bg-blue-50 p-5 shadow-inner">
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-blue-700">
+                  Class Code
+                </p>
+                <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <span className="rounded-xl bg-white px-4 py-3 font-mono text-3xl font-black tracking-widest text-blue-950 shadow-sm ring-1 ring-blue-100">
+                    {classroom.class_code}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleCopy(classroom.class_code, "code")}
+                    className="rounded-xl bg-blue-700 px-4 py-3 text-sm font-bold text-white shadow-sm hover:bg-blue-800"
+                  >
+                    {copied === "code" ? "Copied" : "Copy Code"}
+                  </button>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border-2 border-slate-200 bg-slate-50 p-5">
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-600">
+                  Join Link
+                </p>
+                <div className="mt-3 flex flex-col gap-3 xl:flex-row xl:items-center">
+                  <p className="min-w-0 flex-1 break-all rounded-xl bg-white px-4 py-3 text-sm font-semibold text-slate-800 ring-1 ring-slate-200">
+                    {joinLink || "Join link will appear here."}
                   </p>
-                  <div className="mt-2 space-y-2">
-                    <p className="break-all text-sm text-gray-700">
-                      {joinLink || "Join link will appear here."}
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => handleCopy(joinLink, "link")}
-                      className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100"
-                    >
-                      {copied === "link" ? "Copied" : "Copy Link"}
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleCopy(joinLink, "link")}
+                    className="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-bold text-slate-800 shadow-sm hover:bg-slate-100"
+                  >
+                    {copied === "link" ? "Copied" : "Copy Link"}
+                  </button>
                 </div>
               </div>
             </div>
@@ -1019,90 +1055,51 @@ export default function ClassroomDetailPage({ params }: PageProps) {
           <WorkspaceTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
           {activeTab === "classroom" && (
-            <section className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-              <div className="bg-white rounded-xl shadow border border-gray-200 p-6">
-                <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">
-                  Classroom Command Center
-                </p>
-                <h3 className="mt-2 text-xl font-bold text-gray-900">
-                  {classroom.name}
-                </h3>
-                <p className="mt-2 text-sm text-gray-600">
-                  Use this workspace to share access, manage students, create
-                  assignments, and review Regents Algebra 1 progress.
-                </p>
-
-                <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                  <WorkspaceSummaryCard
-                    label="Students"
-                    value={roster.length}
-                    helper={`${roster.length === 1 ? "student" : "students"} on roster`}
-                  />
-                  <WorkspaceSummaryCard
-                    label="Active Assignments"
-                    value={activeAssignments.length}
-                    helper="ready for student work"
-                  />
-                  <WorkspaceSummaryCard
-                    label="Archived"
-                    value={archivedAssignments.length}
-                    helper="stored assignment records"
-                  />
-                  <WorkspaceSummaryCard
-                    label="Progress"
-                    value={classProgress?.summary.studentsWithProgress ?? 0}
-                    helper="students with visible activity"
-                  />
+            <section className="rounded-3xl border border-blue-200 bg-white p-6 shadow-2xl shadow-blue-950/20 lg:p-8">
+              <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+                <div className="max-w-3xl">
+                  <p className="text-xs font-black uppercase tracking-[0.2em] text-blue-700">
+                    Classroom Command Center
+                  </p>
+                  <h3 className="mt-3 text-3xl font-black tracking-tight text-gray-950">
+                    {classroom.name}
+                  </h3>
+                  <p className="mt-3 max-w-2xl text-base leading-7 text-gray-700">
+                    Use this workspace to share access, manage students, create
+                    assignments, and review Regents Algebra 1 progress.
+                  </p>
+                </div>
+                <div className="rounded-2xl bg-blue-950 px-5 py-4 text-white shadow-lg">
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-200">
+                    Primary panel
+                  </p>
+                  <p className="mt-1 text-sm font-semibold text-white/90">
+                    Classroom tools and status at a glance
+                  </p>
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <div className="bg-white rounded-xl shadow border border-gray-200 p-6">
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    Quick Actions
-                  </h3>
-                  <div className="mt-4 grid gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleCopy(classroom.class_code, "code")}
-                      className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-left text-sm font-semibold text-gray-700 hover:bg-gray-100"
-                    >
-                      {copied === "code"
-                        ? "Class code copied"
-                        : "Copy class code"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleCopy(joinLink, "link")}
-                      className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-left text-sm font-semibold text-gray-700 hover:bg-gray-100"
-                    >
-                      {copied === "link"
-                        ? "Join link copied"
-                        : "Copy join link"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab("students")}
-                      className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-left text-sm font-semibold text-blue-700 hover:bg-blue-100"
-                    >
-                      Manage students
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab("assignments")}
-                      className="rounded-lg border border-purple-200 bg-purple-50 px-4 py-2 text-left text-sm font-semibold text-purple-700 hover:bg-purple-100"
-                    >
-                      Manage assignments
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab("progress")}
-                      className="rounded-lg border border-green-200 bg-green-50 px-4 py-2 text-left text-sm font-semibold text-green-700 hover:bg-green-100"
-                    >
-                      Review progress
-                    </button>
-                  </div>
-                </div>
+              <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <WorkspaceSummaryCard
+                  label="Students"
+                  value={roster.length}
+                  helper={`${roster.length === 1 ? "student" : "students"} on roster`}
+                />
+                <WorkspaceSummaryCard
+                  label="Active Assignments"
+                  value={activeAssignmentGroupCount}
+                  helper="grouped assignment sets ready for work"
+                />
+                <WorkspaceSummaryCard
+                  label="Archived"
+                  value={archivedAssignmentGroupCount}
+                  helper="grouped assignment records stored"
+                />
+                <WorkspaceSummaryCard
+                  label="Progress"
+                  value={classProgress?.summary.studentsWithProgress ?? 0}
+                  helper="students with visible activity"
+                />
               </div>
             </section>
           )}
@@ -1799,12 +1796,12 @@ function WorkspaceSummaryCard({
   helper: string;
 }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+    <div className="rounded-2xl border border-blue-100 bg-gradient-to-br from-slate-50 to-white p-5 shadow-sm">
+      <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-500">
         {label}
       </p>
-      <p className="mt-2 text-2xl font-bold text-gray-900">{value}</p>
-      <p className="mt-1 text-xs text-gray-600">{helper}</p>
+      <p className="mt-3 text-4xl font-black tracking-tight text-gray-950">{value}</p>
+      <p className="mt-2 text-sm font-medium leading-5 text-gray-600">{helper}</p>
     </div>
   );
 }
