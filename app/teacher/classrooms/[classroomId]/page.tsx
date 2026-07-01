@@ -61,6 +61,11 @@ type AssignmentProgressContext = {
 };
 
 type ProgressPanelMode = "class" | "overall" | "assignment";
+type ClassroomWorkspaceTab =
+  | "classroom"
+  | "students"
+  | "assignments"
+  | "progress";
 
 function getErrorMessage(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback;
@@ -121,6 +126,8 @@ export default function ClassroomDetailPage({ params }: PageProps) {
   >(null);
   const [assignmentProgressContext, setAssignmentProgressContext] =
     useState<AssignmentProgressContext | null>(null);
+  const [activeTab, setActiveTab] =
+    useState<ClassroomWorkspaceTab>("classroom");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<"code" | "link" | null>(null);
@@ -521,6 +528,7 @@ export default function ClassroomDetailPage({ params }: PageProps) {
     try {
       setSelectedProgressStudentId(member.user_id);
       setAssignmentProgressContext(null);
+      setActiveTab("progress");
       setStudentProgress(null);
       setStudentProgressError(null);
       setStudentProgressLoading(true);
@@ -561,7 +569,10 @@ export default function ClassroomDetailPage({ params }: PageProps) {
         classroomId,
         userId,
       );
-      setStudentAssignmentsByUserId((prev) => ({ ...prev, [userId]: groupedAssignments }));
+      setStudentAssignmentsByUserId((prev) => ({
+        ...prev,
+        [userId]: groupedAssignments,
+      }));
     } catch (err) {
       console.error(err);
       setStudentAssignmentsError(
@@ -580,54 +591,61 @@ export default function ClassroomDetailPage({ params }: PageProps) {
       (item) => item.id === assignment.assignmentId,
     );
     return (
-    <div key={assignment.assignmentId} className="rounded-lg border border-gray-200 bg-white p-2">
-      <p className="truncate text-xs font-semibold text-gray-900">{assignment.title}</p>
-      <p className="mt-1 text-[11px] text-gray-600 truncate">
-        {getSectionLabel(assignment.sectionId)}
-      </p>
-      <div className="mt-1 grid grid-cols-2 gap-1 text-[11px] text-gray-600">
-        <span>Status: {assignment.status}</span>
-        <span>{assignment.completionPercent}% complete</span>
+      <div
+        key={assignment.assignmentId}
+        className="rounded-lg border border-gray-200 bg-white p-2"
+      >
+        <p className="truncate text-xs font-semibold text-gray-900">
+          {assignment.title}
+        </p>
+        <p className="mt-1 text-[11px] text-gray-600 truncate">
+          {getSectionLabel(assignment.sectionId)}
+        </p>
+        <div className="mt-1 grid grid-cols-2 gap-1 text-[11px] text-gray-600">
+          <span>Status: {assignment.status}</span>
+          <span>{assignment.completionPercent}% complete</span>
+        </div>
+        <p className="mt-1 text-[11px] text-gray-600">
+          Due: {formatAssignmentDate(assignment.dueDate)}
+        </p>
+        <div className="mt-2 flex flex-wrap gap-1">
+          <button
+            type="button"
+            disabled={!assignmentRecord}
+            onClick={() =>
+              handleViewRecipientAssignmentDetails(
+                assignmentRecord as ClassroomAssignment,
+                {
+                  userId: member.user_id,
+                  fullName: member.full_name,
+                  email: member.email,
+                  status: assignment.status,
+                  assignedAt: assignment.assignedAt,
+                  completedAt: null,
+                  questionsAttempted: 0,
+                  questionsCorrect: 0,
+                  completionPercent: assignment.completionPercent,
+                  accuracyPercent: 0,
+                  attemptCount: 0,
+                  correctCount: 0,
+                  lastActivityAt: null,
+                },
+              )
+            }
+            className="rounded border border-blue-300 px-2 py-1 text-[10px] font-semibold text-blue-700 hover:bg-blue-50"
+          >
+            View Assignment Details
+          </button>
+          <button
+            type="button"
+            onClick={() => handleViewStudentProgress(member)}
+            className="rounded border border-gray-300 px-2 py-1 text-[10px] font-semibold text-gray-700 hover:bg-gray-50"
+          >
+            View Overall Progress
+          </button>
+        </div>
       </div>
-      <p className="mt-1 text-[11px] text-gray-600">Due: {formatAssignmentDate(assignment.dueDate)}</p>
-      <div className="mt-2 flex flex-wrap gap-1">
-        <button
-          type="button"
-          disabled={!assignmentRecord}
-          onClick={() =>
-            handleViewRecipientAssignmentDetails(
-              assignmentRecord as ClassroomAssignment,
-              {
-                userId: member.user_id,
-                fullName: member.full_name,
-                email: member.email,
-                status: assignment.status,
-                assignedAt: assignment.assignedAt,
-                completedAt: null,
-                questionsAttempted: 0,
-                questionsCorrect: 0,
-                completionPercent: assignment.completionPercent,
-                accuracyPercent: 0,
-                attemptCount: 0,
-                correctCount: 0,
-                lastActivityAt: null,
-              },
-            )
-          }
-          className="rounded border border-blue-300 px-2 py-1 text-[10px] font-semibold text-blue-700 hover:bg-blue-50"
-        >
-          View Assignment Details
-        </button>
-        <button
-          type="button"
-          onClick={() => handleViewStudentProgress(member)}
-          className="rounded border border-gray-300 px-2 py-1 text-[10px] font-semibold text-gray-700 hover:bg-gray-50"
-        >
-          View Overall Progress
-        </button>
-      </div>
-    </div>
-  );
+    );
   };
 
   const handleBackToClassProgress = () => {
@@ -787,6 +805,7 @@ export default function ClassroomDetailPage({ params }: PageProps) {
     try {
       setSelectedProgressStudentId(recipient.userId);
       setAssignmentProgressContext({ assignment, recipient });
+      setActiveTab("progress");
       setStudentProgress(null);
       setStudentProgressError(null);
       setStudentProgressLoading(true);
@@ -915,7 +934,7 @@ export default function ClassroomDetailPage({ params }: PageProps) {
     <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Classroom Detail</h1>
+          <h1 className="text-2xl font-bold text-white">Classroom Workspace</h1>
           <p className="text-slate-300 mt-1">
             Review class information, roster, assignments, and progress.
           </p>
@@ -997,596 +1016,795 @@ export default function ClassroomDetailPage({ params }: PageProps) {
             </div>
           </section>
 
-          <div className="grid gap-6 xl:grid-cols-3">
-            <section className="xl:col-span-1 bg-white rounded-xl shadow border border-gray-200 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Roster</h3>
-                <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
-                  {roster.length} student{roster.length === 1 ? "" : "s"}
-                </span>
-              </div>
+          <WorkspaceTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
-              <div className="mb-5 space-y-3 rounded-xl border border-gray-200 bg-gray-50 p-4">
-                <p className="text-sm font-semibold text-gray-900">
-                  Add Existing Student
+          {activeTab === "classroom" && (
+            <section className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+              <div className="bg-white rounded-xl shadow border border-gray-200 p-6">
+                <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">
+                  Classroom Command Center
+                </p>
+                <h3 className="mt-2 text-xl font-bold text-gray-900">
+                  {classroom.name}
+                </h3>
+                <p className="mt-2 text-sm text-gray-600">
+                  Use this workspace to share access, manage students, create
+                  assignments, and review Regents Algebra 1 progress.
                 </p>
 
-                <div>
-                  <label className="block text-sm font-semibold mb-1 text-gray-800">
-                    Search Registered Students
-                  </label>
-                  <input
-                    type="text"
-                    value={studentSearch}
-                    onChange={(e) => setStudentSearch(e.target.value)}
-                    placeholder="Search by full name or email"
-                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  <WorkspaceSummaryCard
+                    label="Students"
+                    value={roster.length}
+                    helper={`${roster.length === 1 ? "student" : "students"} on roster`}
                   />
-                </div>
-
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={handleSearchStudents}
-                    disabled={searchingStudents}
-                    className="rounded-lg border border-blue-600 bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {searchingStudents ? "Searching..." : "Search"}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleAddSelected}
-                    disabled={addingStudents || selectedStudentIds.length === 0}
-                    className="rounded-lg border border-green-600 bg-green-600 px-3 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {addingStudents ? "Adding..." : "Add Selected"}
-                  </button>
+                  <WorkspaceSummaryCard
+                    label="Active Assignments"
+                    value={activeAssignments.length}
+                    helper="ready for student work"
+                  />
+                  <WorkspaceSummaryCard
+                    label="Archived"
+                    value={archivedAssignments.length}
+                    helper="stored assignment records"
+                  />
+                  <WorkspaceSummaryCard
+                    label="Progress"
+                    value={classProgress?.summary.studentsWithProgress ?? 0}
+                    helper="students with visible activity"
+                  />
                 </div>
               </div>
 
-              {searchResults.length > 0 && (
-                <div className="mb-5 rounded-xl border border-gray-200 bg-gray-50 p-3">
-                  <p className="mb-3 text-sm font-semibold text-gray-900">
-                    Search Results
-                  </p>
-
-                  <div className="space-y-2">
-                    {searchResults.map((student) => {
-                      const isSelected = selectedStudentIds.includes(
-                        student.id,
-                      );
-
-                      return (
-                        <label
-                          key={student.id}
-                          className={`flex items-start gap-3 rounded-lg border p-3 cursor-pointer ${
-                            student.already_in_classroom
-                              ? "border-gray-200 bg-gray-100"
-                              : isSelected
-                                ? "border-blue-300 bg-blue-50"
-                                : "border-gray-200 bg-white"
-                          }`}
-                        >
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            disabled={student.already_in_classroom}
-                            onChange={() => toggleStudentSelection(student.id)}
-                            className="mt-1"
-                          />
-
-                          <div className="min-w-0">
-                            <p className="text-sm font-semibold text-gray-900">
-                              {student.full_name?.trim() || "Student"}
-                            </p>
-                            <p className="text-xs text-gray-600 break-all">
-                              {student.email || "No email available"}
-                            </p>
-                            <p className="mt-1 text-xs font-medium">
-                              {student.already_in_classroom ? (
-                                <span className="text-amber-700">
-                                  Already in classroom
-                                </span>
-                              ) : (
-                                <span className="text-green-700">
-                                  Available to add
-                                </span>
-                              )}
-                            </p>
-                          </div>
-                        </label>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              <div className="mb-5 space-y-3 rounded-xl border border-gray-200 bg-gray-50 p-4">
-                <p className="text-sm font-semibold text-gray-900">
-                  Create New Student and Add to Classroom
-                </p>
-
-                <div>
-                  <label className="block text-sm font-semibold mb-1 text-gray-800">
-                    Student Full Name
-                  </label>
-                  <input
-                    type="text"
-                    value={newStudentFullName}
-                    onChange={(e) => setNewStudentFullName(e.target.value)}
-                    placeholder="James Orlando"
-                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold mb-1 text-gray-800">
-                    Student Email
-                  </label>
-                  <input
-                    type="email"
-                    value={newStudentEmail}
-                    onChange={(e) => setNewStudentEmail(e.target.value)}
-                    placeholder="student@email.com"
-                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handleCreateStudentAndAdd}
-                  disabled={creatingStudent}
-                  className="rounded-lg border border-purple-600 bg-purple-600 px-3 py-2 text-sm font-semibold text-white hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {creatingStudent ? "Creating..." : "Create Student & Add"}
-                </button>
-              </div>
-
-              {rosterMessage && (
-                <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
-                  {rosterMessage}
-                </div>
-              )}
-
-              {roster.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-600">
-                  No students have joined this classroom yet.
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {roster.map((member) => (
-                    <div
-                      key={member.id}
-                      className={`rounded-xl border p-4 ${
-                        selectedProgressStudentId === member.user_id
-                          ? "border-blue-300 bg-blue-50"
-                          : "border-gray-200 bg-gray-50"
-                      }`}
+              <div className="space-y-4">
+                <div className="bg-white rounded-xl shadow border border-gray-200 p-6">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Quick Actions
+                  </h3>
+                  <div className="mt-4 grid gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(classroom.class_code, "code")}
+                      className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-left text-sm font-semibold text-gray-700 hover:bg-gray-100"
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <button
-                            type="button"
-                            onClick={() => handleSelectRosterStudent(member)}
-                            className="font-semibold text-left text-gray-900 hover:text-blue-700"
-                          >
-                            {member.full_name?.trim() || "Student"}
-                          </button>
-                          <p className="mt-2 text-xs text-gray-500">
-                            Joined{" "}
-                            {new Date(member.joined_at).toLocaleDateString()}
-                          </p>
-                        </div>
-
-                        <div className="flex flex-col gap-2 sm:flex-row">
-                          <button
-                            type="button"
-                            onClick={() => handleViewStudentProgress(member)}
-                            disabled={studentProgressLoading}
-                            className="rounded-lg border border-blue-300 bg-white px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
-                          >
-                            {selectedProgressStudentId === member.user_id
-                              ? "Viewing"
-                              : "View Progress"}
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveStudent(member)}
-                            disabled={removingUserId === member.user_id}
-                            className="rounded-lg border border-red-300 bg-white px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
-                          >
-                            {removingUserId === member.user_id
-                              ? "Removing..."
-                              : "Remove"}
-                          </button>
-                        </div>
-                      </div>
-                      {expandedStudentAssignmentsId === member.user_id && (
-                        <div className="mt-3 space-y-2 rounded-lg border border-blue-100 bg-blue-50/60 p-2">
-                          {studentAssignmentsLoadingId === member.user_id ? (
-                            <p className="text-xs text-blue-700">Loading assignments…</p>
-                          ) : (
-                            <>
-                              {studentAssignmentsError && (
-                                <p className="text-xs text-red-700">{studentAssignmentsError}</p>
-                              )}
-                              <div>
-                                <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-700">
-                                  Current Assignments
-                                </p>
-                                <div className="mt-1 space-y-1">
-                                  {(studentAssignmentsByUserId[member.user_id]?.current ?? []).length === 0 ? (
-                                    <p className="text-[11px] text-gray-600">No current assignments.</p>
-                                  ) : (
-                                    (studentAssignmentsByUserId[member.user_id]?.current ?? []).map((assignment) =>
-                                      renderStudentAssignmentRow(member, assignment),
-                                    )
-                                  )}
-                                </div>
-                              </div>
-                              <div>
-                                <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-700">
-                                  Past Assignments
-                                </p>
-                                <div className="mt-1 space-y-1">
-                                  {(studentAssignmentsByUserId[member.user_id]?.past ?? []).length === 0 ? (
-                                    <p className="text-[11px] text-gray-600">No past assignments.</p>
-                                  ) : (
-                                    (studentAssignmentsByUserId[member.user_id]?.past ?? []).map((assignment) =>
-                                      renderStudentAssignmentRow(member, assignment),
-                                    )
-                                  )}
-                                </div>
-                              </div>
-                            </>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                      {copied === "code"
+                        ? "Class code copied"
+                        : "Copy class code"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(joinLink, "link")}
+                      className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-left text-sm font-semibold text-gray-700 hover:bg-gray-100"
+                    >
+                      {copied === "link"
+                        ? "Join link copied"
+                        : "Copy join link"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("students")}
+                      className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-left text-sm font-semibold text-blue-700 hover:bg-blue-100"
+                    >
+                      Manage students
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("assignments")}
+                      className="rounded-lg border border-purple-200 bg-purple-50 px-4 py-2 text-left text-sm font-semibold text-purple-700 hover:bg-purple-100"
+                    >
+                      Manage assignments
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("progress")}
+                      className="rounded-lg border border-green-200 bg-green-50 px-4 py-2 text-left text-sm font-semibold text-green-700 hover:bg-green-100"
+                    >
+                      Review progress
+                    </button>
+                  </div>
                 </div>
-              )}
+              </div>
             </section>
+          )}
 
-            <section className="xl:col-span-1 bg-white rounded-xl shadow border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Assignments
-              </h3>
-
-              <div className="mt-4 space-y-3 rounded-xl border border-gray-200 bg-gray-50 p-4">
-                <div>
-                  <label className="block text-sm font-semibold mb-1 text-gray-800">
-                    Assignment Title
-                  </label>
-                  <input
-                    type="text"
-                    value={assignmentTitle}
-                    onChange={(e) => setAssignmentTitle(e.target.value)}
-                    placeholder="Unit 1 Review"
-                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
+          {activeTab === "students" && (
+            <div className="grid gap-6">
+              <section className="bg-white rounded-xl shadow border border-gray-200 p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Roster
+                  </h3>
+                  <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+                    {roster.length} student{roster.length === 1 ? "" : "s"}
+                  </span>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-semibold mb-1 text-gray-800">
-                    Description
-                  </label>
-                  <textarea
-                    value={assignmentDescription}
-                    onChange={(e) => setAssignmentDescription(e.target.value)}
-                    placeholder="Optional assignment directions"
-                    rows={3}
-                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold mb-1 text-gray-800">
-                    Section
-                  </label>
-                  <select
-                    value={assignmentSectionId}
-                    onChange={(e) => setAssignmentSectionId(e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="">Choose an Algebra 1 section</option>
-                    {SECTIONS.map((section) => (
-                      <option key={section.id} value={section.id}>
-                        {getSectionLabel(section.id)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold mb-1 text-gray-800">
-                    Due Date
-                  </label>
-                  <input
-                    type="date"
-                    value={assignmentDueDate}
-                    onChange={(e) => setAssignmentDueDate(e.target.value)}
-                    className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <p className="block text-sm font-semibold mb-2 text-gray-800">
-                    Assign To
+                <div className="mb-5 space-y-3 rounded-xl border border-gray-200 bg-gray-50 p-4">
+                  <p className="text-sm font-semibold text-gray-900">
+                    Add Existing Student
                   </p>
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    <label className="flex cursor-pointer items-start gap-2 rounded-lg border border-gray-200 bg-white p-3 text-sm text-gray-800">
-                      <input
-                        type="radio"
-                        name="assignment-target"
-                        value="class"
-                        checked={assignmentTarget === "class"}
-                        onChange={() => {
-                          setAssignmentTarget("class");
-                          setAssignmentRecipientIds([]);
-                        }}
-                        className="mt-1"
-                      />
-                      <span>
-                        <span className="block font-semibold">
-                          Entire Class
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          Assign to all current roster students.
-                        </span>
-                      </span>
-                    </label>
 
-                    <label className="flex cursor-pointer items-start gap-2 rounded-lg border border-gray-200 bg-white p-3 text-sm text-gray-800">
-                      <input
-                        type="radio"
-                        name="assignment-target"
-                        value="students"
-                        checked={assignmentTarget === "students"}
-                        onChange={() => setAssignmentTarget("students")}
-                        className="mt-1"
-                      />
-                      <span>
-                        <span className="block font-semibold">
-                          Selected Students
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          Pick individual roster students below.
-                        </span>
-                      </span>
+                  <div>
+                    <label className="block text-sm font-semibold mb-1 text-gray-800">
+                      Search Registered Students
                     </label>
+                    <input
+                      type="text"
+                      value={studentSearch}
+                      onChange={(e) => setStudentSearch(e.target.value)}
+                      placeholder="Search by full name or email"
+                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={handleSearchStudents}
+                      disabled={searchingStudents}
+                      className="rounded-lg border border-blue-600 bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {searchingStudents ? "Searching..." : "Search"}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleAddSelected}
+                      disabled={
+                        addingStudents || selectedStudentIds.length === 0
+                      }
+                      className="rounded-lg border border-green-600 bg-green-600 px-3 py-2 text-sm font-semibold text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {addingStudents ? "Adding..." : "Add Selected"}
+                    </button>
                   </div>
                 </div>
 
-                {assignmentTarget === "students" && (
-                  <div className="rounded-xl border border-gray-200 bg-white p-3">
-                    <p className="mb-2 text-sm font-semibold text-gray-900">
-                      Select Students
+                {searchResults.length > 0 && (
+                  <div className="mb-5 rounded-xl border border-gray-200 bg-gray-50 p-3">
+                    <p className="mb-3 text-sm font-semibold text-gray-900">
+                      Search Results
                     </p>
 
-                    {roster.length === 0 ? (
-                      <p className="text-sm text-gray-600">
-                        No students are currently on this roster.
-                      </p>
-                    ) : (
-                      <div className="max-h-48 space-y-2 overflow-y-auto pr-1">
-                        {roster.map((member) => {
-                          const checked = assignmentRecipientIds.includes(
-                            member.user_id,
-                          );
+                    <div className="space-y-2">
+                      {searchResults.map((student) => {
+                        const isSelected = selectedStudentIds.includes(
+                          student.id,
+                        );
 
-                          return (
-                            <label
-                              key={member.id}
-                              className={`flex cursor-pointer items-start gap-2 rounded-lg border p-3 text-sm ${
-                                checked
+                        return (
+                          <label
+                            key={student.id}
+                            className={`flex items-start gap-3 rounded-lg border p-3 cursor-pointer ${
+                              student.already_in_classroom
+                                ? "border-gray-200 bg-gray-100"
+                                : isSelected
                                   ? "border-blue-300 bg-blue-50"
-                                  : "border-gray-200 bg-gray-50"
-                              }`}
-                            >
-                              <input
-                                type="checkbox"
-                                checked={checked}
-                                onChange={() =>
-                                  toggleAssignmentRecipient(member.user_id)
-                                }
-                                className="mt-1"
-                              />
-                              <span>
-                                <span className="block font-semibold text-gray-900">
-                                  {member.full_name?.trim() || "Student"}
-                                </span>
-                                {member.email && (
-                                  <span className="text-xs text-gray-500">
-                                    {member.email}
+                                  : "border-gray-200 bg-white"
+                            }`}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              disabled={student.already_in_classroom}
+                              onChange={() =>
+                                toggleStudentSelection(student.id)
+                              }
+                              className="mt-1"
+                            />
+
+                            <div className="min-w-0">
+                              <p className="text-sm font-semibold text-gray-900">
+                                {student.full_name?.trim() || "Student"}
+                              </p>
+                              <p className="text-xs text-gray-600 break-all">
+                                {student.email || "No email available"}
+                              </p>
+                              <p className="mt-1 text-xs font-medium">
+                                {student.already_in_classroom ? (
+                                  <span className="text-amber-700">
+                                    Already in classroom
+                                  </span>
+                                ) : (
+                                  <span className="text-green-700">
+                                    Available to add
                                   </span>
                                 )}
-                              </span>
-                            </label>
-                          );
-                        })}
-                      </div>
-                    )}
+                              </p>
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
 
-                <button
-                  type="button"
-                  onClick={handleCreateAssignment}
-                  disabled={
-                    creatingAssignment ||
-                    (assignmentTarget === "students" &&
-                      assignmentRecipientIds.length === 0)
-                  }
-                  className="rounded-lg border border-blue-600 bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {creatingAssignment ? "Creating..." : "Create Assignment"}
-                </button>
-              </div>
+                <div className="mb-5 space-y-3 rounded-xl border border-gray-200 bg-gray-50 p-4">
+                  <p className="text-sm font-semibold text-gray-900">
+                    Create New Student and Add to Classroom
+                  </p>
 
-              {assignmentMessage && (
-                <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
-                  {assignmentMessage}
-                </div>
-              )}
-
-              {selectedRecipientAssignment ? (
-                <AssignmentRecipientDetailPanel
-                  assignment={
-                    recipientDetail?.assignment ?? selectedRecipientAssignment
-                  }
-                  detail={recipientDetail}
-                  loading={recipientDetailLoading}
-                  error={recipientDetailError}
-                  message={recipientDetailMessage}
-                  updatingRecipientKey={updatingRecipientKey}
-                  formatDate={formatProgressDate}
-                  onBack={closeAssignmentRecipients}
-                  onMarkExcused={(recipient) =>
-                    handleUpdateRecipientStatus(recipient, "excused")
-                  }
-                  onUnexcuse={(recipient) =>
-                    handleUpdateRecipientStatus(recipient, "assigned")
-                  }
-                  onViewOverallProgress={handleViewRecipientOverallProgress}
-                  onViewAssignmentDetails={(recipient) =>
-                    handleViewRecipientAssignmentDetails(
-                      recipientDetail?.assignment ??
-                        selectedRecipientAssignment,
-                      recipient,
-                    )
-                  }
-                />
-              ) : (
-                <>
-                  <div className="mt-4 space-y-3">
-                    {activeAssignments.length === 0 ? (
-                      <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-600">
-                        No active assignments yet.
-                      </div>
-                    ) : (
-                      activeAssignments.map((assignment) => (
-                        <AssignmentManagementCard
-                          key={assignment.id}
-                          assignment={assignment}
-                          isEditing={editingAssignmentId === assignment.id}
-                          editTitle={editAssignmentTitle}
-                          editDescription={editAssignmentDescription}
-                          editDueDate={editAssignmentDueDate}
-                          saving={savingAssignmentId === assignment.id}
-                          archiving={archivingAssignmentId === assignment.id}
-                          onViewRecipients={() =>
-                            openAssignmentRecipients(assignment)
-                          }
-                          onEdit={() => startEditingAssignment(assignment)}
-                          onCancelEdit={cancelEditingAssignment}
-                          onSave={() => handleSaveAssignment(assignment.id)}
-                          onArchive={() => handleArchiveAssignment(assignment)}
-                          onEditTitleChange={setEditAssignmentTitle}
-                          onEditDescriptionChange={setEditAssignmentDescription}
-                          onEditDueDateChange={setEditAssignmentDueDate}
-                        />
-                      ))
-                    )}
+                  <div>
+                    <label className="block text-sm font-semibold mb-1 text-gray-800">
+                      Student Full Name
+                    </label>
+                    <input
+                      type="text"
+                      value={newStudentFullName}
+                      onChange={(e) => setNewStudentFullName(e.target.value)}
+                      placeholder="James Orlando"
+                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
                   </div>
 
-                  {archivedAssignments.length > 0 && (
-                    <div className="mt-5 rounded-xl border border-gray-200 bg-white p-3">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setShowArchivedAssignments((current) => !current)
-                        }
-                        className="flex w-full items-center justify-between text-left text-sm font-semibold text-gray-800"
-                      >
-                        <span>
-                          Archived assignments ({archivedAssignments.length})
-                        </span>
-                        <span className="text-xs text-gray-500">
-                          {showArchivedAssignments ? "Hide" : "Show"}
-                        </span>
-                      </button>
+                  <div>
+                    <label className="block text-sm font-semibold mb-1 text-gray-800">
+                      Student Email
+                    </label>
+                    <input
+                      type="email"
+                      value={newStudentEmail}
+                      onChange={(e) => setNewStudentEmail(e.target.value)}
+                      placeholder="student@email.com"
+                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
 
-                      {showArchivedAssignments && (
-                        <div className="mt-3 space-y-3">
-                          {archivedAssignments.map((assignment) => (
-                            <AssignmentManagementCard
-                              key={assignment.id}
-                              assignment={assignment}
-                              isArchived
-                              isEditing={false}
-                              editTitle=""
-                              editDescription=""
-                              editDueDate=""
-                              saving={false}
-                              archiving={false}
-                              onViewRecipients={() =>
-                                openAssignmentRecipients(assignment)
-                              }
-                              onEdit={() => undefined}
-                              onCancelEdit={() => undefined}
-                              onSave={() => undefined}
-                              onArchive={() => undefined}
-                              onEditTitleChange={() => undefined}
-                              onEditDescriptionChange={() => undefined}
-                              onEditDueDateChange={() => undefined}
-                            />
-                          ))}
+                  <button
+                    type="button"
+                    onClick={handleCreateStudentAndAdd}
+                    disabled={creatingStudent}
+                    className="rounded-lg border border-purple-600 bg-purple-600 px-3 py-2 text-sm font-semibold text-white hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {creatingStudent ? "Creating..." : "Create Student & Add"}
+                  </button>
+                </div>
+
+                {rosterMessage && (
+                  <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
+                    {rosterMessage}
+                  </div>
+                )}
+
+                {roster.length === 0 ? (
+                  <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-600">
+                    No students have joined this classroom yet.
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {roster.map((member) => (
+                      <div
+                        key={member.id}
+                        className={`rounded-xl border p-4 ${
+                          selectedProgressStudentId === member.user_id
+                            ? "border-blue-300 bg-blue-50"
+                            : "border-gray-200 bg-gray-50"
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <button
+                              type="button"
+                              onClick={() => handleSelectRosterStudent(member)}
+                              className="font-semibold text-left text-gray-900 hover:text-blue-700"
+                            >
+                              {member.full_name?.trim() || "Student"}
+                            </button>
+                            <p className="mt-2 text-xs text-gray-500">
+                              Joined{" "}
+                              {new Date(member.joined_at).toLocaleDateString()}
+                            </p>
+                          </div>
+
+                          <div className="flex flex-col gap-2 sm:flex-row">
+                            <button
+                              type="button"
+                              onClick={() => handleViewStudentProgress(member)}
+                              disabled={studentProgressLoading}
+                              className="rounded-lg border border-blue-300 bg-white px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-50 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              {selectedProgressStudentId === member.user_id
+                                ? "Viewing"
+                                : "View Progress"}
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveStudent(member)}
+                              disabled={removingUserId === member.user_id}
+                              className="rounded-lg border border-red-300 bg-white px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              {removingUserId === member.user_id
+                                ? "Removing..."
+                                : "Remove"}
+                            </button>
+                          </div>
+                        </div>
+                        {expandedStudentAssignmentsId === member.user_id && (
+                          <div className="mt-3 space-y-2 rounded-lg border border-blue-100 bg-blue-50/60 p-2">
+                            {studentAssignmentsLoadingId === member.user_id ? (
+                              <p className="text-xs text-blue-700">
+                                Loading assignments…
+                              </p>
+                            ) : (
+                              <>
+                                {studentAssignmentsError && (
+                                  <p className="text-xs text-red-700">
+                                    {studentAssignmentsError}
+                                  </p>
+                                )}
+                                <div>
+                                  <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-700">
+                                    Current Assignments
+                                  </p>
+                                  <div className="mt-1 space-y-1">
+                                    {(
+                                      studentAssignmentsByUserId[member.user_id]
+                                        ?.current ?? []
+                                    ).length === 0 ? (
+                                      <p className="text-[11px] text-gray-600">
+                                        No current assignments.
+                                      </p>
+                                    ) : (
+                                      (
+                                        studentAssignmentsByUserId[
+                                          member.user_id
+                                        ]?.current ?? []
+                                      ).map((assignment) =>
+                                        renderStudentAssignmentRow(
+                                          member,
+                                          assignment,
+                                        ),
+                                      )
+                                    )}
+                                  </div>
+                                </div>
+                                <div>
+                                  <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-700">
+                                    Past Assignments
+                                  </p>
+                                  <div className="mt-1 space-y-1">
+                                    {(
+                                      studentAssignmentsByUserId[member.user_id]
+                                        ?.past ?? []
+                                    ).length === 0 ? (
+                                      <p className="text-[11px] text-gray-600">
+                                        No past assignments.
+                                      </p>
+                                    ) : (
+                                      (
+                                        studentAssignmentsByUserId[
+                                          member.user_id
+                                        ]?.past ?? []
+                                      ).map((assignment) =>
+                                        renderStudentAssignmentRow(
+                                          member,
+                                          assignment,
+                                        ),
+                                      )
+                                    )}
+                                  </div>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
+            </div>
+          )}
+
+          {activeTab === "assignments" && (
+            <div className="grid gap-6">
+              <section className="bg-white rounded-xl shadow border border-gray-200 p-6">
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Assignments
+                </h3>
+
+                <div className="mt-4 space-y-3 rounded-xl border border-gray-200 bg-gray-50 p-4">
+                  <div>
+                    <label className="block text-sm font-semibold mb-1 text-gray-800">
+                      Assignment Title
+                    </label>
+                    <input
+                      type="text"
+                      value={assignmentTitle}
+                      onChange={(e) => setAssignmentTitle(e.target.value)}
+                      placeholder="Unit 1 Review"
+                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold mb-1 text-gray-800">
+                      Description
+                    </label>
+                    <textarea
+                      value={assignmentDescription}
+                      onChange={(e) => setAssignmentDescription(e.target.value)}
+                      placeholder="Optional assignment directions"
+                      rows={3}
+                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold mb-1 text-gray-800">
+                      Section
+                    </label>
+                    <select
+                      value={assignmentSectionId}
+                      onChange={(e) => setAssignmentSectionId(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">Choose an Algebra 1 section</option>
+                      {SECTIONS.map((section) => (
+                        <option key={section.id} value={section.id}>
+                          {getSectionLabel(section.id)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold mb-1 text-gray-800">
+                      Due Date
+                    </label>
+                    <input
+                      type="date"
+                      value={assignmentDueDate}
+                      onChange={(e) => setAssignmentDueDate(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <p className="block text-sm font-semibold mb-2 text-gray-800">
+                      Assign To
+                    </p>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <label className="flex cursor-pointer items-start gap-2 rounded-lg border border-gray-200 bg-white p-3 text-sm text-gray-800">
+                        <input
+                          type="radio"
+                          name="assignment-target"
+                          value="class"
+                          checked={assignmentTarget === "class"}
+                          onChange={() => {
+                            setAssignmentTarget("class");
+                            setAssignmentRecipientIds([]);
+                          }}
+                          className="mt-1"
+                        />
+                        <span>
+                          <span className="block font-semibold">
+                            Entire Class
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            Assign to all current roster students.
+                          </span>
+                        </span>
+                      </label>
+
+                      <label className="flex cursor-pointer items-start gap-2 rounded-lg border border-gray-200 bg-white p-3 text-sm text-gray-800">
+                        <input
+                          type="radio"
+                          name="assignment-target"
+                          value="students"
+                          checked={assignmentTarget === "students"}
+                          onChange={() => setAssignmentTarget("students")}
+                          className="mt-1"
+                        />
+                        <span>
+                          <span className="block font-semibold">
+                            Selected Students
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            Pick individual roster students below.
+                          </span>
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {assignmentTarget === "students" && (
+                    <div className="rounded-xl border border-gray-200 bg-white p-3">
+                      <p className="mb-2 text-sm font-semibold text-gray-900">
+                        Select Students
+                      </p>
+
+                      {roster.length === 0 ? (
+                        <p className="text-sm text-gray-600">
+                          No students are currently on this roster.
+                        </p>
+                      ) : (
+                        <div className="max-h-48 space-y-2 overflow-y-auto pr-1">
+                          {roster.map((member) => {
+                            const checked = assignmentRecipientIds.includes(
+                              member.user_id,
+                            );
+
+                            return (
+                              <label
+                                key={member.id}
+                                className={`flex cursor-pointer items-start gap-2 rounded-lg border p-3 text-sm ${
+                                  checked
+                                    ? "border-blue-300 bg-blue-50"
+                                    : "border-gray-200 bg-gray-50"
+                                }`}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={checked}
+                                  onChange={() =>
+                                    toggleAssignmentRecipient(member.user_id)
+                                  }
+                                  className="mt-1"
+                                />
+                                <span>
+                                  <span className="block font-semibold text-gray-900">
+                                    {member.full_name?.trim() || "Student"}
+                                  </span>
+                                  {member.email && (
+                                    <span className="text-xs text-gray-500">
+                                      {member.email}
+                                    </span>
+                                  )}
+                                </span>
+                              </label>
+                            );
+                          })}
                         </div>
                       )}
                     </div>
                   )}
-                </>
-              )}
-            </section>
 
-            <section className="xl:col-span-1 bg-white rounded-xl shadow border border-gray-200 p-6">
-              <ProgressPanelHeader
-                mode={
-                  assignmentProgressContext
-                    ? "assignment"
-                    : selectedProgressStudentId
-                      ? "overall"
-                      : "class"
-                }
-                onBack={
-                  assignmentProgressContext
-                    ? handleBackToOverallProgress
-                    : handleBackToClassProgress
-                }
-              />
+                  <button
+                    type="button"
+                    onClick={handleCreateAssignment}
+                    disabled={
+                      creatingAssignment ||
+                      (assignmentTarget === "students" &&
+                        assignmentRecipientIds.length === 0)
+                    }
+                    className="rounded-lg border border-blue-600 bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {creatingAssignment ? "Creating..." : "Create Assignment"}
+                  </button>
+                </div>
 
-              {selectedProgressStudentId ? (
-                assignmentProgressContext ? (
-                  <AssignmentStudentProgressView
-                    context={assignmentProgressContext}
-                    progress={studentProgress}
-                    loading={studentProgressLoading}
-                    error={studentProgressError}
+                {assignmentMessage && (
+                  <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
+                    {assignmentMessage}
+                  </div>
+                )}
+
+                {selectedRecipientAssignment ? (
+                  <AssignmentRecipientDetailPanel
+                    assignment={
+                      recipientDetail?.assignment ?? selectedRecipientAssignment
+                    }
+                    detail={recipientDetail}
+                    loading={recipientDetailLoading}
+                    error={recipientDetailError}
+                    message={recipientDetailMessage}
+                    updatingRecipientKey={updatingRecipientKey}
                     formatDate={formatProgressDate}
+                    onBack={closeAssignmentRecipients}
+                    onMarkExcused={(recipient) =>
+                      handleUpdateRecipientStatus(recipient, "excused")
+                    }
+                    onUnexcuse={(recipient) =>
+                      handleUpdateRecipientStatus(recipient, "assigned")
+                    }
+                    onViewOverallProgress={handleViewRecipientOverallProgress}
+                    onViewAssignmentDetails={(recipient) =>
+                      handleViewRecipientAssignmentDetails(
+                        recipientDetail?.assignment ??
+                          selectedRecipientAssignment,
+                        recipient,
+                      )
+                    }
                   />
                 ) : (
-                  <IndividualStudentProgressView
-                    progress={studentProgress}
-                    loading={studentProgressLoading}
-                    error={studentProgressError}
+                  <>
+                    <div className="mt-4 space-y-3">
+                      {activeAssignments.length === 0 ? (
+                        <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-600">
+                          No active assignments yet.
+                        </div>
+                      ) : (
+                        activeAssignments.map((assignment) => (
+                          <AssignmentManagementCard
+                            key={assignment.id}
+                            assignment={assignment}
+                            isEditing={editingAssignmentId === assignment.id}
+                            editTitle={editAssignmentTitle}
+                            editDescription={editAssignmentDescription}
+                            editDueDate={editAssignmentDueDate}
+                            saving={savingAssignmentId === assignment.id}
+                            archiving={archivingAssignmentId === assignment.id}
+                            onViewRecipients={() =>
+                              openAssignmentRecipients(assignment)
+                            }
+                            onEdit={() => startEditingAssignment(assignment)}
+                            onCancelEdit={cancelEditingAssignment}
+                            onSave={() => handleSaveAssignment(assignment.id)}
+                            onArchive={() =>
+                              handleArchiveAssignment(assignment)
+                            }
+                            onEditTitleChange={setEditAssignmentTitle}
+                            onEditDescriptionChange={
+                              setEditAssignmentDescription
+                            }
+                            onEditDueDateChange={setEditAssignmentDueDate}
+                          />
+                        ))
+                      )}
+                    </div>
+
+                    {archivedAssignments.length > 0 && (
+                      <div className="mt-5 rounded-xl border border-gray-200 bg-white p-3">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setShowArchivedAssignments((current) => !current)
+                          }
+                          className="flex w-full items-center justify-between text-left text-sm font-semibold text-gray-800"
+                        >
+                          <span>
+                            Archived assignments ({archivedAssignments.length})
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {showArchivedAssignments ? "Hide" : "Show"}
+                          </span>
+                        </button>
+
+                        {showArchivedAssignments && (
+                          <div className="mt-3 space-y-3">
+                            {archivedAssignments.map((assignment) => (
+                              <AssignmentManagementCard
+                                key={assignment.id}
+                                assignment={assignment}
+                                isArchived
+                                isEditing={false}
+                                editTitle=""
+                                editDescription=""
+                                editDueDate=""
+                                saving={false}
+                                archiving={false}
+                                onViewRecipients={() =>
+                                  openAssignmentRecipients(assignment)
+                                }
+                                onEdit={() => undefined}
+                                onCancelEdit={() => undefined}
+                                onSave={() => undefined}
+                                onArchive={() => undefined}
+                                onEditTitleChange={() => undefined}
+                                onEditDescriptionChange={() => undefined}
+                                onEditDueDateChange={() => undefined}
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
+              </section>
+            </div>
+          )}
+
+          {activeTab === "progress" && (
+            <div className="grid gap-6">
+              <section className="bg-white rounded-xl shadow border border-gray-200 p-6">
+                <ProgressPanelHeader
+                  mode={
+                    assignmentProgressContext
+                      ? "assignment"
+                      : selectedProgressStudentId
+                        ? "overall"
+                        : "class"
+                  }
+                  onBack={
+                    assignmentProgressContext
+                      ? handleBackToOverallProgress
+                      : handleBackToClassProgress
+                  }
+                />
+
+                {selectedProgressStudentId ? (
+                  assignmentProgressContext ? (
+                    <AssignmentStudentProgressView
+                      context={assignmentProgressContext}
+                      progress={studentProgress}
+                      loading={studentProgressLoading}
+                      error={studentProgressError}
+                      formatDate={formatProgressDate}
+                    />
+                  ) : (
+                    <IndividualStudentProgressView
+                      progress={studentProgress}
+                      loading={studentProgressLoading}
+                      error={studentProgressError}
+                      formatDate={formatProgressDate}
+                    />
+                  )
+                ) : (
+                  <FullClassProgressView
+                    progress={classProgress}
+                    loading={progressLoading}
+                    error={progressError}
                     formatDate={formatProgressDate}
                   />
-                )
-              ) : (
-                <FullClassProgressView
-                  progress={classProgress}
-                  loading={progressLoading}
-                  error={progressError}
-                  formatDate={formatProgressDate}
-                />
-              )}
-            </section>
-          </div>
+                )}
+              </section>
+            </div>
+          )}
         </>
       )}
+    </div>
+  );
+}
+
+function WorkspaceTabs({
+  activeTab,
+  onTabChange,
+}: {
+  activeTab: ClassroomWorkspaceTab;
+  onTabChange: (tab: ClassroomWorkspaceTab) => void;
+}) {
+  const tabs: Array<{ id: ClassroomWorkspaceTab; label: string }> = [
+    { id: "classroom", label: "Classroom" },
+    { id: "students", label: "Students" },
+    { id: "assignments", label: "Assignments" },
+    { id: "progress", label: "Progress" },
+  ];
+
+  return (
+    <div className="rounded-xl border border-white/15 bg-white/10 p-2 shadow">
+      <div className="grid gap-2 sm:grid-cols-4">
+        {tabs.map((tab) => {
+          const selected = activeTab === tab.id;
+
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => onTabChange(tab.id)}
+              className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
+                selected
+                  ? "bg-white text-blue-700 shadow"
+                  : "text-white hover:bg-white/15"
+              }`}
+            >
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function WorkspaceSummaryCard({
+  label,
+  value,
+  helper,
+}: {
+  label: string;
+  value: string | number;
+  helper: string;
+}) {
+  return (
+    <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+      <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+        {label}
+      </p>
+      <p className="mt-2 text-2xl font-bold text-gray-900">{value}</p>
+      <p className="mt-1 text-xs text-gray-600">{helper}</p>
     </div>
   );
 }
@@ -2409,7 +2627,9 @@ function RecentActivityFeed({
       ) : (
         <div className="mt-3 space-y-2">
           {[...attempts]
-            .sort((a, b) => (b.attemptedAt ?? "").localeCompare(a.attemptedAt ?? ""))
+            .sort((a, b) =>
+              (b.attemptedAt ?? "").localeCompare(a.attemptedAt ?? ""),
+            )
             .slice(0, 10)
             .map((attempt, index) => (
               <div
@@ -2418,11 +2638,15 @@ function RecentActivityFeed({
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="font-semibold text-gray-900">{attempt.sectionTitle}</p>
+                    <p className="font-semibold text-gray-900">
+                      {attempt.sectionTitle}
+                    </p>
                     <p className="mt-0.5 text-xs text-gray-500">
                       {attempt.fullName?.trim() || attempt.email || "Student"}
                     </p>
-                    <p className="text-xs text-gray-500">{formatDate(attempt.attemptedAt)}</p>
+                    <p className="text-xs text-gray-500">
+                      {formatDate(attempt.attemptedAt)}
+                    </p>
                   </div>
                   {typeof attempt.correct === "boolean" ? (
                     <span
