@@ -730,3 +730,93 @@ html.om-hide-header .om-header {
     padding: 0.07in 0.09in !important;
   }
 }
+
+/* Printable section/chapter worksheet styles */
+.section-print-content[data-print-layout="double"] .section-print-question-list {
+  column-count: 2;
+  column-gap: 1.5rem;
+}
+
+.section-print-content[data-print-layout="double"] .section-print-question {
+  display: inline-block;
+  width: 100%;
+  margin-bottom: 1.5rem;
+}
+
+.chapter-print-section {
+  display: block;
+  border-top: 4px solid #2563eb;
+  padding-top: 1.5rem;
+  margin-top: 2rem;
+}
+
+.chapter-print-section-header {
+  margin-bottom: 1rem;
+  break-after: avoid;
+  page-break-after: avoid;
+  border-radius: 1rem;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  padding: 1rem 1.25rem;
+}
+
+.section-print-question,
+.section-print-lesson {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+@media print {
+  @page {
+    margin: 0.5in;
+  }
+
+  html,
+  body {
+    height: auto;
+    background: #ffffff !important;
+    color: #111827 !important;
+  }
+
+  body::before,
+  body::after,
+  .om-header,
+  .no-print {
+    display: none !important;
+  }
+
+  .om-page {
+    padding-top: 0 !important;
+  }
+
+  .section-print-content,
+  .chapter-print-content {
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #ffffff !important;
+  }
+
+  .chapter-print-title,
+  .chapter-print-section-header,
+  .section-print-lesson,
+  .section-print-question {
+    box-shadow: none !important;
+  }
+
+  .section-print-answer-choice {
+    background: #ffffff !important;
+    color: #111827 !important;
+    pointer-events: none;
+  }
+
+  .section-print-content[data-print-layout="double"] .section-print-question-list {
+    column-count: 2;
+    column-gap: 0.35in;
+  }
+
+  .chapter-print-section {
+    break-before: auto;
+    page-break-before: auto;
+  }
+}

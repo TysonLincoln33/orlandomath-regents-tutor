@@ -60,8 +60,17 @@ export default function ChapterClient({ chapterId }: Props) {
           <Link href="/dashboard" className="text-sm text-slate-600 hover:underline">
             ← Return to dashboard
           </Link>
-          <div className="text-sm text-slate-600">
-            Overall progress: <span className="font-semibold text-slate-900">{overallPercent}%</span>
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              href={`/chapter/${chapter.id}/print`}
+              target="_blank"
+              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+            >
+              Print Chapter
+            </Link>
+            <div className="text-sm text-slate-600">
+              Overall progress: <span className="font-semibold text-slate-900">{overallPercent}%</span>
+            </div>
           </div>
         </div>
 
