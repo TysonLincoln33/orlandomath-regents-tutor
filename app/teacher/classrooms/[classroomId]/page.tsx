@@ -1019,12 +1019,9 @@ export default function ClassroomDetailPage({ params }: PageProps) {
           <WorkspaceTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
           {activeTab === "classroom" && (
-            <section className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+            <section className="grid gap-6">
               <div className="bg-white rounded-xl shadow border border-gray-200 p-6">
-                <p className="text-sm font-semibold uppercase tracking-wide text-blue-700">
-                  Classroom Command Center
-                </p>
-                <h3 className="mt-2 text-xl font-bold text-gray-900">
+                <h3 className="text-xl font-bold text-gray-900">
                   {classroom.name}
                 </h3>
                 <p className="mt-2 text-sm text-gray-600">
