@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { SECTIONS } from "@/lib/course/algebra1";
 import { isTeacherLikeRole } from "@/lib/auth/roles";
@@ -137,6 +137,8 @@ export default function ClassroomDetailPage({ params }: PageProps) {
   const [studentSearch, setStudentSearch] = useState("");
   const [searchResults, setSearchResults] = useState<SearchStudentResult[]>([]);
   const [searchingStudents, setSearchingStudents] = useState(false);
+  const [studentSearchTouched, setStudentSearchTouched] = useState(false);
+  const latestStudentSearchId = useRef(0);
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
   const [addingStudents, setAddingStudents] = useState(false);
 
@@ -382,37 +384,78 @@ export default function ClassroomDetailPage({ params }: PageProps) {
     }
   };
 
-  const handleSearchStudents = async () => {
-    if (!classroomId) return;
+  const runStudentSearch = useCallback(
+    async (
+      rawSearchTerm: string,
+      options?: { showMinimumMessage?: boolean },
+    ) => {
+      if (!classroomId) return;
+
+      const trimmed = rawSearchTerm.trim();
+
+      if (trimmed.length < 2) {
+        setSearchResults([]);
+        setSelectedStudentIds([]);
+        if (options?.showMinimumMessage) {
+          setRosterMessage("Enter at least 2 characters to search.");
+        }
+        return;
+      }
+
+      const searchId = latestStudentSearchId.current + 1;
+      latestStudentSearchId.current = searchId;
+
+      try {
+        setSearchingStudents(true);
+        setRosterMessage(null);
+
+        const results = await searchStudentsForClassroom(classroomId, trimmed);
+
+        if (latestStudentSearchId.current !== searchId) return;
+
+        setSearchResults(results);
+        setSelectedStudentIds([]);
+
+        if (results.length === 0) {
+          setRosterMessage("No matching registered students found.");
+        }
+      } catch (err) {
+        if (latestStudentSearchId.current !== searchId) return;
+
+        console.error(err);
+        setSearchResults([]);
+        setSelectedStudentIds([]);
+        setRosterMessage(getErrorMessage(err, "Failed to search students."));
+      } finally {
+        if (latestStudentSearchId.current === searchId) {
+          setSearchingStudents(false);
+        }
+      }
+    },
+    [classroomId],
+  );
+
+  useEffect(() => {
+    if (!studentSearchTouched) return;
 
     const trimmed = studentSearch.trim();
 
     if (trimmed.length < 2) {
       setSearchResults([]);
       setSelectedStudentIds([]);
-      setRosterMessage("Enter at least 2 characters to search.");
       return;
     }
 
-    try {
-      setSearchingStudents(true);
-      setRosterMessage(null);
+    const timeoutId = window.setTimeout(() => {
+      void runStudentSearch(trimmed);
+    }, 250);
 
-      const results = await searchStudentsForClassroom(classroomId, trimmed);
-      setSearchResults(results);
-      setSelectedStudentIds([]);
+    return () => window.clearTimeout(timeoutId);
+  }, [runStudentSearch, studentSearch, studentSearchTouched]);
 
-      if (results.length === 0) {
-        setRosterMessage("No matching registered students found.");
-      }
-    } catch (err) {
-      console.error(err);
-      setSearchResults([]);
-      setSelectedStudentIds([]);
-      setRosterMessage(getErrorMessage(err, "Failed to search students."));
-    } finally {
-      setSearchingStudents(false);
-    }
+  const handleSearchStudents = async () => {
+    setStudentSearchTouched(true);
+    await runStudentSearch(studentSearch, { showMinimumMessage: true });
   };
 
   const toggleStudentSelection = (studentId: string) => {
@@ -1079,10 +1122,72 @@ export default function ClassroomDetailPage({ params }: PageProps) {
                     <input
                       type="text"
                       value={studentSearch}
-                      onChange={(e) => setStudentSearch(e.target.value)}
+                      onChange={(e) => {
+                        setStudentSearch(e.target.value);
+                        setStudentSearchTouched(true);
+                      }}
                       placeholder="Search by full name or email"
                       className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
+
+                    {searchResults.length > 0 && (
+                      <div className="mt-2 rounded-xl border border-gray-200 bg-white p-3 shadow-lg">
+                        <p className="mb-3 text-sm font-semibold text-gray-900">
+                          Matching Registered Students
+                        </p>
+
+                        <div className="space-y-2">
+                          {searchResults.map((student) => {
+                            const isSelected = selectedStudentIds.includes(
+                              student.id,
+                            );
+
+                            return (
+                              <label
+                                key={student.id}
+                                className={`flex items-start gap-3 rounded-lg border p-3 cursor-pointer ${
+                                  student.already_in_classroom
+                                    ? "border-gray-200 bg-gray-100"
+                                    : isSelected
+                                      ? "border-blue-300 bg-blue-50"
+                                      : "border-gray-200 bg-white"
+                                }`}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  disabled={student.already_in_classroom}
+                                  onChange={() =>
+                                    toggleStudentSelection(student.id)
+                                  }
+                                  className="mt-1"
+                                />
+
+                                <div className="min-w-0">
+                                  <p className="text-sm font-semibold text-gray-900">
+                                    {student.full_name?.trim() || "Student"}
+                                  </p>
+                                  <p className="text-xs text-gray-600 break-all">
+                                    {student.email || "No email available"}
+                                  </p>
+                                  <p className="mt-1 text-xs font-medium">
+                                    {student.already_in_classroom ? (
+                                      <span className="text-amber-700">
+                                        Already in classroom
+                                      </span>
+                                    ) : (
+                                      <span className="text-green-700">
+                                        Available to add
+                                      </span>
+                                    )}
+                                  </p>
+                                </div>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex gap-2">
@@ -1107,65 +1212,6 @@ export default function ClassroomDetailPage({ params }: PageProps) {
                     </button>
                   </div>
                 </div>
-
-                {searchResults.length > 0 && (
-                  <div className="mb-5 rounded-xl border border-gray-200 bg-gray-50 p-3">
-                    <p className="mb-3 text-sm font-semibold text-gray-900">
-                      Search Results
-                    </p>
-
-                    <div className="space-y-2">
-                      {searchResults.map((student) => {
-                        const isSelected = selectedStudentIds.includes(
-                          student.id,
-                        );
-
-                        return (
-                          <label
-                            key={student.id}
-                            className={`flex items-start gap-3 rounded-lg border p-3 cursor-pointer ${
-                              student.already_in_classroom
-                                ? "border-gray-200 bg-gray-100"
-                                : isSelected
-                                  ? "border-blue-300 bg-blue-50"
-                                  : "border-gray-200 bg-white"
-                            }`}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={isSelected}
-                              disabled={student.already_in_classroom}
-                              onChange={() =>
-                                toggleStudentSelection(student.id)
-                              }
-                              className="mt-1"
-                            />
-
-                            <div className="min-w-0">
-                              <p className="text-sm font-semibold text-gray-900">
-                                {student.full_name?.trim() || "Student"}
-                              </p>
-                              <p className="text-xs text-gray-600 break-all">
-                                {student.email || "No email available"}
-                              </p>
-                              <p className="mt-1 text-xs font-medium">
-                                {student.already_in_classroom ? (
-                                  <span className="text-amber-700">
-                                    Already in classroom
-                                  </span>
-                                ) : (
-                                  <span className="text-green-700">
-                                    Available to add
-                                  </span>
-                                )}
-                              </p>
-                            </div>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
 
                 <div className="mb-5 space-y-3 rounded-xl border border-gray-200 bg-gray-50 p-4">
                   <p className="text-sm font-semibold text-gray-900">
