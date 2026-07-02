@@ -17,7 +17,7 @@ export default function GlobalSaveMyProgressBar() {
 
   return (
     <>
-      <div className="om-page-savebar">
+      <div className="om-page-savebar no-print">
         <div className="om-page-savebar-inner">
           <button
             type="button"
