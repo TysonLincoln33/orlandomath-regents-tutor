@@ -12,7 +12,7 @@ export default function GlobalBookTutoringFab() {
   return (
     <button
       onClick={() => router.back()}
-      className="fixed bottom-6 left-6 z-[9999] rounded-full bg-blue-600 text-white px-5 py-3 shadow-lg hover:bg-blue-700 transition flex items-center gap-2 font-semibold"
+      className="no-print fixed bottom-6 left-6 z-[9999] rounded-full bg-blue-600 text-white px-5 py-3 shadow-lg hover:bg-blue-700 transition flex items-center gap-2 font-semibold"
     >
       ← Back
     </button>

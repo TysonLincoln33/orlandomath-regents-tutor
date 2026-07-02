@@ -608,3 +608,125 @@ html.om-hide-header .om-header {
   line-height: 1.35 !important;
 }
 
+@media print {
+  @page {
+    margin: 0.45in;
+  }
+
+  html,
+  body {
+    height: auto !important;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body::before,
+  body::after {
+    display: none !important;
+  }
+
+  .no-print,
+  .om-header,
+  .om-topbar,
+  .om-rainbowline,
+  .section-print-toolbar,
+  .section-print-progress-meter {
+    display: none !important;
+  }
+
+  .om-page {
+    min-height: auto !important;
+    padding-top: 0 !important;
+  }
+
+  .section-print-content {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    padding-bottom: 0 !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  .section-print-lesson,
+  .section-print-question {
+    background: #ffffff !important;
+    color: #000000 !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .section-print-lesson {
+    margin-bottom: 0.25in !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .section-print-question-list {
+    display: block !important;
+    margin-top: 0 !important;
+  }
+
+  .section-print-content[data-print-layout="single"] .section-print-question-list {
+    column-count: 1;
+  }
+
+  .section-print-content[data-print-layout="double"] .section-print-question-list {
+    column-count: 2;
+    column-gap: 0.28in;
+  }
+
+  .section-print-question {
+    display: inline-block !important;
+    width: 100% !important;
+    margin: 0 0 0.22in !important;
+    padding: 0.18in !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .section-print-question *,
+  .section-print-lesson * {
+    color: #000000 !important;
+  }
+
+  .section-print-question img,
+  .section-print-question table,
+  .section-print-answer-list,
+  .section-print-answer-choice {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .section-print-answer-choice {
+    display: block !important;
+    width: 100% !important;
+    background: #ffffff !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    text-align: left !important;
+  }
+
+  .section-print-content[data-print-layout="double"] .section-print-question {
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+    padding: 0.14in !important;
+  }
+
+  .section-print-content[data-print-layout="double"] .section-print-question-prompt {
+    font-size: 12px !important;
+    line-height: 1.4 !important;
+  }
+
+  .section-print-content[data-print-layout="double"] .section-print-answer-choice {
+    padding: 0.07in 0.09in !important;
+  }
+}
