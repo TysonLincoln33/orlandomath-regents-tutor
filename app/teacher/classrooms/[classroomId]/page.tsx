@@ -1055,55 +1055,6 @@ export default function ClassroomDetailPage({ params }: PageProps) {
                   />
                 </div>
               </div>
-
-              <div className="space-y-4">
-                <div className="bg-white rounded-xl shadow border border-gray-200 p-6">
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    Quick Actions
-                  </h3>
-                  <div className="mt-4 grid gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleCopy(classroom.class_code, "code")}
-                      className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-left text-sm font-semibold text-gray-700 hover:bg-gray-100"
-                    >
-                      {copied === "code"
-                        ? "Class code copied"
-                        : "Copy class code"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleCopy(joinLink, "link")}
-                      className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-left text-sm font-semibold text-gray-700 hover:bg-gray-100"
-                    >
-                      {copied === "link"
-                        ? "Join link copied"
-                        : "Copy join link"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab("students")}
-                      className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-left text-sm font-semibold text-blue-700 hover:bg-blue-100"
-                    >
-                      Manage students
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab("assignments")}
-                      className="rounded-lg border border-purple-200 bg-purple-50 px-4 py-2 text-left text-sm font-semibold text-purple-700 hover:bg-purple-100"
-                    >
-                      Manage assignments
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab("progress")}
-                      className="rounded-lg border border-green-200 bg-green-50 px-4 py-2 text-left text-sm font-semibold text-green-700 hover:bg-green-100"
-                    >
-                      Review progress
-                    </button>
-                  </div>
-                </div>
-              </div>
             </section>
           )}
 
