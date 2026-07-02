@@ -28,6 +28,7 @@ import {
 import { getClassroomAssignments } from "@/lib/classrooms/getClassroomAssignments";
 import { updateClassroomAssignment } from "@/lib/classrooms/updateClassroomAssignment";
 import { archiveClassroomAssignment } from "@/lib/classrooms/archiveClassroomAssignment";
+import { groupAssignmentRows } from "@/lib/assignments/groupAssignments";
 import {
   getTeacherAssignmentRecipients,
   type TeacherAssignmentRecipient,
@@ -325,6 +326,21 @@ export default function ClassroomDetailPage({ params }: PageProps) {
     url.searchParams.set("code", classroom.class_code);
     return url.toString();
   }, [classroom?.class_code]);
+
+  const assignmentGroups = useMemo(
+    () => groupAssignmentRows(assignments),
+    [assignments],
+  );
+
+  const activeAssignmentGroups = useMemo(
+    () => assignmentGroups.filter((assignmentGroup) => !assignmentGroup.archivedAt),
+    [assignmentGroups],
+  );
+
+  const archivedAssignmentGroups = useMemo(
+    () => assignmentGroups.filter((assignmentGroup) => assignmentGroup.archivedAt),
+    [assignmentGroups],
+  );
 
   const activeAssignments = useMemo(
     () => assignments.filter((assignment) => !assignment.archived_at),
@@ -1080,12 +1096,12 @@ export default function ClassroomDetailPage({ params }: PageProps) {
                   />
                   <WorkspaceSummaryCard
                     label="Active Assignments"
-                    value={activeAssignments.length}
+                    value={activeAssignmentGroups.length}
                     helper="ready for student work"
                   />
                   <WorkspaceSummaryCard
                     label="Archived"
-                    value={archivedAssignments.length}
+                    value={archivedAssignmentGroups.length}
                     helper="stored assignment records"
                   />
                   <WorkspaceSummaryCard

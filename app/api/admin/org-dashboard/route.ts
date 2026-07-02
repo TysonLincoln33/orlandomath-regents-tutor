@@ -6,6 +6,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { canAccessAdminRoute, getEmailDomain, isMasterRole } from "@/lib/auth/roles";
 import { CHAPTERS, SECTIONS } from "@/lib/course/algebra1";
 import type { AdminOrgDashboard } from "@/lib/admin/orgDashboard";
+import { getAssignmentGroupKey } from "@/lib/assignments/groupAssignments";
 
 type ProfileRow = {
   id: string;
@@ -231,14 +232,6 @@ function calculateQuestionCompletionPercent(completedQuestionCount: number, tota
     : null;
 }
 
-function getAssignmentGroupKey(assignment: AssignmentRow) {
-  return [
-    assignment.classroom_id,
-    assignment.title.trim().toLowerCase(),
-    (assignment.description ?? "").trim().toLowerCase(),
-    assignment.due_date ?? "",
-  ].join("::");
-}
 
 type InQuery<T> = {
   in: (
