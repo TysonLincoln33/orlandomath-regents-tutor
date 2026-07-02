@@ -2162,181 +2162,24 @@ function AssignmentManagementGroupCard({
   onEditDescriptionChange: (value: string) => void;
   onEditDueDateChange: (value: string) => void;
 }) {
-  const [localSelectedAssignmentId, setLocalSelectedAssignmentId] = useState(
-    group.assignments[0]?.id ?? "",
-  );
-  const activeGroupAssignment = selectedRecipientAssignment
+  const [primaryAssignment] = group.assignments;
+  const selectedGroupAssignment = selectedRecipientAssignment
     ? group.assignments.find(
         (assignment) => assignment.id === selectedRecipientAssignment.id,
       )
     : null;
-  const selectedAssignment =
-    activeGroupAssignment ??
-    group.assignments.find(
-      (assignment) => assignment.id === localSelectedAssignmentId,
-    ) ??
-    group.assignments[0];
-  const [primaryAssignment] = group.assignments;
+  const detailAssignment = selectedGroupAssignment ?? primaryAssignment;
   const sectionCount = group.assignments.length;
+  const isEditing = editingAssignmentId === primaryAssignment?.id;
 
-  if (!primaryAssignment || !selectedAssignment) return null;
-
-  const handleSelectSection = (assignment: ClassroomAssignment) => {
-    setLocalSelectedAssignmentId(assignment.id);
-    onViewRecipients(assignment);
-  };
-
-  return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <div className="flex flex-wrap items-center gap-2">
-            <p className="font-semibold text-gray-900">
-              {primaryAssignment.title}
-            </p>
-            <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700">
-              {sectionCount} section{sectionCount === 1 ? "" : "s"}
-            </span>
-            {isArchived && (
-              <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs font-semibold text-gray-600">
-                Archived
-              </span>
-            )}
-          </div>
-
-          {primaryAssignment.description && (
-            <p className="mt-1 whitespace-pre-wrap text-sm text-gray-600">
-              {primaryAssignment.description}
-            </p>
-          )}
-          <p className="mt-2 text-xs text-gray-500">
-            Due {formatAssignmentDate(primaryAssignment.due_date)}. Select a
-            section to view that section’s assigned students and actions.
-          </p>
-        </div>
-      </div>
-
-      <div
-        className="mt-3 flex flex-wrap gap-2"
-        role="tablist"
-        aria-label="Assignment sections"
-      >
-        {group.assignments.map((assignment) => {
-          const selected = assignment.id === selectedAssignment.id;
-
-          return (
-            <button
-              key={`${group.id}-${assignment.id}-section`}
-              type="button"
-              role="tab"
-              aria-selected={selected}
-              onClick={() => handleSelectSection(assignment)}
-              className={`rounded-full border px-3 py-1 text-xs font-semibold ${
-                selected
-                  ? "border-blue-600 bg-blue-600 text-white"
-                  : "border-blue-100 bg-blue-50 text-blue-800 hover:bg-blue-100"
-              }`}
-            >
-              {getSectionLabel(assignment.section_id)}
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="mt-4">
-        <AssignmentManagementCard
-          assignment={selectedAssignment}
-          isArchived={isArchived}
-          isEditing={editingAssignmentId === selectedAssignment.id}
-          editTitle={editTitle}
-          editDescription={editDescription}
-          editDueDate={editDueDate}
-          saving={savingAssignmentId === selectedAssignment.id}
-          archiving={archivingAssignmentId === selectedAssignment.id}
-          onViewRecipients={() => onViewRecipients(selectedAssignment)}
-          onEdit={() => onEdit(selectedAssignment)}
-          onCancelEdit={onCancelEdit}
-          onSave={() => onSave(selectedAssignment.id)}
-          onArchive={() => onArchive(selectedAssignment)}
-          onEditTitleChange={onEditTitleChange}
-          onEditDescriptionChange={onEditDescriptionChange}
-          onEditDueDateChange={onEditDueDateChange}
-        />
-      </div>
-
-      {selectedRecipientAssignment?.id === selectedAssignment.id && (
-        <AssignmentRecipientDetailPanel
-          assignment={recipientDetail?.assignment ?? selectedAssignment}
-          detail={recipientDetail}
-          loading={recipientDetailLoading}
-          error={recipientDetailError}
-          message={recipientDetailMessage}
-          updatingRecipientKey={updatingRecipientKey}
-          formatDate={formatDate}
-          onBack={onCloseRecipients}
-          onMarkExcused={onMarkExcused}
-          onUnexcuse={onUnexcuse}
-          onViewOverallProgress={onViewOverallProgress}
-          onViewAssignmentDetails={(recipient) =>
-            onViewAssignmentDetails(
-              recipientDetail?.assignment ?? selectedAssignment,
-              recipient,
-            )
-          }
-        />
-      )}
-    </div>
-  );
-}
-
-function AssignmentManagementCard({
-  assignment,
-  isArchived = false,
-  isEditing,
-  editTitle,
-  editDescription,
-  editDueDate,
-  saving,
-  archiving,
-  onViewRecipients,
-  onEdit,
-  onCancelEdit,
-  onSave,
-  onArchive,
-  onEditTitleChange,
-  onEditDescriptionChange,
-  onEditDueDateChange,
-}: {
-  assignment: ClassroomAssignment;
-  isArchived?: boolean;
-  isEditing: boolean;
-  editTitle: string;
-  editDescription: string;
-  editDueDate: string;
-  saving: boolean;
-  archiving: boolean;
-  onViewRecipients: () => void;
-  onEdit: () => void;
-  onCancelEdit: () => void;
-  onSave: () => void;
-  onArchive: () => void;
-  onEditTitleChange: (value: string) => void;
-  onEditDescriptionChange: (value: string) => void;
-  onEditDueDateChange: (value: string) => void;
-}) {
-  const recipientCount = assignment.recipient_count ?? 0;
-  const completedCount = assignment.completed_count ?? 0;
-  const excusedCount = assignment.excused_count ?? 0;
-  const incompleteCount =
-    assignment.incomplete_count ??
-    Math.max(recipientCount - completedCount - excusedCount, 0);
+  if (!primaryAssignment || !detailAssignment) return null;
 
   return (
     <div
-      className={`rounded-xl border p-4 ${
+      className={`rounded-xl border p-4 shadow-sm ${
         isArchived
           ? "border-gray-200 bg-gray-100 opacity-90"
-          : "border-gray-200 bg-gray-50"
+          : "border-gray-200 bg-white"
       }`}
     >
       {isEditing ? (
@@ -2380,16 +2223,18 @@ function AssignmentManagementCard({
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
-              onClick={onSave}
-              disabled={saving}
+              onClick={() => onSave(primaryAssignment.id)}
+              disabled={savingAssignmentId === primaryAssignment.id}
               className="rounded-lg border border-blue-600 bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {saving ? "Saving..." : "Save Changes"}
+              {savingAssignmentId === primaryAssignment.id
+                ? "Saving..."
+                : "Save Changes"}
             </button>
             <button
               type="button"
               onClick={onCancelEdit}
-              disabled={saving}
+              disabled={savingAssignmentId === primaryAssignment.id}
               className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Cancel
@@ -2399,11 +2244,14 @@ function AssignmentManagementCard({
       ) : (
         <>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div>
+            <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <p className="font-semibold text-gray-900">
-                  {assignment.title}
+                <p className="break-words font-semibold text-gray-900">
+                  {primaryAssignment.title}
                 </p>
+                <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700">
+                  {sectionCount} section{sectionCount === 1 ? "" : "s"}
+                </span>
                 {isArchived && (
                   <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs font-semibold text-gray-600">
                     Archived
@@ -2411,17 +2259,20 @@ function AssignmentManagementCard({
                 )}
               </div>
 
-              {assignment.description && (
+              {primaryAssignment.description && (
                 <p className="mt-1 whitespace-pre-wrap text-sm text-gray-600">
-                  {assignment.description}
+                  {primaryAssignment.description}
                 </p>
               )}
+              <p className="mt-2 text-xs text-gray-500">
+                Due {formatAssignmentDate(primaryAssignment.due_date)}
+              </p>
             </div>
 
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
-                onClick={onViewRecipients}
+                onClick={() => onViewRecipients(primaryAssignment)}
                 className="rounded-lg border border-blue-300 bg-white px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-50"
               >
                 View Assigned Students
@@ -2430,48 +2281,61 @@ function AssignmentManagementCard({
                 <>
                   <button
                     type="button"
-                    onClick={onEdit}
+                    onClick={() => onEdit(primaryAssignment)}
                     className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-100"
                   >
                     Edit
                   </button>
                   <button
                     type="button"
-                    onClick={onArchive}
-                    disabled={archiving}
+                    onClick={() => onArchive(primaryAssignment)}
+                    disabled={archivingAssignmentId === primaryAssignment.id}
                     className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-800 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    {archiving ? "Archiving..." : "Archive"}
+                    {archivingAssignmentId === primaryAssignment.id
+                      ? "Archiving..."
+                      : "Archive"}
                   </button>
                 </>
               )}
             </div>
           </div>
 
-          <div className="mt-3 grid gap-2 text-xs text-gray-500 sm:grid-cols-2">
-            <p>
-              Section{" "}
-              <span className="font-semibold text-gray-700">
-                {getSectionLabel(assignment.section_id)}
-              </span>
+          <div className="mt-3 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2">
+            <p className="text-xs font-semibold text-gray-700">
+              Assigned sections:
             </p>
-            <p>Due {formatAssignmentDate(assignment.due_date)}</p>
-            <p>Created {formatAssignmentDate(assignment.created_at)}</p>
-            {assignment.updated_at && (
-              <p>Updated {formatAssignmentDate(assignment.updated_at)}</p>
-            )}
-            {isArchived && assignment.archived_at && (
-              <p>Archived {formatAssignmentDate(assignment.archived_at)}</p>
-            )}
-          </div>
-
-          <div className="mt-3 grid gap-2 sm:grid-cols-4">
-            <AssignmentCountPill label="Recipients" value={recipientCount} />
-            <AssignmentCountPill label="Completed" value={completedCount} />
-            <AssignmentCountPill label="Incomplete" value={incompleteCount} />
-            <AssignmentCountPill label="Excused" value={excusedCount} />
+            <ul className="mt-1 list-disc space-y-0.5 pl-5 text-xs text-gray-600">
+              {group.assignments.map((assignment) => (
+                <li key={`${group.id}-${assignment.id}-section`}>
+                  {getSectionLabel(assignment.section_id)}
+                </li>
+              ))}
+            </ul>
           </div>
         </>
+      )}
+
+      {selectedGroupAssignment && (
+        <AssignmentRecipientDetailPanel
+          assignment={recipientDetail?.assignment ?? detailAssignment}
+          detail={recipientDetail}
+          loading={recipientDetailLoading}
+          error={recipientDetailError}
+          message={recipientDetailMessage}
+          updatingRecipientKey={updatingRecipientKey}
+          formatDate={formatDate}
+          onBack={onCloseRecipients}
+          onMarkExcused={onMarkExcused}
+          onUnexcuse={onUnexcuse}
+          onViewOverallProgress={onViewOverallProgress}
+          onViewAssignmentDetails={(recipient) =>
+            onViewAssignmentDetails(
+              recipientDetail?.assignment ?? detailAssignment,
+              recipient,
+            )
+          }
+        />
       )}
     </div>
   );
