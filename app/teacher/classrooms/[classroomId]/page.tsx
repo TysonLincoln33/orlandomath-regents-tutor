@@ -60,6 +60,11 @@ type AssignmentProgressContext = {
   recipient: TeacherAssignmentRecipient;
 };
 
+type AssignmentDisplayGroup = {
+  id: string;
+  assignments: ClassroomAssignment[];
+};
+
 type ProgressPanelMode = "class" | "overall" | "assignment";
 type ClassroomWorkspaceTab =
   | "classroom"
@@ -96,6 +101,22 @@ function formatAssignmentDate(value: string | null | undefined) {
     day: "numeric",
     year: "numeric",
   });
+}
+
+function groupAssignmentsByLogicalId(
+  assignments: ClassroomAssignment[],
+): AssignmentDisplayGroup[] {
+  const groups = new Map<string, ClassroomAssignment[]>();
+
+  assignments.forEach((assignment) => {
+    const groupId = assignment.assignment_group_id ?? assignment.id;
+    groups.set(groupId, [...(groups.get(groupId) ?? []), assignment]);
+  });
+
+  return [...groups.entries()].map(([id, groupedAssignments]) => ({
+    id,
+    assignments: groupedAssignments,
+  }));
 }
 
 function getSectionLabel(sectionId: string | null) {
@@ -334,6 +355,16 @@ export default function ClassroomDetailPage({ params }: PageProps) {
   const archivedAssignments = useMemo(
     () => assignments.filter((assignment) => assignment.archived_at),
     [assignments],
+  );
+
+  const activeAssignmentGroups = useMemo(
+    () => groupAssignmentsByLogicalId(activeAssignments),
+    [activeAssignments],
+  );
+
+  const archivedAssignmentGroups = useMemo(
+    () => groupAssignmentsByLogicalId(archivedAssignments),
+    [archivedAssignments],
   );
 
   const activeAssignmentGroupCount = useMemo(
@@ -1643,41 +1674,35 @@ export default function ClassroomDetailPage({ params }: PageProps) {
                 ) : (
                   <>
                     <div className="mt-4 space-y-3">
-                      {activeAssignments.length === 0 ? (
+                      {activeAssignmentGroups.length === 0 ? (
                         <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-600">
                           No active assignments yet.
                         </div>
                       ) : (
-                        activeAssignments.map((assignment) => (
-                          <AssignmentManagementCard
-                            key={assignment.id}
-                            assignment={assignment}
-                            isEditing={editingAssignmentId === assignment.id}
+                        activeAssignmentGroups.map((assignmentGroup) => (
+                          <AssignmentManagementGroupCard
+                            key={assignmentGroup.id}
+                            group={assignmentGroup}
+                            editingAssignmentId={editingAssignmentId}
                             editTitle={editAssignmentTitle}
                             editDescription={editAssignmentDescription}
                             editDueDate={editAssignmentDueDate}
-                            saving={savingAssignmentId === assignment.id}
-                            archiving={archivingAssignmentId === assignment.id}
-                            onViewRecipients={() =>
-                              openAssignmentRecipients(assignment)
-                            }
-                            onEdit={() => startEditingAssignment(assignment)}
+                            savingAssignmentId={savingAssignmentId}
+                            archivingAssignmentId={archivingAssignmentId}
+                            onViewRecipients={openAssignmentRecipients}
+                            onEdit={startEditingAssignment}
                             onCancelEdit={cancelEditingAssignment}
-                            onSave={() => handleSaveAssignment(assignment.id)}
-                            onArchive={() =>
-                              handleArchiveAssignment(assignment)
-                            }
+                            onSave={handleSaveAssignment}
+                            onArchive={handleArchiveAssignment}
                             onEditTitleChange={setEditAssignmentTitle}
-                            onEditDescriptionChange={
-                              setEditAssignmentDescription
-                            }
+                            onEditDescriptionChange={setEditAssignmentDescription}
                             onEditDueDateChange={setEditAssignmentDueDate}
                           />
                         ))
                       )}
                     </div>
 
-                    {archivedAssignments.length > 0 && (
+                    {archivedAssignmentGroups.length > 0 && (
                       <div className="mt-5 rounded-xl border border-gray-200 bg-white p-3">
                         <button
                           type="button"
@@ -1687,7 +1712,7 @@ export default function ClassroomDetailPage({ params }: PageProps) {
                           className="flex w-full items-center justify-between text-left text-sm font-semibold text-gray-800"
                         >
                           <span>
-                            Archived assignments ({archivedAssignments.length})
+                            Archived assignments ({archivedAssignmentGroups.length})
                           </span>
                           <span className="text-xs text-gray-500">
                             {showArchivedAssignments ? "Hide" : "Show"}
@@ -1696,20 +1721,18 @@ export default function ClassroomDetailPage({ params }: PageProps) {
 
                         {showArchivedAssignments && (
                           <div className="mt-3 space-y-3">
-                            {archivedAssignments.map((assignment) => (
-                              <AssignmentManagementCard
-                                key={assignment.id}
-                                assignment={assignment}
+                            {archivedAssignmentGroups.map((assignmentGroup) => (
+                              <AssignmentManagementGroupCard
+                                key={assignmentGroup.id}
+                                group={assignmentGroup}
                                 isArchived
-                                isEditing={false}
+                                editingAssignmentId={null}
                                 editTitle=""
                                 editDescription=""
                                 editDueDate=""
-                                saving={false}
-                                archiving={false}
-                                onViewRecipients={() =>
-                                  openAssignmentRecipients(assignment)
-                                }
+                                savingAssignmentId={null}
+                                archivingAssignmentId={null}
+                                onViewRecipients={openAssignmentRecipients}
                                 onEdit={() => undefined}
                                 onCancelEdit={() => undefined}
                                 onSave={() => undefined}
@@ -2062,6 +2085,108 @@ function RecipientMetric({ label, value }: { label: string; value: string }) {
       <p className="mt-1 break-words text-sm font-semibold text-gray-900">
         {value}
       </p>
+    </div>
+  );
+}
+
+function AssignmentManagementGroupCard({
+  group,
+  isArchived = false,
+  editingAssignmentId,
+  editTitle,
+  editDescription,
+  editDueDate,
+  savingAssignmentId,
+  archivingAssignmentId,
+  onViewRecipients,
+  onEdit,
+  onCancelEdit,
+  onSave,
+  onArchive,
+  onEditTitleChange,
+  onEditDescriptionChange,
+  onEditDueDateChange,
+}: {
+  group: AssignmentDisplayGroup;
+  isArchived?: boolean;
+  editingAssignmentId: string | null;
+  editTitle: string;
+  editDescription: string;
+  editDueDate: string;
+  savingAssignmentId: string | null;
+  archivingAssignmentId: string | null;
+  onViewRecipients: (assignment: ClassroomAssignment) => void;
+  onEdit: (assignment: ClassroomAssignment) => void;
+  onCancelEdit: () => void;
+  onSave: (assignmentId: string) => void;
+  onArchive: (assignment: ClassroomAssignment) => void;
+  onEditTitleChange: (value: string) => void;
+  onEditDescriptionChange: (value: string) => void;
+  onEditDueDateChange: (value: string) => void;
+}) {
+  const [primaryAssignment] = group.assignments;
+  const sectionCount = group.assignments.length;
+
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="font-semibold text-gray-900">
+              {primaryAssignment?.title ?? "Assignment"}
+            </p>
+            <span className="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700">
+              {sectionCount} section{sectionCount === 1 ? "" : "s"}
+            </span>
+            {isArchived && (
+              <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs font-semibold text-gray-600">
+                Archived
+              </span>
+            )}
+          </div>
+
+          {primaryAssignment?.description && (
+            <p className="mt-1 whitespace-pre-wrap text-sm text-gray-600">
+              {primaryAssignment.description}
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-3 flex flex-wrap gap-2">
+        {group.assignments.map((assignment) => (
+          <span
+            key={`${group.id}-${assignment.id}-section`}
+            className="rounded-full border border-blue-100 bg-blue-50 px-2 py-1 text-xs font-semibold text-blue-800"
+          >
+            {getSectionLabel(assignment.section_id)}
+          </span>
+        ))}
+      </div>
+
+      <div className="mt-4 space-y-3">
+        {group.assignments.map((assignment) => (
+          <AssignmentManagementCard
+            key={assignment.id}
+            assignment={assignment}
+            isArchived={isArchived}
+            isEditing={editingAssignmentId === assignment.id}
+            editTitle={editTitle}
+            editDescription={editDescription}
+            editDueDate={editDueDate}
+            saving={savingAssignmentId === assignment.id}
+            archiving={archivingAssignmentId === assignment.id}
+            onViewRecipients={() => onViewRecipients(assignment)}
+            onEdit={() => onEdit(assignment)}
+            onCancelEdit={onCancelEdit}
+            onSave={() => onSave(assignment.id)}
+            onArchive={() => onArchive(assignment)}
+            onEditTitleChange={onEditTitleChange}
+            onEditDescriptionChange={onEditDescriptionChange}
+            onEditDueDateChange={onEditDueDateChange}
+          />
+        ))}
+      </div>
     </div>
   );
 }
