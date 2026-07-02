@@ -106,6 +106,29 @@ function getSectionLabel(sectionId: string | null) {
   return `Chapter ${section.chapterNumber}, Section ${section.sectionNumber}: ${section.title}`;
 }
 
+function toAssignmentGroupMinuteBucket(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value.slice(0, 16);
+
+  date.setSeconds(0, 0);
+  return date.toISOString();
+}
+
+function getAssignmentGroupKey(assignment: ClassroomAssignment) {
+  return [
+    assignment.classroom_id,
+    assignment.created_by,
+    assignment.title.trim().toLowerCase(),
+    (assignment.description ?? "").trim().toLowerCase(),
+    assignment.due_date ?? "no-due-date",
+    toAssignmentGroupMinuteBucket(assignment.created_at),
+  ].join("::");
+}
+
+function getGroupedAssignmentCount(assignments: ClassroomAssignment[]) {
+  return new Set(assignments.map(getAssignmentGroupKey)).size;
+}
+
 export default function ClassroomDetailPage({ params }: PageProps) {
   const [classroomId, setClassroomId] = useState<string>("");
   const [classroom, setClassroom] = useState<Classroom | null>(null);
@@ -334,6 +357,16 @@ export default function ClassroomDetailPage({ params }: PageProps) {
   const archivedAssignments = useMemo(
     () => assignments.filter((assignment) => assignment.archived_at),
     [assignments],
+  );
+
+  const activeAssignmentGroupCount = useMemo(
+    () => getGroupedAssignmentCount(activeAssignments),
+    [activeAssignments],
+  );
+
+  const archivedAssignmentGroupCount = useMemo(
+    () => getGroupedAssignmentCount(archivedAssignments),
+    [archivedAssignments],
   );
 
   const handleCopy = async (value: string, type: "code" | "link") => {
@@ -1080,12 +1113,12 @@ export default function ClassroomDetailPage({ params }: PageProps) {
                   />
                   <WorkspaceSummaryCard
                     label="Active Assignments"
-                    value={activeAssignments.length}
+                    value={activeAssignmentGroupCount}
                     helper="ready for student work"
                   />
                   <WorkspaceSummaryCard
                     label="Archived"
-                    value={archivedAssignments.length}
+                    value={archivedAssignmentGroupCount}
                     helper="stored assignment records"
                   />
                   <WorkspaceSummaryCard
