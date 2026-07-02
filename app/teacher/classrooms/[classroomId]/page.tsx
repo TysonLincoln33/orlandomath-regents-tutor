@@ -149,7 +149,7 @@ export default function ClassroomDetailPage({ params }: PageProps) {
   const [assignmentTitle, setAssignmentTitle] = useState("");
   const [assignmentDescription, setAssignmentDescription] = useState("");
   const [assignmentDueDate, setAssignmentDueDate] = useState("");
-  const [assignmentSectionId, setAssignmentSectionId] = useState("");
+  const [assignmentSectionIds, setAssignmentSectionIds] = useState<string[]>([]);
   const [assignmentTarget, setAssignmentTarget] = useState<
     "class" | "students"
   >("class");
@@ -335,6 +335,34 @@ export default function ClassroomDetailPage({ params }: PageProps) {
     () => assignments.filter((assignment) => assignment.archived_at),
     [assignments],
   );
+
+  const activeAssignmentGroupCount = useMemo(
+    () =>
+      new Set(
+        activeAssignments.map(
+          (assignment) => assignment.assignment_group_id ?? assignment.id,
+        ),
+      ).size,
+    [activeAssignments],
+  );
+
+  const archivedAssignmentGroupCount = useMemo(
+    () =>
+      new Set(
+        archivedAssignments.map(
+          (assignment) => assignment.assignment_group_id ?? assignment.id,
+        ),
+      ).size,
+    [archivedAssignments],
+  );
+
+  const toggleAssignmentSection = (sectionId: string) => {
+    setAssignmentSectionIds((prev) =>
+      prev.includes(sectionId)
+        ? prev.filter((id) => id !== sectionId)
+        : [...prev, sectionId],
+    );
+  };
 
   const handleCopy = async (value: string, type: "code" | "link") => {
     if (!value) return;
@@ -944,22 +972,24 @@ export default function ClassroomDetailPage({ params }: PageProps) {
         title: assignmentTitle,
         description: assignmentDescription,
         dueDate: assignmentDueDate,
-        sectionId: assignmentSectionId,
+        sectionIds: assignmentSectionIds,
         target: assignmentTarget,
         recipientUserIds:
           assignmentTarget === "students" ? assignmentRecipientIds : undefined,
       });
 
-      setAssignments((prev) => [result.assignment, ...prev]);
+      setAssignments((prev) => [...result.assignments, ...prev]);
       setShowArchivedAssignments(false);
       setAssignmentTitle("");
       setAssignmentDescription("");
       setAssignmentDueDate("");
-      setAssignmentSectionId("");
+      setAssignmentSectionIds([]);
       setAssignmentTarget("class");
       setAssignmentRecipientIds([]);
       setAssignmentMessage(
-        `Assignment created for ${result.recipient_count} student${
+        `Assignment created for ${result.created_count} section${
+          result.created_count === 1 ? "" : "s"
+        } and ${result.recipient_count} recipient${
           result.recipient_count === 1 ? "" : "s"
         }.`,
       );
@@ -1080,12 +1110,12 @@ export default function ClassroomDetailPage({ params }: PageProps) {
                   />
                   <WorkspaceSummaryCard
                     label="Active Assignments"
-                    value={activeAssignments.length}
+                    value={activeAssignmentGroupCount}
                     helper="ready for student work"
                   />
                   <WorkspaceSummaryCard
                     label="Archived"
-                    value={archivedAssignments.length}
+                    value={archivedAssignmentGroupCount}
                     helper="stored assignment records"
                   />
                   <WorkspaceSummaryCard
@@ -1426,21 +1456,29 @@ export default function ClassroomDetailPage({ params }: PageProps) {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold mb-1 text-gray-800">
-                      Section
-                    </label>
-                    <select
-                      value={assignmentSectionId}
-                      onChange={(e) => setAssignmentSectionId(e.target.value)}
-                      className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value="">Choose an Algebra 1 section</option>
+                    <p className="block text-sm font-semibold mb-2 text-gray-800">
+                      Sections
+                    </p>
+                    <div className="grid max-h-56 gap-2 overflow-y-auto rounded-lg border border-gray-200 bg-white p-3 sm:grid-cols-2">
                       {SECTIONS.map((section) => (
-                        <option key={section.id} value={section.id}>
-                          {getSectionLabel(section.id)}
-                        </option>
+                        <label
+                          key={section.id}
+                          className="flex cursor-pointer items-start gap-2 rounded-md border border-gray-100 p-2 text-sm text-gray-800 hover:bg-blue-50"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={assignmentSectionIds.includes(section.id)}
+                            onChange={() => toggleAssignmentSection(section.id)}
+                            className="mt-0.5 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <span>{getSectionLabel(section.id)}</span>
+                        </label>
                       ))}
-                    </select>
+                    </div>
+                    <p className="mt-2 text-xs text-gray-500">
+                      Select one or more Algebra 1 sections. Each section gets its
+                      own manageable assignment row in one logical assignment group.
+                    </p>
                   </div>
 
                   <div>

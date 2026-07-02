@@ -10,7 +10,7 @@ import {
 const VALID_SECTION_IDS = new Set(SECTIONS.map((section) => section.id));
 
 const ASSIGNMENT_SELECT =
-  "id, classroom_id, title, description, due_date, section_id, created_by, created_at, updated_at, archived_at";
+  "id, classroom_id, title, description, due_date, section_id, assignment_group_id, created_by, created_at, updated_at, archived_at";
 
 type RouteContext = {
   params: Promise<{
@@ -29,6 +29,7 @@ type AssignmentRow = {
   description: string | null;
   due_date: string | null;
   section_id: string | null;
+  assignment_group_id?: string | null;
   created_by: string;
   created_at: string;
   updated_at?: string | null;
@@ -151,7 +152,17 @@ export async function POST(req: NextRequest, context: RouteContext) {
     const title = String(body?.title || "").trim();
     const description = String(body?.description || "").trim() || null;
     const dueDate = normalizeDate(body?.due_date);
-    const sectionId = String(body?.section_id || "").trim();
+    const legacySectionId = String(body?.section_id || "").trim();
+    const requestedSectionIds = Array.isArray(body?.section_ids)
+      ? [...body.section_ids, legacySectionId]
+      : [legacySectionId];
+    const sectionIds: string[] = [
+      ...new Set<string>(
+        requestedSectionIds
+          .map((sectionId: unknown) => String(sectionId || "").trim())
+          .filter((sectionId: string): sectionId is string => Boolean(sectionId)),
+      ),
+    ];
     const target = body?.target === "students" ? "students" : "class";
     const recipientUserIds: string[] = Array.isArray(body?.recipient_user_ids)
       ? [
@@ -168,9 +179,12 @@ export async function POST(req: NextRequest, context: RouteContext) {
       );
     }
 
-    if (!sectionId || !VALID_SECTION_IDS.has(sectionId)) {
+    if (
+      sectionIds.length === 0 ||
+      sectionIds.some((sectionId) => !VALID_SECTION_IDS.has(sectionId))
+    ) {
       return NextResponse.json(
-        { error: "Please select a valid Algebra 1 section." },
+        { error: "Please select one or more valid Algebra 1 sections." },
         { status: 400 },
       );
     }
@@ -216,41 +230,52 @@ export async function POST(req: NextRequest, context: RouteContext) {
       );
     }
 
-    const { data: assignment, error: assignmentError } = await adminClient
+    const assignmentGroupId = crypto.randomUUID();
+    const { data: assignmentRowsData, error: assignmentError } = await adminClient
       .from("assignments")
-      .insert({
-        classroom_id: classroomId,
-        title,
-        description,
-        due_date: dueDate,
-        section_id: sectionId,
-        created_by: user.id,
-      })
-      .select(ASSIGNMENT_SELECT)
-      .single();
+      .insert(
+        sectionIds.map((sectionId) => ({
+          classroom_id: classroomId,
+          title,
+          description,
+          due_date: dueDate,
+          section_id: sectionId,
+          assignment_group_id: assignmentGroupId,
+          created_by: user.id,
+        })),
+      )
+      .select(ASSIGNMENT_SELECT);
 
-    if (assignmentError || !assignment) {
+    if (assignmentError || !assignmentRowsData?.length) {
       return NextResponse.json(
         { error: assignmentError?.message || "Failed to create assignment." },
         { status: 500 },
       );
     }
 
-    const assignmentRow = assignment as AssignmentRow;
-    const recipientRows = recipients.map((recipientUserId) => ({
-      assignment_id: assignmentRow.id,
-      classroom_id: classroomId,
-      user_id: recipientUserId,
-      assigned_by: user.id,
-      status: "assigned",
-    }));
+    const assignmentRows = assignmentRowsData as AssignmentRow[];
+    const recipientRows = assignmentRows.flatMap((assignmentRow) =>
+      recipients.map((recipientUserId) => ({
+        assignment_id: assignmentRow.id,
+        classroom_id: classroomId,
+        user_id: recipientUserId,
+        assigned_by: user.id,
+        status: "assigned",
+      })),
+    );
 
     const { error: recipientsError } = await adminClient
       .from("assignment_recipients")
       .insert(recipientRows);
 
     if (recipientsError) {
-      await adminClient.from("assignments").delete().eq("id", assignmentRow.id);
+      await adminClient
+        .from("assignments")
+        .delete()
+        .in(
+          "id",
+          assignmentRows.map((assignmentRow) => assignmentRow.id),
+        );
 
       return NextResponse.json(
         {
@@ -262,15 +287,19 @@ export async function POST(req: NextRequest, context: RouteContext) {
       );
     }
 
+    const assignmentsWithCounts = assignmentRows.map((assignmentRow) => ({
+      ...assignmentRow,
+      recipient_count: recipients.length,
+      completed_count: 0,
+      incomplete_count: recipients.length,
+      excused_count: 0,
+    }));
+
     return NextResponse.json({
-      assignment: {
-        ...assignmentRow,
-        recipient_count: recipientRows.length,
-        completed_count: 0,
-        incomplete_count: recipientRows.length,
-        excused_count: 0,
-      },
+      assignment: assignmentsWithCounts[0],
+      assignments: assignmentsWithCounts,
       recipient_count: recipientRows.length,
+      created_count: assignmentsWithCounts.length,
     });
   } catch (err) {
     console.error("create assignment route error", err);
