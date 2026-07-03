@@ -904,46 +904,41 @@ html.om-hide-header .om-header {
     margin: 0.02in 0 0 !important;
   }
 
-  .section-print-lesson {
-    padding: 0.11in 0.13in !important;
+  .chapter-print-content .section-print-lesson {
+    padding: 0.08in 0.1in !important;
     margin: 0 0 0.12in !important;
     break-inside: auto !important;
     page-break-inside: auto !important;
   }
 
-  .section-print-lesson p:first-child {
+  .chapter-print-content .section-print-lesson p:first-child {
     font-size: 8px !important;
     line-height: 1.1 !important;
     margin: 0 0 0.04in !important;
     letter-spacing: 0.04em !important;
   }
 
-  .section-print-lesson h3 {
+  .chapter-print-content .section-print-lesson h3 {
     font-size: 12px !important;
     line-height: 1.15 !important;
     margin: 0 0 0.05in !important;
   }
 
-  .section-print-lesson p {
+  .chapter-print-content .section-print-lesson p {
     font-size: 10px !important;
     line-height: 1.28 !important;
     margin: 0 0 0.05in !important;
   }
 
-  .section-print-question-list {
+  .chapter-print-content .section-print-question-list {
     margin-top: 0 !important;
   }
 
-  .section-print-question-list > :not([hidden]) ~ :not([hidden]),
-  .section-print-answer-list > :not([hidden]) ~ :not([hidden]) {
-    margin-top: 0.07in !important;
-  }
-
-  .section-print-question {
+  .chapter-print-content .section-print-question {
     margin-bottom: 0.14in !important;
   }
 
-  .section-print-question-prompt {
+  .chapter-print-content .section-print-question-prompt {
     margin-bottom: 0.08in !important;
   }
 }
