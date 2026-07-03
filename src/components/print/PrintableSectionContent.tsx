@@ -39,6 +39,7 @@ type Props = {
   onCheck?: (question: PrintableQuestion) => void;
   showHint?: Record<string, boolean>;
   interactive?: boolean;
+  answerKey?: boolean;
 };
 
 export default function PrintableSectionContent({
@@ -51,6 +52,7 @@ export default function PrintableSectionContent({
   onCheck,
   showHint = {},
   interactive = false,
+  answerKey = false,
 }: Props) {
   return (
     <section className="chapter-print-section section-print-section">
@@ -86,12 +88,13 @@ export default function PrintableSectionContent({
               ) : null}
               <div className="section-print-answer-list space-y-3 mt-4">
                 {question.choices.map((choice, choiceIndex) => {
+                  const isAnswerKeyCorrect = answerKey && choiceIndex === question.answerIndex;
                   const isSelected = selected === choiceIndex;
                   let buttonClass = "section-print-answer-choice w-full text-left border rounded-lg px-4 py-3 transition text-gray-900";
                   if (isMastered && isSelected) buttonClass += " bg-green-100 border-green-400";
                   else if (isIncorrect && isSelected) buttonClass += " bg-red-100 border-red-400";
                   else buttonClass += isSelected ? " bg-blue-50 border-blue-400" : " bg-white border-gray-300";
-                  return <button key={choiceIndex} type="button" onClick={() => interactive && onSelect?.(question.id, choiceIndex)} disabled={!interactive} className={buttonClass}>{question.choiceImages?.[choiceIndex] ? <div className="flex items-start gap-3"><span className="font-semibold mt-1 shrink-0">{String.fromCharCode(65 + choiceIndex)}.</span><img src={question.choiceImages[choiceIndex]} alt={`Choice ${choiceIndex + 1}`} className="max-w-full rounded" /></div> : <><span className="font-semibold mr-2">{String.fromCharCode(65 + choiceIndex)}.</span>{renderBoldText(choice)}</>}</button>;
+                  return <button key={choiceIndex} type="button" onClick={() => interactive && onSelect?.(question.id, choiceIndex)} disabled={!interactive} className={buttonClass}>{question.choiceImages?.[choiceIndex] ? <div className="flex items-start gap-3"><span className={`section-print-choice-label font-semibold mt-1 shrink-0 ${isAnswerKeyCorrect ? "section-print-choice-label-correct" : ""}`}>{String.fromCharCode(65 + choiceIndex)}.</span><img src={question.choiceImages[choiceIndex]} alt={`Choice ${choiceIndex + 1}`} className="max-w-full rounded" /></div> : <><span className={`section-print-choice-label font-semibold mr-2 ${isAnswerKeyCorrect ? "section-print-choice-label-correct" : ""}`}>{String.fromCharCode(65 + choiceIndex)}.</span>{renderBoldText(choice)}</>}</button>;
                 })}
               </div>
               {interactive ? <><button type="button" onClick={() => onCheck?.(question)} className="no-print mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg">Check answer</button>{isIncorrect ? <div className="no-print mt-4 p-3 bg-red-50 border border-red-300 rounded-lg text-sm text-red-800 font-medium">Incorrect. Try again.</div> : null}{showHint[question.id] ? <div className="section-print-hint no-print mt-4 p-3 bg-amber-50 border border-amber-300 rounded-lg text-sm text-amber-900"><strong className="font-semibold">Hint:</strong> {question.hint ?? "Eliminate choices that don't match conditions."}</div> : null}{isMastered && question.explanation ? <div className="section-print-explanation no-print mt-4 p-3 bg-gray-50 border rounded-lg text-sm text-gray-800 leading-7">{renderBoldText(question.explanation)}</div> : null}</> : null}

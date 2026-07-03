@@ -923,3 +923,15 @@ html.om-hide-header .om-header {
     margin-bottom: 0.08in !important;
   }
 }
+
+/* Filled answer-key choice marker; student worksheet choices remain unchanged. */
+.section-print-choice-label-correct {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.35em;
+  min-height: 1.35em;
+  border-radius: 9999px;
+  background: #111827;
+  color: #ffffff !important;
+}
