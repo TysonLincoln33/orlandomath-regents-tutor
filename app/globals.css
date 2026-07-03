@@ -683,6 +683,10 @@ html.om-hide-header .om-header {
     column-gap: 0.28in;
   }
 
+  .section-print-content[data-print-layout="double"] .section-print-lesson {
+    display: none !important;
+  }
+
   .section-print-question {
     display: inline-block !important;
     width: 100% !important;
