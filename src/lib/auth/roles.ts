@@ -13,6 +13,10 @@ export function isAdminRole(role: AppRole) {
   return role === "admin";
 }
 
+export function canUsePrintControls(role: AppRole) {
+  return isTeacherLikeRole(role) || isAdminRole(role);
+}
+
 export function isApprovedStatus(approvalStatus: ApprovalStatus) {
   return approvalStatus === "approved";
 }
@@ -22,7 +26,8 @@ export function canAccessAdminRoute(
   approvalStatus: ApprovalStatus,
 ) {
   return (
-    isApprovedStatus(approvalStatus) && (isAdminRole(role) || isMasterRole(role))
+    isApprovedStatus(approvalStatus) &&
+    (isAdminRole(role) || isMasterRole(role))
   );
 }
 

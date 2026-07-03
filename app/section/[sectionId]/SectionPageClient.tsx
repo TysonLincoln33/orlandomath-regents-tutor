@@ -6,7 +6,10 @@ import "katex/dist/katex.min.css";
 
 import RainbowBar from "@/components/progress/RainbowBar";
 import PrintableAnswerKey from "@/components/print/PrintableAnswerKey";
-import PrintableSectionContent, { type PrintableQuestion } from "@/components/print/PrintableSectionContent";
+import PrintableSectionContent, {
+  type PrintableQuestion,
+} from "@/components/print/PrintableSectionContent";
+import { useCanUsePrintControls } from "@/lib/auth/usePrintControls";
 import { recordQuestionAttempt } from "@/lib/progress/attemptTracking";
 import { emitProgressUpdated } from "@/lib/progress/events";
 import {
@@ -43,7 +46,10 @@ export default function SectionPageClient({ data }: { data: SectionData }) {
   const [showHint, setShowHint] = useState<Record<string, boolean>>({});
   const [progressPercent, setProgressPercent] = useState(0);
   const [printLayout, setPrintLayout] = useState<"single" | "double">("single");
-  const [printMode, setPrintMode] = useState<"worksheet" | "answer-key">("worksheet");
+  const [printMode, setPrintMode] = useState<"worksheet" | "answer-key">(
+    "worksheet",
+  );
+  const canPrint = useCanUsePrintControls();
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -172,63 +178,65 @@ export default function SectionPageClient({ data }: { data: SectionData }) {
       data-print-layout={printLayout}
       data-print-mode={printMode}
     >
-      <div className="section-print-toolbar no-print rounded-xl border border-slate-200 bg-white p-4 shadow">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-              Print Section
-            </p>
-            <p className="mt-1 text-sm text-gray-700">
-              Choose a worksheet layout, then print this section.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <div
-              className="inline-flex rounded-lg border border-gray-300 bg-gray-50 p-1"
-              aria-label="Print layout"
-            >
-              <button
-                type="button"
-                onClick={() => setPrintLayout("single")}
-                className={`rounded-md px-3 py-2 text-sm font-semibold transition ${
-                  printLayout === "single"
-                    ? "bg-blue-600 text-white shadow-sm"
-                    : "text-gray-700 hover:bg-white"
-                }`}
-              >
-                Single Column
-              </button>
-              <button
-                type="button"
-                onClick={() => setPrintLayout("double")}
-                className={`rounded-md px-3 py-2 text-sm font-semibold transition ${
-                  printLayout === "double"
-                    ? "bg-blue-600 text-white shadow-sm"
-                    : "text-gray-700 hover:bg-white"
-                }`}
-              >
-                Double Column
-              </button>
+      {canPrint ? (
+        <div className="section-print-toolbar no-print rounded-xl border border-slate-200 bg-white p-4 shadow">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                Print Section
+              </p>
+              <p className="mt-1 text-sm text-gray-700">
+                Choose a worksheet layout, then print this section.
+              </p>
             </div>
 
-            <button
-              type="button"
-              onClick={printWorksheet}
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
-            >
-              Print Section
-            </button>
-            <button
-              type="button"
-              onClick={printAnswerKey}
-              className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
-            >
-              Print Answer Key
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <div
+                className="inline-flex rounded-lg border border-gray-300 bg-gray-50 p-1"
+                aria-label="Print layout"
+              >
+                <button
+                  type="button"
+                  onClick={() => setPrintLayout("single")}
+                  className={`rounded-md px-3 py-2 text-sm font-semibold transition ${
+                    printLayout === "single"
+                      ? "bg-blue-600 text-white shadow-sm"
+                      : "text-gray-700 hover:bg-white"
+                  }`}
+                >
+                  Single Column
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPrintLayout("double")}
+                  className={`rounded-md px-3 py-2 text-sm font-semibold transition ${
+                    printLayout === "double"
+                      ? "bg-blue-600 text-white shadow-sm"
+                      : "text-gray-700 hover:bg-white"
+                  }`}
+                >
+                  Double Column
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={printWorksheet}
+                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+              >
+                Print Section
+              </button>
+              <button
+                type="button"
+                onClick={printAnswerKey}
+                className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
+              >
+                Print Answer Key
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      ) : null}
 
       <div className="worksheet-print-area">
         <PrintableSectionContent

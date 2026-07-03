@@ -7,27 +7,37 @@ import RainbowBar from "@/components/progress/RainbowBar";
 import SectionRow from "@/components/course/SectionRow";
 
 import { CHAPTERS, SECTIONS, type Section } from "@/lib/course/algebra1";
+import { useCanUsePrintControls } from "@/lib/auth/usePrintControls";
 import { getAveragePercent } from "@/lib/sectionProgressLocal";
 import { RT_PROGRESS_UPDATED_EVENT } from "@/lib/progress/events";
 
 type Props = { chapterId: string };
 
 export default function ChapterClient({ chapterId }: Props) {
-  const chapter = useMemo(() => CHAPTERS.find((c) => c.id === chapterId), [chapterId]);
+  const chapter = useMemo(
+    () => CHAPTERS.find((c) => c.id === chapterId),
+    [chapterId],
+  );
 
   const sections: Section[] = useMemo(() => {
     if (!chapter) return [];
     return SECTIONS.filter((s) => s.chapterId === chapter.id);
   }, [chapter]);
 
-  const sectionIds = useMemo(() => sections.map((section) => section.id), [sections]);
+  const sectionIds = useMemo(
+    () => sections.map((section) => section.id),
+    [sections],
+  );
   const [completionPercent, setCompletionPercent] = useState(0);
   const [overallPercent, setOverallPercent] = useState(0);
+  const canPrint = useCanUsePrintControls();
 
   useEffect(() => {
     const refresh = () => {
       setCompletionPercent(getAveragePercent(sectionIds));
-      setOverallPercent(getAveragePercent(SECTIONS.map((section) => section.id)));
+      setOverallPercent(
+        getAveragePercent(SECTIONS.map((section) => section.id)),
+      );
     };
 
     refresh();
@@ -42,8 +52,12 @@ export default function ChapterClient({ chapterId }: Props) {
   if (!chapter) {
     return (
       <main className="min-h-screen bg-transparent px-6 py-16 text-center">
-        <h1 className="text-xl font-semibold text-slate-900">Chapter not found</h1>
-        <p className="mt-2 text-sm text-slate-600">This chapter ID does not exist.</p>
+        <h1 className="text-xl font-semibold text-slate-900">
+          Chapter not found
+        </h1>
+        <p className="mt-2 text-sm text-slate-600">
+          This chapter ID does not exist.
+        </p>
         <div className="mt-6">
           <Link href="/dashboard" className="text-blue-600 hover:underline">
             Return to dashboard
@@ -57,19 +71,27 @@ export default function ChapterClient({ chapterId }: Props) {
     <div className="min-h-screen bg-transparent">
       <div className="mx-auto w-full max-w-screen-2xl px-4 py-10">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-          <Link href="/dashboard" className="text-sm text-slate-600 hover:underline">
+          <Link
+            href="/dashboard"
+            className="text-sm text-slate-600 hover:underline"
+          >
             ← Return to dashboard
           </Link>
           <div className="flex flex-wrap items-center gap-3">
-            <Link
-              href={`/chapter/${chapter.id}/print`}
-              target="_blank"
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
-            >
-              Print Chapter
-            </Link>
+            {canPrint ? (
+              <Link
+                href={`/chapter/${chapter.id}/print`}
+                target="_blank"
+                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+              >
+                Print Chapter
+              </Link>
+            ) : null}
             <div className="text-sm text-slate-600">
-              Overall progress: <span className="font-semibold text-slate-900">{overallPercent}%</span>
+              Overall progress:{" "}
+              <span className="font-semibold text-slate-900">
+                {overallPercent}%
+              </span>
             </div>
           </div>
         </div>
@@ -80,15 +102,23 @@ export default function ChapterClient({ chapterId }: Props) {
               <div className="text-xs font-semibold tracking-wide text-slate-300">
                 Chapter {chapter.number} • {chapter.percent.toFixed(1)}% of exam
               </div>
-              <h1 className="mt-2 text-4xl font-bold tracking-tight text-white">{chapter.title}</h1>
+              <h1 className="mt-2 text-4xl font-bold tracking-tight text-white">
+                {chapter.title}
+              </h1>
               {chapter.dashboardBlurb ? (
-                <p className="mt-3 max-w-2xl text-slate-300">{chapter.dashboardBlurb}</p>
+                <p className="mt-3 max-w-2xl text-slate-300">
+                  {chapter.dashboardBlurb}
+                </p>
               ) : null}
             </div>
 
             <div className="shrink-0 rounded-2xl border border-white/20 bg-[rgba(15,18,50,0.75)] px-6 py-4 text-center shadow-[0_0_18px_rgba(108,72,255,0.35)]">
-              <div className="text-xs tracking-widest text-slate-300">PROGRESS</div>
-              <div className="text-3xl font-bold text-white">{completionPercent}%</div>
+              <div className="text-xs tracking-widest text-slate-300">
+                PROGRESS
+              </div>
+              <div className="text-3xl font-bold text-white">
+                {completionPercent}%
+              </div>
             </div>
           </div>
 
