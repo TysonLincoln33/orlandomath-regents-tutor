@@ -212,6 +212,8 @@ export default function SectionPageClient({ data }: { data: SectionData }) {
 
       <PrintableSectionContent
         data={data}
+        showSectionTitle
+        sectionHeaderPrintOnly
         answers={answers}
         mastered={mastered}
         incorrect={incorrect}
