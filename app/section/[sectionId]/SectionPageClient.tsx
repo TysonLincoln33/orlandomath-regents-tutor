@@ -5,7 +5,10 @@ import renderMathInElement from "katex/contrib/auto-render";
 import "katex/dist/katex.min.css";
 
 import RainbowBar from "@/components/progress/RainbowBar";
-import PrintableSectionContent, { type PrintableQuestion } from "@/components/print/PrintableSectionContent";
+import PrintableSectionContent, {
+  type PrintablePrintMode,
+  type PrintableQuestion,
+} from "@/components/print/PrintableSectionContent";
 import { recordQuestionAttempt } from "@/lib/progress/attemptTracking";
 import { emitProgressUpdated } from "@/lib/progress/events";
 import {
@@ -42,6 +45,7 @@ export default function SectionPageClient({ data }: { data: SectionData }) {
   const [showHint, setShowHint] = useState<Record<string, boolean>>({});
   const [progressPercent, setProgressPercent] = useState(0);
   const [printLayout, setPrintLayout] = useState<"single" | "double">("single");
+  const [printMode, setPrintMode] = useState<PrintablePrintMode>("student");
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -166,7 +170,7 @@ export default function SectionPageClient({ data }: { data: SectionData }) {
               Print Section
             </p>
             <p className="mt-1 text-sm text-gray-700">
-              Choose a worksheet layout, then print this section.
+              Choose a worksheet layout and version, then print this section.
             </p>
           </div>
 
@@ -199,6 +203,34 @@ export default function SectionPageClient({ data }: { data: SectionData }) {
               </button>
             </div>
 
+            <div
+              className="inline-flex rounded-lg border border-gray-300 bg-gray-50 p-1"
+              aria-label="Print mode"
+            >
+              <button
+                type="button"
+                onClick={() => setPrintMode("student")}
+                className={`rounded-md px-3 py-2 text-sm font-semibold transition ${
+                  printMode === "student"
+                    ? "bg-blue-600 text-white shadow-sm"
+                    : "text-gray-700 hover:bg-white"
+                }`}
+              >
+                Student Version
+              </button>
+              <button
+                type="button"
+                onClick={() => setPrintMode("answerKey")}
+                className={`rounded-md px-3 py-2 text-sm font-semibold transition ${
+                  printMode === "answerKey"
+                    ? "bg-blue-600 text-white shadow-sm"
+                    : "text-gray-700 hover:bg-white"
+                }`}
+              >
+                Answer Key
+              </button>
+            </div>
+
             <button
               type="button"
               onClick={() => window.print()}
@@ -219,6 +251,7 @@ export default function SectionPageClient({ data }: { data: SectionData }) {
         onCheck={handleCheck}
         showHint={showHint}
         interactive
+        printMode={printMode}
       />
 
       {/* FLOATING RAINBOW PROGRESS BAR */}

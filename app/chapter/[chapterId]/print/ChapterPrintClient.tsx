@@ -4,7 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import renderMathInElement from "katex/contrib/auto-render";
 import "katex/dist/katex.min.css";
 
-import PrintableSectionContent, { type PrintableSectionData } from "@/components/print/PrintableSectionContent";
+import PrintableSectionContent, {
+  type PrintablePrintMode,
+  type PrintableSectionData,
+} from "@/components/print/PrintableSectionContent";
 
 type ChapterPrintData = {
   chapterId: string;
@@ -14,6 +17,7 @@ type ChapterPrintData = {
 
 export default function ChapterPrintClient({ data }: { data: ChapterPrintData }) {
   const [printLayout, setPrintLayout] = useState<"single" | "double">("single");
+  const [printMode, setPrintMode] = useState<PrintablePrintMode>("student");
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -42,12 +46,16 @@ export default function ChapterPrintClient({ data }: { data: ChapterPrintData })
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Print Chapter</p>
-            <p className="mt-1 text-sm text-gray-700">Choose a worksheet layout, then print the full chapter.</p>
+            <p className="mt-1 text-sm text-gray-700">Choose a worksheet layout and version, then print the full chapter.</p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <div className="inline-flex rounded-lg border border-gray-300 bg-gray-50 p-1" aria-label="Print layout">
               <button type="button" onClick={() => setPrintLayout("single")} className={`rounded-md px-3 py-2 text-sm font-semibold transition ${printLayout === "single" ? "bg-blue-600 text-white shadow-sm" : "text-gray-700 hover:bg-white"}`}>Single Column</button>
               <button type="button" onClick={() => setPrintLayout("double")} className={`rounded-md px-3 py-2 text-sm font-semibold transition ${printLayout === "double" ? "bg-blue-600 text-white shadow-sm" : "text-gray-700 hover:bg-white"}`}>Double Column</button>
+            </div>
+            <div className="inline-flex rounded-lg border border-gray-300 bg-gray-50 p-1" aria-label="Print mode">
+              <button type="button" onClick={() => setPrintMode("student")} className={`rounded-md px-3 py-2 text-sm font-semibold transition ${printMode === "student" ? "bg-blue-600 text-white shadow-sm" : "text-gray-700 hover:bg-white"}`}>Student Version</button>
+              <button type="button" onClick={() => setPrintMode("answerKey")} className={`rounded-md px-3 py-2 text-sm font-semibold transition ${printMode === "answerKey" ? "bg-blue-600 text-white shadow-sm" : "text-gray-700 hover:bg-white"}`}>Answer Key</button>
             </div>
             <button type="button" onClick={() => window.print()} className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700">Print Chapter</button>
           </div>
@@ -60,7 +68,7 @@ export default function ChapterPrintClient({ data }: { data: ChapterPrintData })
       </header>
 
       {data.sections.map((section) => (
-        <PrintableSectionContent key={section.sectionId} data={section} showSectionTitle />
+        <PrintableSectionContent key={section.sectionId} data={section} showSectionTitle printMode={printMode} />
       ))}
     </main>
   );

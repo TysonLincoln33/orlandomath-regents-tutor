@@ -810,6 +810,12 @@ html.om-hide-header .om-header {
     pointer-events: none;
   }
 
+  .section-print-correct-answer {
+    background: #ecfdf5 !important;
+    border: 2px solid #047857 !important;
+    font-weight: 700 !important;
+  }
+
   .section-print-content[data-print-layout="double"] .section-print-question-list {
     column-count: 2;
     column-gap: 0.35in;
