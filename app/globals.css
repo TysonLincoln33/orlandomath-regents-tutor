@@ -1001,3 +1001,15 @@ html.om-hide-header .om-header {
     margin: 0 0 0.04in !important;
   }
 }
+
+@media screen {
+  .section-print-section-header-print-only {
+    border-top: 0;
+    margin-top: 0;
+    padding-top: 0;
+  }
+
+  .section-print-lesson + .section-print-question-list {
+    margin-top: 2rem;
+  }
+}

@@ -70,7 +70,7 @@ export default function PrintableSectionContent({
   const { chapterLabel, sectionLabel } = formatSectionHeader(data.sectionId);
 
   return (
-    <section className="chapter-print-section section-print-section">
+    <section className={`chapter-print-section section-print-section${sectionHeaderPrintOnly ? " section-print-section-header-print-only" : ""}`}>
       {showSectionTitle ? (
         <header className={`chapter-print-section-header${sectionHeaderPrintOnly ? " section-print-header-screen-hidden" : ""}`}>
           {chapterLabel ? (
