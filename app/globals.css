@@ -634,6 +634,7 @@ html.om-hide-header .om-header {
   .om-header,
   .om-topbar,
   .om-rainbowline,
+  .section-print-lesson,
   .section-print-toolbar,
   .section-print-progress-meter {
     display: none !important;
