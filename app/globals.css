@@ -906,6 +906,10 @@ html.om-hide-header .om-header {
     margin: 0 0 0.05in !important;
   }
 
+  .section-print-lesson {
+    display: none !important;
+  }
+
   .section-print-question-list {
     margin-top: 0 !important;
   }
