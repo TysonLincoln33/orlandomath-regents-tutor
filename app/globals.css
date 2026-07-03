@@ -669,16 +669,20 @@ html.om-hide-header .om-header {
     page-break-inside: avoid;
   }
 
-  .section-print-question-list {
+  .section-print-body {
     display: block !important;
     margin-top: 0 !important;
   }
 
-  .section-print-content[data-print-layout="single"] .section-print-question-list {
+  .section-print-question-list {
+    display: contents !important;
+  }
+
+  .section-print-content[data-print-layout="single"] .section-print-body {
     column-count: 1;
   }
 
-  .section-print-content[data-print-layout="double"] .section-print-question-list {
+  .section-print-content[data-print-layout="double"] .section-print-body {
     column-count: 2;
     column-gap: 0.28in;
   }
@@ -732,7 +736,7 @@ html.om-hide-header .om-header {
 }
 
 /* Printable section/chapter worksheet styles */
-.section-print-content[data-print-layout="double"] .section-print-question-list {
+.section-print-content[data-print-layout="double"] .section-print-body {
   column-count: 2;
   column-gap: 1.5rem;
 }
@@ -810,9 +814,13 @@ html.om-hide-header .om-header {
     pointer-events: none;
   }
 
-  .section-print-content[data-print-layout="double"] .section-print-question-list {
+  .section-print-content[data-print-layout="double"] .section-print-body {
     column-count: 2;
     column-gap: 0.35in;
+  }
+
+  .section-print-question-list {
+    display: contents !important;
   }
 
   .chapter-print-section {
@@ -906,6 +914,7 @@ html.om-hide-header .om-header {
     margin: 0 0 0.05in !important;
   }
 
+  .section-print-body,
   .section-print-question-list {
     margin-top: 0 !important;
   }
