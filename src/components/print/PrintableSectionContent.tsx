@@ -32,6 +32,7 @@ export function renderBoldText(text: string) {
 type Props = {
   data: PrintableSectionData;
   showSectionTitle?: boolean;
+  sectionHeaderPrintOnly?: boolean;
   answers?: Record<string, number | null>;
   mastered?: Record<string, boolean>;
   incorrect?: Record<string, boolean>;
@@ -41,9 +42,23 @@ type Props = {
   interactive?: boolean;
 };
 
+function formatSectionHeader(sectionId: string) {
+  const match = sectionId.match(/^ch(\d+)_s(\d+)$/i);
+
+  if (!match) {
+    return { chapterLabel: undefined, sectionLabel: sectionId };
+  }
+
+  return {
+    chapterLabel: `CHAPTER ${match[1]}`,
+    sectionLabel: `SECTION ${match[1]}.${match[2]}`,
+  };
+}
+
 export default function PrintableSectionContent({
   data,
   showSectionTitle = false,
+  sectionHeaderPrintOnly = false,
   answers = {},
   mastered = {},
   incorrect = {},
@@ -52,11 +67,16 @@ export default function PrintableSectionContent({
   showHint = {},
   interactive = false,
 }: Props) {
+  const { chapterLabel, sectionLabel } = formatSectionHeader(data.sectionId);
+
   return (
     <section className="chapter-print-section section-print-section">
       {showSectionTitle ? (
-        <header className="chapter-print-section-header">
-          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{data.sectionId}</p>
+        <header className={`chapter-print-section-header${sectionHeaderPrintOnly ? " section-print-header-screen-hidden" : ""}`}>
+          {chapterLabel ? (
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{chapterLabel}</p>
+          ) : null}
+          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">{sectionLabel}</p>
           <h2 className="mt-1 text-2xl font-bold text-gray-950">{data.title}</h2>
         </header>
       ) : null}
