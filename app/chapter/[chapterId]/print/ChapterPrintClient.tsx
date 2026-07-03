@@ -4,16 +4,19 @@ import { useEffect, useRef, useState } from "react";
 import renderMathInElement from "katex/contrib/auto-render";
 import "katex/dist/katex.min.css";
 
+import { PrintableChapterAnswerKey } from "@/components/print/PrintableAnswerKey";
 import PrintableSectionContent, { type PrintableSectionData } from "@/components/print/PrintableSectionContent";
 
 type ChapterPrintData = {
   chapterId: string;
   chapterTitle: string;
+  chapterNumber: number;
   sections: PrintableSectionData[];
 };
 
 export default function ChapterPrintClient({ data }: { data: ChapterPrintData }) {
   const [printLayout, setPrintLayout] = useState<"single" | "double">("single");
+  const [printMode, setPrintMode] = useState<"worksheet" | "answerKey">("worksheet");
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -32,11 +35,22 @@ export default function ChapterPrintClient({ data }: { data: ChapterPrintData })
     return () => window.clearTimeout(timer);
   }, [data]);
 
+  const printWorksheet = () => {
+    setPrintMode("worksheet");
+    window.requestAnimationFrame(() => window.print());
+  };
+
+  const printAnswerKey = () => {
+    setPrintMode("answerKey");
+    window.requestAnimationFrame(() => window.print());
+  };
+
   return (
     <main
       ref={containerRef}
       className="chapter-print-content section-print-content mx-auto max-w-5xl px-4 py-8 space-y-8"
       data-print-layout={printLayout}
+      data-print-mode={printMode}
     >
       <div className="section-print-toolbar no-print rounded-xl border border-slate-200 bg-white p-4 shadow">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -49,19 +63,26 @@ export default function ChapterPrintClient({ data }: { data: ChapterPrintData })
               <button type="button" onClick={() => setPrintLayout("single")} className={`rounded-md px-3 py-2 text-sm font-semibold transition ${printLayout === "single" ? "bg-blue-600 text-white shadow-sm" : "text-gray-700 hover:bg-white"}`}>Single Column</button>
               <button type="button" onClick={() => setPrintLayout("double")} className={`rounded-md px-3 py-2 text-sm font-semibold transition ${printLayout === "double" ? "bg-blue-600 text-white shadow-sm" : "text-gray-700 hover:bg-white"}`}>Double Column</button>
             </div>
-            <button type="button" onClick={() => window.print()} className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700">Print Chapter</button>
+            <button type="button" onClick={printWorksheet} className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700">Print Chapter</button>
+            <button type="button" onClick={printAnswerKey} className="rounded-lg bg-slate-800 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-900">Print Chapter Answer Key</button>
           </div>
         </div>
       </div>
 
-      <header className="chapter-print-title rounded-2xl bg-white p-8 shadow">
-        <p className="text-sm font-semibold uppercase tracking-wide text-gray-500">{data.chapterId}</p>
-        <h1 className="mt-2 text-4xl font-bold text-gray-950">{data.chapterTitle}</h1>
-      </header>
+      {printMode === "answerKey" ? (
+        <PrintableChapterAnswerKey chapterNumber={data.chapterNumber} sections={data.sections} />
+      ) : (
+        <>
+          <header className="chapter-print-title rounded-2xl bg-white p-8 shadow">
+            <p className="text-sm font-semibold uppercase tracking-wide text-gray-500">{data.chapterId}</p>
+            <h1 className="mt-2 text-4xl font-bold text-gray-950">{data.chapterTitle}</h1>
+          </header>
 
-      {data.sections.map((section) => (
-        <PrintableSectionContent key={section.sectionId} data={section} showSectionTitle />
-      ))}
+          {data.sections.map((section) => (
+            <PrintableSectionContent key={section.sectionId} data={section} showSectionTitle />
+          ))}
+        </>
+      )}
     </main>
   );
 }

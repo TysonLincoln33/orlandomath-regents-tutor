@@ -25,5 +25,5 @@ export default async function ChapterPrintPage({ params }: { params: Params | Pr
     return <main className="mx-auto max-w-3xl p-8 text-white"><h1 className="text-2xl font-bold">Chapter not found</h1><Link href="/dashboard" className="mt-4 inline-block text-blue-200 underline">Return to dashboard</Link></main>;
   }
 
-  return <ChapterPrintClient data={{ chapterId: chapter.id, chapterTitle: chapter.title, sections }} />;
+  return <ChapterPrintClient data={{ chapterId: chapter.id, chapterTitle: chapter.title, chapterNumber: chapter.number, sections }} />;
 }
