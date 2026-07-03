@@ -731,6 +731,11 @@ html.om-hide-header .om-header {
   }
 }
 
+
+.section-print-choice-circle {
+  display: none;
+}
+
 /* Printable section/chapter worksheet styles */
 .section-print-content[data-print-layout="double"] .section-print-question-list {
   column-count: 2;
@@ -808,6 +813,25 @@ html.om-hide-header .om-header {
     background: #ffffff !important;
     color: #111827 !important;
     pointer-events: none;
+  }
+
+
+  .section-print-choice-circle {
+    display: inline-block !important;
+    width: 0.12in;
+    height: 0.12in;
+    margin-right: 0.08in;
+    border: 1.5px solid #000000;
+    border-radius: 9999px;
+    background: #ffffff;
+    vertical-align: -0.01in;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .section-print-answer-choice[data-print-correct="true"] .section-print-choice-circle {
+    background: #000000;
+    box-shadow: inset 0 0 0 2px #ffffff;
   }
 
   .section-print-content[data-print-layout="double"] .section-print-question-list {

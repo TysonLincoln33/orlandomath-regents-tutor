@@ -14,6 +14,7 @@ type ChapterPrintData = {
 
 export default function ChapterPrintClient({ data }: { data: ChapterPrintData }) {
   const [printLayout, setPrintLayout] = useState<"single" | "double">("single");
+  const [printVariant, setPrintVariant] = useState<"student" | "answerKey">("student");
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -49,6 +50,10 @@ export default function ChapterPrintClient({ data }: { data: ChapterPrintData })
               <button type="button" onClick={() => setPrintLayout("single")} className={`rounded-md px-3 py-2 text-sm font-semibold transition ${printLayout === "single" ? "bg-blue-600 text-white shadow-sm" : "text-gray-700 hover:bg-white"}`}>Single Column</button>
               <button type="button" onClick={() => setPrintLayout("double")} className={`rounded-md px-3 py-2 text-sm font-semibold transition ${printLayout === "double" ? "bg-blue-600 text-white shadow-sm" : "text-gray-700 hover:bg-white"}`}>Double Column</button>
             </div>
+            <div className="inline-flex rounded-lg border border-gray-300 bg-gray-50 p-1" aria-label="Print version">
+              <button type="button" onClick={() => setPrintVariant("student")} className={`rounded-md px-3 py-2 text-sm font-semibold transition ${printVariant === "student" ? "bg-blue-600 text-white shadow-sm" : "text-gray-700 hover:bg-white"}`}>Student Version</button>
+              <button type="button" onClick={() => setPrintVariant("answerKey")} className={`rounded-md px-3 py-2 text-sm font-semibold transition ${printVariant === "answerKey" ? "bg-blue-600 text-white shadow-sm" : "text-gray-700 hover:bg-white"}`}>Answer Key</button>
+            </div>
             <button type="button" onClick={() => window.print()} className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700">Print Chapter</button>
           </div>
         </div>
@@ -60,7 +65,7 @@ export default function ChapterPrintClient({ data }: { data: ChapterPrintData })
       </header>
 
       {data.sections.map((section) => (
-        <PrintableSectionContent key={section.sectionId} data={section} showSectionTitle />
+        <PrintableSectionContent key={section.sectionId} data={section} showSectionTitle printVariant={printVariant} />
       ))}
     </main>
   );
