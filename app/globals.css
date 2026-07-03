@@ -923,3 +923,53 @@ html.om-hide-header .om-header {
     margin-bottom: 0.08in !important;
   }
 }
+
+/* Bubble answer key print mode */
+.section-print-answer-key-bubbles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.section-print-answer-key-bubble {
+  display: inline-block;
+  width: 1.05rem;
+  height: 1.05rem;
+  border: 2px solid #111827;
+  border-radius: 9999px;
+  background: #ffffff;
+}
+
+.section-print-answer-key-bubble--correct {
+  background: #111827;
+}
+
+@media print {
+  .section-print-content[data-print-mode="answerKey"] .section-print-question-list {
+    column-count: 1 !important;
+  }
+
+  .section-print-content[data-print-mode="answerKey"] .section-print-question {
+    display: block !important;
+  }
+
+  .section-print-answer-key-bubbles {
+    gap: 0.1in !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .section-print-answer-key-bubble {
+    width: 0.16in !important;
+    height: 0.16in !important;
+    border: 1px solid #000000 !important;
+    background: #ffffff !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .section-print-answer-key-bubble--correct {
+    background: #000000 !important;
+  }
+}

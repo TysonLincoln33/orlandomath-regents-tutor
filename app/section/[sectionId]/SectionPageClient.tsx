@@ -42,6 +42,8 @@ export default function SectionPageClient({ data }: { data: SectionData }) {
   const [showHint, setShowHint] = useState<Record<string, boolean>>({});
   const [progressPercent, setProgressPercent] = useState(0);
   const [printLayout, setPrintLayout] = useState<"single" | "double">("single");
+  const [printMode, setPrintMode] = useState<"student" | "answerKey">("student");
+  const [isPrintMenuOpen, setIsPrintMenuOpen] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -85,6 +87,16 @@ export default function SectionPageClient({ data }: { data: SectionData }) {
       ...prev,
       [questionId]: false,
     }));
+  };
+
+  const printWithSettings = (mode: "student" | "answerKey", layout: "single" | "double") => {
+    setPrintMode(mode);
+    setPrintLayout(mode === "answerKey" ? "single" : layout);
+    setIsPrintMenuOpen(false);
+
+    window.requestAnimationFrame(() => {
+      window.print();
+    });
   };
 
   const handleCheck = async (question: Question) => {
@@ -158,55 +170,33 @@ export default function SectionPageClient({ data }: { data: SectionData }) {
       ref={containerRef}
       className="section-print-content max-w-4xl mx-auto px-4 py-8 pb-32 space-y-8"
       data-print-layout={printLayout}
+      data-print-mode={printMode}
     >
-      <div className="section-print-toolbar no-print rounded-xl border border-slate-200 bg-white p-4 shadow">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-              Print Section
-            </p>
-            <p className="mt-1 text-sm text-gray-700">
-              Choose a worksheet layout, then print this section.
-            </p>
-          </div>
+      <div className="section-print-toolbar no-print flex justify-end">
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setIsPrintMenuOpen((open) => !open)}
+            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
+            aria-expanded={isPrintMenuOpen}
+          >
+            Print ▼
+          </button>
 
-          <div className="flex flex-wrap items-center gap-2">
-            <div
-              className="inline-flex rounded-lg border border-gray-300 bg-gray-50 p-1"
-              aria-label="Print layout"
-            >
-              <button
-                type="button"
-                onClick={() => setPrintLayout("single")}
-                className={`rounded-md px-3 py-2 text-sm font-semibold transition ${
-                  printLayout === "single"
-                    ? "bg-blue-600 text-white shadow-sm"
-                    : "text-gray-700 hover:bg-white"
-                }`}
-              >
-                Single Column
-              </button>
-              <button
-                type="button"
-                onClick={() => setPrintLayout("double")}
-                className={`rounded-md px-3 py-2 text-sm font-semibold transition ${
-                  printLayout === "double"
-                    ? "bg-blue-600 text-white shadow-sm"
-                    : "text-gray-700 hover:bg-white"
-                }`}
-              >
-                Double Column
-              </button>
+          {isPrintMenuOpen ? (
+            <div className="absolute right-0 z-20 mt-2 w-64 rounded-xl border border-slate-200 bg-white p-3 text-sm text-slate-900 shadow-xl">
+              <div className="border-b border-slate-200 pb-3">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Student Worksheet</p>
+                <button type="button" onClick={() => printWithSettings("student", "single")} className="block w-full rounded-md px-3 py-2 text-left font-medium hover:bg-slate-100">Single Column</button>
+                <button type="button" onClick={() => printWithSettings("student", "double")} className="block w-full rounded-md px-3 py-2 text-left font-medium hover:bg-slate-100">Double Column</button>
+              </div>
+
+              <div className="pt-3">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Answer Key</p>
+                <button type="button" onClick={() => printWithSettings("answerKey", "single")} className="block w-full rounded-md px-3 py-2 text-left font-medium hover:bg-slate-100">Print Answer Key</button>
+              </div>
             </div>
-
-            <button
-              type="button"
-              onClick={() => window.print()}
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
-            >
-              Print Section
-            </button>
-          </div>
+          ) : null}
         </div>
       </div>
 
@@ -218,6 +208,7 @@ export default function SectionPageClient({ data }: { data: SectionData }) {
         onSelect={handleSelect}
         onCheck={handleCheck}
         showHint={showHint}
+        printMode={printMode}
         interactive
       />
 
