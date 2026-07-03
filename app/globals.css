@@ -933,3 +933,71 @@ html.om-hide-header .om-header {
     margin-bottom: 0.08in !important;
   }
 }
+
+/* Separate printable answer keys: hidden on screen and only printed when requested. */
+.print-answer-key {
+  display: none;
+}
+
+@media print {
+  .section-print-content[data-print-mode="answer-key"] .worksheet-print-area {
+    display: none !important;
+  }
+
+  .section-print-content[data-print-mode="answer-key"] .print-answer-key {
+    display: block !important;
+    box-shadow: none !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    color: #000000 !important;
+  }
+
+  .section-print-content[data-print-mode="answer-key"] .print-answer-key * {
+    color: #000000 !important;
+  }
+
+  .section-print-content[data-print-mode="worksheet"] .print-answer-key {
+    display: none !important;
+  }
+
+  .print-answer-key-header {
+    margin-bottom: 0.18in !important;
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  .print-answer-key-header p {
+    font-size: 10px !important;
+    margin: 0 !important;
+  }
+
+  .print-answer-key-header h1 {
+    font-size: 18px !important;
+    line-height: 1.2 !important;
+    margin: 0.04in 0 0 !important;
+  }
+
+  .print-answer-key-section {
+    margin: 0 0 0.2in !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .print-answer-key-section h2 {
+    font-size: 14px !important;
+    line-height: 1.2 !important;
+    margin: 0 0 0.08in !important;
+  }
+
+  .print-answer-key-section ol {
+    margin: 0 !important;
+    padding-left: 0 !important;
+  }
+
+  .print-answer-key-item {
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+    margin: 0 0 0.04in !important;
+  }
+}

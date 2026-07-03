@@ -5,6 +5,7 @@ import renderMathInElement from "katex/contrib/auto-render";
 import "katex/dist/katex.min.css";
 
 import RainbowBar from "@/components/progress/RainbowBar";
+import PrintableAnswerKey from "@/components/print/PrintableAnswerKey";
 import PrintableSectionContent, { type PrintableQuestion } from "@/components/print/PrintableSectionContent";
 import { recordQuestionAttempt } from "@/lib/progress/attemptTracking";
 import { emitProgressUpdated } from "@/lib/progress/events";
@@ -42,6 +43,7 @@ export default function SectionPageClient({ data }: { data: SectionData }) {
   const [showHint, setShowHint] = useState<Record<string, boolean>>({});
   const [progressPercent, setProgressPercent] = useState(0);
   const [printLayout, setPrintLayout] = useState<"single" | "double">("single");
+  const [printMode, setPrintMode] = useState<"worksheet" | "answer-key">("worksheet");
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -85,6 +87,16 @@ export default function SectionPageClient({ data }: { data: SectionData }) {
       ...prev,
       [questionId]: false,
     }));
+  };
+
+  const printWorksheet = () => {
+    setPrintMode("worksheet");
+    window.requestAnimationFrame(() => window.print());
+  };
+
+  const printAnswerKey = () => {
+    setPrintMode("answer-key");
+    window.requestAnimationFrame(() => window.print());
   };
 
   const handleCheck = async (question: Question) => {
@@ -158,6 +170,7 @@ export default function SectionPageClient({ data }: { data: SectionData }) {
       ref={containerRef}
       className="section-print-content max-w-4xl mx-auto px-4 py-8 pb-32 space-y-8"
       data-print-layout={printLayout}
+      data-print-mode={printMode}
     >
       <div className="section-print-toolbar no-print rounded-xl border border-slate-200 bg-white p-4 shadow">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -201,27 +214,38 @@ export default function SectionPageClient({ data }: { data: SectionData }) {
 
             <button
               type="button"
-              onClick={() => window.print()}
+              onClick={printWorksheet}
               className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
             >
               Print Section
+            </button>
+            <button
+              type="button"
+              onClick={printAnswerKey}
+              className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
+            >
+              Print Answer Key
             </button>
           </div>
         </div>
       </div>
 
-      <PrintableSectionContent
-        data={data}
-        showSectionTitle
-        sectionHeaderPrintOnly
-        answers={answers}
-        mastered={mastered}
-        incorrect={incorrect}
-        onSelect={handleSelect}
-        onCheck={handleCheck}
-        showHint={showHint}
-        interactive
-      />
+      <div className="worksheet-print-area">
+        <PrintableSectionContent
+          data={data}
+          showSectionTitle
+          sectionHeaderPrintOnly
+          answers={answers}
+          mastered={mastered}
+          incorrect={incorrect}
+          onSelect={handleSelect}
+          onCheck={handleCheck}
+          showHint={showHint}
+          interactive
+        />
+      </div>
+
+      <PrintableAnswerKey sections={[data]} />
 
       {/* FLOATING RAINBOW PROGRESS BAR */}
       <div className="section-print-progress-meter no-print fixed bottom-6 right-6 z-[9998] w-[min(960px,calc(100vw-40px))] rounded-2xl border-2 border-slate-300 bg-white px-4 py-3 shadow-[0_18px_50px_rgba(15,23,42,0.24)]">
