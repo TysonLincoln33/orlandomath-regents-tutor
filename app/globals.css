@@ -664,9 +664,9 @@ html.om-hide-header .om-header {
   }
 
   .section-print-lesson {
-    margin-bottom: 0.25in !important;
-    break-inside: avoid;
-    page-break-inside: avoid;
+    margin-bottom: 0.12in !important;
+    break-inside: auto !important;
+    page-break-inside: auto !important;
   }
 
   .section-print-question-list {
@@ -760,8 +760,7 @@ html.om-hide-header .om-header {
   padding: 1rem 1.25rem;
 }
 
-.section-print-question,
-.section-print-lesson {
+.section-print-question {
   break-inside: avoid;
   page-break-inside: avoid;
 }
@@ -819,6 +818,12 @@ html.om-hide-header .om-header {
   .section-print-content[data-print-layout="double"] .section-print-question-list {
     column-count: 2;
     column-gap: 0.35in;
+  }
+
+  .section-print-content[data-print-layout="double"] .section-print-lesson {
+    margin-bottom: 0.1in !important;
+    break-after: auto !important;
+    page-break-after: auto !important;
   }
 
   .chapter-print-section {
