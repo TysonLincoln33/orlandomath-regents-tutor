@@ -820,3 +820,106 @@ html.om-hide-header .om-header {
     page-break-before: auto;
   }
 }
+
+/* Chapter worksheet print polish: compact headings and lessons without changing screen UI. */
+@media print {
+  .chapter-print-content {
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+  }
+
+  .chapter-print-title {
+    padding: 0.12in 0.16in !important;
+    margin: 0 0 0.14in !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 0 !important;
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  .chapter-print-title p {
+    font-size: 9px !important;
+    line-height: 1.1 !important;
+    margin: 0 !important;
+    letter-spacing: 0.04em !important;
+  }
+
+  .chapter-print-title h1 {
+    font-size: 18px !important;
+    line-height: 1.15 !important;
+    margin: 0.03in 0 0 !important;
+  }
+
+  .chapter-print-section {
+    margin-top: 0.16in !important;
+    padding-top: 0.08in !important;
+    border-top: 2px solid #2563eb !important;
+  }
+
+  .chapter-print-section-header {
+    padding: 0.08in 0.12in !important;
+    margin: 0 0 0.08in !important;
+    border-radius: 0 !important;
+    border: 1px solid #bfdbfe !important;
+    break-after: avoid;
+    page-break-after: avoid;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .chapter-print-section-header p {
+    font-size: 8px !important;
+    line-height: 1.1 !important;
+    margin: 0 !important;
+    letter-spacing: 0.04em !important;
+  }
+
+  .chapter-print-section-header h2 {
+    font-size: 14px !important;
+    line-height: 1.15 !important;
+    margin: 0.02in 0 0 !important;
+  }
+
+  .section-print-lesson {
+    padding: 0.11in 0.13in !important;
+    margin: 0 0 0.12in !important;
+    break-inside: auto !important;
+    page-break-inside: auto !important;
+  }
+
+  .section-print-lesson p:first-child {
+    font-size: 8px !important;
+    line-height: 1.1 !important;
+    margin: 0 0 0.04in !important;
+    letter-spacing: 0.04em !important;
+  }
+
+  .section-print-lesson h3 {
+    font-size: 12px !important;
+    line-height: 1.15 !important;
+    margin: 0 0 0.05in !important;
+  }
+
+  .section-print-lesson p {
+    font-size: 10px !important;
+    line-height: 1.28 !important;
+    margin: 0 0 0.05in !important;
+  }
+
+  .section-print-question-list {
+    margin-top: 0 !important;
+  }
+
+  .section-print-question-list > :not([hidden]) ~ :not([hidden]),
+  .section-print-answer-list > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 0.07in !important;
+  }
+
+  .section-print-question {
+    margin-bottom: 0.14in !important;
+  }
+
+  .section-print-question-prompt {
+    margin-bottom: 0.08in !important;
+  }
+}
