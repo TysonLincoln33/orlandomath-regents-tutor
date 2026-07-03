@@ -61,24 +61,25 @@ export default function PrintableSectionContent({
         </header>
       ) : null}
 
-      {data.lesson ? (
-        <div className="section-print-lesson bg-white rounded-xl shadow p-6">
-          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">MINI LESSON</p>
-          <h3 className="text-xl font-bold mb-4 text-gray-900">{data.lesson.title}</h3>
-          {data.lesson.intro.map((line, i) => (
-            <p key={i} className="mb-4 text-gray-800 leading-8">{renderBoldText(line)}</p>
-          ))}
-        </div>
-      ) : null}
+      <div className="section-print-body">
+        {data.lesson ? (
+          <div className="section-print-lesson bg-white rounded-xl shadow p-6">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">MINI LESSON</p>
+            <h3 className="text-xl font-bold mb-4 text-gray-900">{data.lesson.title}</h3>
+            {data.lesson.intro.map((line, i) => (
+              <p key={i} className="mb-4 text-gray-800 leading-8">{renderBoldText(line)}</p>
+            ))}
+          </div>
+        ) : null}
 
-      <div className="section-print-question-list space-y-8">
-        {data.questions.map((question, idx) => {
-          const selected = answers[question.id];
-          const isMastered = mastered[question.id];
-          const isIncorrect = incorrect[question.id];
-          return (
-            <div key={question.id} className="section-print-question bg-white rounded-xl shadow p-6">
-              <p className="text-xs font-semibold text-gray-500 mb-3">Question {idx + 1}</p>
+        <div className="section-print-question-list space-y-8">
+          {data.questions.map((question, idx) => {
+            const selected = answers[question.id];
+            const isMastered = mastered[question.id];
+            const isIncorrect = incorrect[question.id];
+            return (
+              <div key={question.id} className="section-print-question bg-white rounded-xl shadow p-6">
+                <p className="text-xs font-semibold text-gray-500 mb-3">Question {idx + 1}</p>
               <div className="section-print-question-prompt text-lg mb-4 leading-8 text-gray-900">{renderBoldText(question.prompt)}</div>
               {question.image ? <img src={question.image} alt="Question visual" className="my-4 max-w-full rounded-lg border" /> : null}
               {question.table ? (
@@ -95,9 +96,10 @@ export default function PrintableSectionContent({
                 })}
               </div>
               {interactive ? <><button type="button" onClick={() => onCheck?.(question)} className="no-print mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg">Check answer</button>{isIncorrect ? <div className="no-print mt-4 p-3 bg-red-50 border border-red-300 rounded-lg text-sm text-red-800 font-medium">Incorrect. Try again.</div> : null}{showHint[question.id] ? <div className="section-print-hint no-print mt-4 p-3 bg-amber-50 border border-amber-300 rounded-lg text-sm text-amber-900"><strong className="font-semibold">Hint:</strong> {question.hint ?? "Eliminate choices that don't match conditions."}</div> : null}{isMastered && question.explanation ? <div className="section-print-explanation no-print mt-4 p-3 bg-gray-50 border rounded-lg text-sm text-gray-800 leading-7">{renderBoldText(question.explanation)}</div> : null}</> : null}
-            </div>
-          );
-        })}
+              </div>
+            );
+          })}
+        </div>
       </div>
     </section>
   );
