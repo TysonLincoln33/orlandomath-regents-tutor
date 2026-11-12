@@ -3,7 +3,7 @@ import path from "path";
 
 import { NextRequest, NextResponse } from "next/server";
 
-import { CHAPTERS, SECTIONS } from "@/lib/course/algebra1";
+import { CHAPTERS, SECTIONS, getCourse } from "@/lib/course/registry";
 import {
   AdminClassroomManagementApiError,
   getRouteContext,
@@ -315,7 +315,9 @@ function buildQuickAssignMetrics(assignments: QuickAssignmentView[]) {
 async function loadQuickAssignData(
   ctx: Awaited<ReturnType<typeof getRouteContext>>,
   studentUserId: string,
+  courseId: string = "algebra1",
 ) {
+  const courseSections = new Set(getCourse(courseId).sections.map(s => s.id));
   const student = await getValidatedStudent(ctx, studentUserId, { requireActive: true });
   const quickClass = await getQuickClass(ctx);
 
@@ -363,7 +365,7 @@ async function loadQuickAssignData(
     );
   }
 
-  const assignmentRows = (assignmentData ?? []) as QuickAssignmentRow[];
+  const assignmentRows = ((assignmentData ?? []) as QuickAssignmentRow[]).filter(a => courseSections.has(a.section_id ?? ""));
   const sectionIds = [...new Set(assignmentRows.map((row) => row.section_id).filter(Boolean) as string[])];
   const questionInfoBySection = loadSectionQuestionInfo(sectionIds);
 
@@ -374,7 +376,7 @@ async function loadQuickAssignData(
       .select("section_id,completion_percent,accuracy_percent,questions_attempted,questions_correct")
       .eq("user_id", studentUserId)
       .eq("app_id", "regents-algebra")
-      .eq("course_id", "algebra1")
+      .eq("course_id", courseId)
       .in("section_id", sectionIds);
 
     if (progressError) {
@@ -402,7 +404,7 @@ async function loadQuickAssignData(
       .select("section_id,question_id,correct,attempted_at")
       .eq("user_id", studentUserId)
       .eq("app_id", "regents-algebra")
-      .eq("course_id", "algebra1")
+      .eq("course_id", courseId)
       .in("section_id", sectionIds)
       .order("attempted_at", { ascending: false })
       .limit(100000);
@@ -514,7 +516,7 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
     }
 
     const { studentUserId } = await params;
-    return NextResponse.json(await loadQuickAssignData(ctx, studentUserId));
+    return NextResponse.json(await loadQuickAssignData(ctx, studentUserId, getCourse(req.nextUrl.searchParams.get("courseId")).id));
   } catch (error) {
     console.error("admin quick assign data route error", error);
     return jsonError(error);

@@ -1,0 +1,197 @@
+{
+  "id": "geo-ch8_s2",
+  "chapterId": "geo-ch8",
+  "courseId": "geometry",
+  "chapterNumber": 8,
+  "sectionNumber": 2,
+  "title": "Using Trigonometry to Find a Side",
+  "standardCode": "G.SRT.C.8",
+  "questionIds": [
+    "geo-q097",
+    "geo-q098",
+    "geo-q099",
+    "geo-q100",
+    "geo-q101",
+    "geo-q102"
+  ],
+  "sectionId": "geo-ch8_s2",
+  "questions": [
+    {
+      "id": "geo-q097",
+      "sourceNumber": 97,
+      "courseId": "geometry",
+      "chapterId": "geo-ch8",
+      "sectionId": "geo-ch8_s2",
+      "topic": "Using Trigonometry to Find a Side",
+      "standardCode": "G.SRT.C.8",
+      "image": "/questions/geometry/originals/q097.png",
+      "imageAlt": "Original JMAP Geometry question 97: Using Trigonometry to Find a Side.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 24,
+        "examRef": "062502geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 124118.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 2,
+      "explanation": "The original JMAP answer key gives choice 3.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q098",
+      "sourceNumber": 98,
+      "courseId": "geometry",
+      "chapterId": "geo-ch8",
+      "sectionId": "geo-ch8_s2",
+      "topic": "Using Trigonometry to Find a Side",
+      "standardCode": "G.SRT.C.8",
+      "image": "/questions/geometry/originals/q098.png",
+      "imageAlt": "Original JMAP Geometry question 98: Using Trigonometry to Find a Side.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 25,
+        "examRef": "082503geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 124125.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 1,
+      "explanation": "The original JMAP answer key gives choice 2.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q099",
+      "sourceNumber": 99,
+      "courseId": "geometry",
+      "chapterId": "geo-ch8",
+      "sectionId": "geo-ch8_s2",
+      "topic": "Using Trigonometry to Find a Side",
+      "standardCode": "G.SRT.C.8",
+      "image": "/questions/geometry/originals/q099.png",
+      "imageAlt": "Original JMAP Geometry question 99: Using Trigonometry to Find a Side.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 25,
+        "examRef": "082528geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 124133.png"
+      },
+      "type": "mc",
+      "origin": "adapted_mc",
+      "prompt": "What is the ramp length, to the nearest tenth of a meter?",
+      "choices": [
+        "0.1 m",
+        "7.2 m",
+        "0.6 m",
+        "12.5 m"
+      ],
+      "answerIndex": 1,
+      "explanation": "sin(4.8°) = 0.6/L. Thus L = 0.6/sin(4.8°) ≈ 7.1704 m, which rounds to 7.2 m."
+    },
+    {
+      "id": "geo-q100",
+      "sourceNumber": 100,
+      "courseId": "geometry",
+      "chapterId": "geo-ch8",
+      "sectionId": "geo-ch8_s2",
+      "topic": "Using Trigonometry to Find a Side",
+      "standardCode": "G.SRT.C.8",
+      "image": "/questions/geometry/originals/q100.png",
+      "imageAlt": "Original JMAP Geometry question 100: Using Trigonometry to Find a Side.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 25,
+        "examRef": "062534geo",
+        "points": 4,
+        "originalClip": "Screenshot 2026-11-12 124140.png"
+      },
+      "type": "mc",
+      "origin": "adapted_mc",
+      "prompt": "Does the ranger have enough wire, and why?",
+      "choices": [
+        "Yes. The two wires require only 7 ft in total.",
+        "Yes. The two wires require about 19.8 ft in total.",
+        "No. The two wires require about 24.8 ft in total, which is more than 20 ft.",
+        "No. The two wires require about 40 ft in total."
+      ],
+      "answerIndex": 2,
+      "explanation": "L₁ = 4/sin(24°) ≈ 9.8344 ft. L₂ = 3/sin(11.6°) ≈ 14.9196 ft. Add before rounding: L₁ + L₂ ≈ 24.7540 ft ≈ 24.8 ft. This exceeds 20 ft. The source key rounds each wire first; both methods support the same no conclusion."
+    },
+    {
+      "id": "geo-q101",
+      "sourceNumber": 101,
+      "courseId": "geometry",
+      "chapterId": "geo-ch8",
+      "sectionId": "geo-ch8_s2",
+      "topic": "Using Trigonometry to Find a Side",
+      "standardCode": "G.SRT.C.8",
+      "image": "/questions/geometry/originals/q101.png",
+      "imageAlt": "Original JMAP Geometry question 101: Using Trigonometry to Find a Side.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 25,
+        "examRef": "012627geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 124145.png"
+      },
+      "type": "mc",
+      "origin": "adapted_mc",
+      "prompt": "What is SR, to the nearest tenth?",
+      "choices": [
+        "14.4",
+        "35.7",
+        "70.0",
+        "28.3"
+      ],
+      "answerIndex": 3,
+      "explanation": "cos(27°) = SR/31.8. Therefore SR = 31.8 cos(27°) ≈ 28.3340, or 28.3."
+    },
+    {
+      "id": "geo-q102",
+      "sourceNumber": 102,
+      "courseId": "geometry",
+      "chapterId": "geo-ch8",
+      "sectionId": "geo-ch8_s2",
+      "topic": "Using Trigonometry to Find a Side",
+      "standardCode": "G.SRT.C.8",
+      "image": "/questions/geometry/originals/q102.png",
+      "imageAlt": "Original JMAP Geometry question 102: Using Trigonometry to Find a Side.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 26,
+        "examRef": "012632geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 124153.png"
+      },
+      "type": "mc",
+      "origin": "adapted_mc",
+      "prompt": "What is the perimeter of △ABC, to the nearest tenth?",
+      "choices": [
+        "34.3",
+        "17.2",
+        "26.9",
+        "41.8"
+      ],
+      "answerIndex": 0,
+      "explanation": "The altitude bisects the 80° vertex angle, giving 40°. BD = 8 tan(40°) ≈ 6.7128 and AB = 8/cos(40°) ≈ 10.4433. Since BC = 2BD and AB = AC, P = 2(6.7128) + 2(10.4433) ≈ 34.3."
+    }
+  ],
+  "mathFormat": "unicode"
+}

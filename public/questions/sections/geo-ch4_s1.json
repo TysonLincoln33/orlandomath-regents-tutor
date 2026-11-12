@@ -1,0 +1,46 @@
+{
+  "id": "geo-ch4_s1",
+  "chapterId": "geo-ch4",
+  "courseId": "geometry",
+  "chapterNumber": 4,
+  "sectionNumber": 1,
+  "title": "Interior and Exterior Angles of Polygons",
+  "standardCode": "G.CO.C.11",
+  "questionIds": [
+    "geo-q028"
+  ],
+  "sectionId": "geo-ch4_s1",
+  "questions": [
+    {
+      "id": "geo-q028",
+      "sourceNumber": 28,
+      "courseId": "geometry",
+      "chapterId": "geo-ch4",
+      "sectionId": "geo-ch4_s1",
+      "topic": "Interior and Exterior Angles of Polygons",
+      "standardCode": "G.CO.C.11",
+      "image": "/questions/geometry/originals/q028.png",
+      "imageAlt": "Original JMAP Geometry question 28: Interior and Exterior Angles of Polygons.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 8,
+        "examRef": "082506geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123158.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 3,
+      "explanation": "The original JMAP answer key gives choice 4.",
+      "originalChoiceLabels": true
+    }
+  ],
+  "mathFormat": "unicode"
+}

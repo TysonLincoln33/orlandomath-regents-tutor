@@ -1,0 +1,108 @@
+{
+  "id": "geo-ch7_s1",
+  "chapterId": "geo-ch7",
+  "courseId": "geometry",
+  "chapterNumber": 7,
+  "sectionNumber": 1,
+  "title": "Line Dilations",
+  "standardCode": "G.SRT.A.1",
+  "questionIds": [
+    "geo-q065",
+    "geo-q066",
+    "geo-q067"
+  ],
+  "sectionId": "geo-ch7_s1",
+  "questions": [
+    {
+      "id": "geo-q065",
+      "sourceNumber": 65,
+      "courseId": "geometry",
+      "chapterId": "geo-ch7",
+      "sectionId": "geo-ch7_s1",
+      "topic": "Line Dilations",
+      "standardCode": "G.SRT.A.1",
+      "image": "/questions/geometry/originals/q065.png",
+      "imageAlt": "Original JMAP Geometry question 65: Line Dilations.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 16,
+        "examRef": "012621geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123643.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 0,
+      "explanation": "The original JMAP answer key gives choice 1.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q066",
+      "sourceNumber": 66,
+      "courseId": "geometry",
+      "chapterId": "geo-ch7",
+      "sectionId": "geo-ch7_s1",
+      "topic": "Line Dilations",
+      "standardCode": "G.SRT.A.1",
+      "image": "/questions/geometry/originals/q066.png",
+      "imageAlt": "Original JMAP Geometry question 66: Line Dilations.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 17,
+        "examRef": "082521geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123649.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 0,
+      "explanation": "The original JMAP answer key gives choice 1.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q067",
+      "sourceNumber": 67,
+      "courseId": "geometry",
+      "chapterId": "geo-ch7",
+      "sectionId": "geo-ch7_s1",
+      "topic": "Line Dilations",
+      "standardCode": "G.SRT.A.1",
+      "image": "/questions/geometry/originals/q067.png",
+      "imageAlt": "Original JMAP Geometry question 67: Line Dilations.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 17,
+        "examRef": "062524geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123655.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 0,
+      "explanation": "The original JMAP answer key gives choice 1.",
+      "originalChoiceLabels": true
+    }
+  ],
+  "mathFormat": "unicode"
+}

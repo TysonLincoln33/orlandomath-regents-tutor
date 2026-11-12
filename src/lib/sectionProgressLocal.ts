@@ -1,8 +1,12 @@
+import type { QuestionAnswer } from "@/lib/questionBank";
 import type { SectionStatus } from "@/lib/progressLocal";
 import { getSectionStatus, setSectionStatus } from "@/lib/progressLocal";
 import { emitProgressUpdated } from "@/lib/progress/events";
 
 const KEY = "orlandomath:sectionProgress:v1";
+let progressOwner = "guest";
+export function setProgressOwner(userId: string | null) { progressOwner = userId ?? "guest"; }
+function storageKey(sectionId: string) { return sectionId.startsWith("geo-") ? `orlandomath:geometry:progress:v1:${progressOwner}` : KEY; }
 
 function isBrowser(): boolean {
   return (
@@ -16,6 +20,7 @@ export type QuestionProgress = {
   // sticky mastery: once correct, stays correct until explicitly reset
   correct: boolean;
   lastAnswerIndex?: number;
+  lastAnswer?: QuestionAnswer;
   lastAttemptAt: string; // ISO timestamp
 };
 
@@ -30,11 +35,11 @@ export type SectionProgress = {
 
 type Store = Record<string, SectionProgress>;
 
-function safeRead(): Store {
+function safeRead(sectionId: string): Store {
   if (!isBrowser()) return {};
 
   try {
-    const raw = window.localStorage.getItem(KEY);
+    const raw = window.localStorage.getItem(storageKey(sectionId));
     if (!raw) return {};
 
     const parsed = JSON.parse(raw) as unknown;
@@ -46,11 +51,11 @@ function safeRead(): Store {
   }
 }
 
-function safeWrite(next: Store): void {
+function safeWrite(next: Store, sectionId: string): void {
   if (!isBrowser()) return;
 
   try {
-    window.localStorage.setItem(KEY, JSON.stringify(next));
+    window.localStorage.setItem(storageKey(sectionId), JSON.stringify(next));
   } catch {
     // ignore quota/privacy failures
   }
@@ -73,7 +78,7 @@ export function getSectionProgress(
   sectionId: string,
   totalQuestions?: number
 ): SectionProgress | null {
-  const store = safeRead();
+  const store = safeRead(sectionId);
   const existing = store[sectionId] ?? null;
 
   if (!existing) return null;
@@ -90,7 +95,7 @@ export function getSectionProgress(
     });
 
     store[sectionId] = patched;
-    safeWrite(store);
+    safeWrite(store, sectionId);
     syncLegacyStatus(sectionId, patched);
     emitProgressUpdated();
 
@@ -104,7 +109,7 @@ export function ensureSectionProgress(
   sectionId: string,
   totalQuestions: number
 ): SectionProgress {
-  const store = safeRead();
+  const store = safeRead(sectionId);
   const existing = store[sectionId];
 
   if (existing) {
@@ -121,7 +126,7 @@ export function ensureSectionProgress(
   };
 
   store[sectionId] = fresh;
-  safeWrite(store);
+  safeWrite(store, sectionId);
   syncLegacyStatus(sectionId, fresh);
   emitProgressUpdated();
 
@@ -133,12 +138,13 @@ export function recordAttempt(opts: {
   questionId: string;
   isCorrect: boolean;
   answerIndex?: number;
+  answer?: QuestionAnswer;
   totalQuestions: number;
 }): SectionProgress {
-  const { sectionId, questionId, isCorrect, answerIndex, totalQuestions } =
+  const { sectionId, questionId, isCorrect, answerIndex, answer, totalQuestions } =
     opts;
 
-  const store = safeRead();
+  const store = safeRead(sectionId);
   const current = store[sectionId] ?? ensureSectionProgress(sectionId, totalQuestions);
 
   const byQ = { ...(current.byQuestionId ?? {}) };
@@ -149,6 +155,7 @@ export function recordAttempt(opts: {
     attempts: (prev?.attempts ?? 0) + 1,
     correct: prev?.correct ? true : isCorrect,
     lastAnswerIndex: answerIndex,
+    lastAnswer: answer,
     lastAttemptAt: nowIso,
   };
 
@@ -164,7 +171,7 @@ export function recordAttempt(opts: {
   });
 
   store[sectionId] = next;
-  safeWrite(store);
+  safeWrite(store, sectionId);
   syncLegacyStatus(sectionId, next);
   emitProgressUpdated();
 
@@ -178,7 +185,7 @@ export function resetQuestionProgress(opts: {
 }): SectionProgress {
   const { sectionId, questionId, totalQuestions } = opts;
 
-  const store = safeRead();
+  const store = safeRead(sectionId);
   const current = store[sectionId] ?? ensureSectionProgress(sectionId, totalQuestions);
 
   const byQ = { ...(current.byQuestionId ?? {}) };
@@ -197,7 +204,7 @@ export function resetQuestionProgress(opts: {
   });
 
   store[sectionId] = next;
-  safeWrite(store);
+  safeWrite(store, sectionId);
   syncLegacyStatus(sectionId, next);
   emitProgressUpdated();
 
@@ -205,15 +212,15 @@ export function resetQuestionProgress(opts: {
 }
 
 export function resetSectionProgress(sectionId: string): void {
-  const store = safeRead();
+  const store = safeRead(sectionId);
 
   if (store[sectionId]) {
     delete store[sectionId];
-    safeWrite(store);
+    safeWrite(store, sectionId);
   }
 
   try {
-    setSectionStatus(sectionId, "not_started");
+    if (!sectionId.startsWith("geo-")) setSectionStatus(sectionId, "not_started");
     emitProgressUpdated();
   } catch {
     // ignore
@@ -221,12 +228,13 @@ export function resetSectionProgress(sectionId: string): void {
 }
 
 export function deriveSectionStatus(progress: SectionProgress): SectionStatus {
-  if (!progress || progress.correct <= 0) return "not_started";
+  if (!progress || progress.answered <= 0) return "not_started";
   if (progress.correct < progress.total) return "in_progress";
   return "complete";
 }
 
 function syncLegacyStatus(sectionId: string, progress: SectionProgress): void {
+  if (sectionId.startsWith("geo-")) return;
   try {
     const status = deriveSectionStatus(progress);
     setSectionStatus(sectionId, status);
@@ -245,6 +253,7 @@ export function getSectionPercent(
     return Math.round((progress.correct / progress.total) * 100);
   }
 
+  if (sectionId.startsWith("geo-")) return 0;
   const status = getSectionStatus(sectionId);
   if (status === "complete") return 100;
   if (status === "in_progress") return 50;
@@ -259,4 +268,21 @@ export function getAveragePercent(sectionIds: string[]): number {
   }, 0);
 
   return Math.round(total / sectionIds.length);
+}
+export function exportGeometrySnapshot() {
+  return { schemaVersion: 2, courseId: "geometry", sectionProgress: safeRead("geo-") };
+}
+export function restoreGeometryGuestSnapshot(snapshot: { sectionProgress?: unknown }) {
+  if (!snapshot.sectionProgress || typeof snapshot.sectionProgress !== "object" || Array.isArray(snapshot.sectionProgress)) throw new Error("Invalid Geometry snapshot");
+  const clean: Store = {};
+  for (const [id, value] of Object.entries(snapshot.sectionProgress)) {
+    if (!/^geo-ch\d+_s\d+$/.test(id) || !value || typeof value !== "object") continue;
+    const row = value as SectionProgress;
+    if (!Number.isInteger(row.total) || row.total < 1 || !row.byQuestionId || typeof row.byQuestionId !== "object") continue;
+    const byQuestionId = Object.fromEntries(Object.entries(row.byQuestionId).filter(([q, item]) => /^geo-q\d+$/.test(q) && item && typeof item.correct === "boolean" && Number.isFinite(item.attempts)));
+    clean[id] = recalc({...row, sectionId:id, byQuestionId});
+  }
+  const owner = progressOwner; progressOwner = "guest";
+  safeWrite({...safeRead("geo-"), ...clean}, "geo-"); progressOwner = owner;
+  emitProgressUpdated();
 }

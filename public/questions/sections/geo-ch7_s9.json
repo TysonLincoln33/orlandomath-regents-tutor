@@ -1,0 +1,168 @@
+{
+  "id": "geo-ch7_s9",
+  "chapterId": "geo-ch7",
+  "courseId": "geometry",
+  "chapterNumber": 7,
+  "sectionNumber": 9,
+  "title": "Similarity",
+  "standardCode": "G.SRT.B.5",
+  "questionIds": [
+    "geo-q090",
+    "geo-q091",
+    "geo-q092",
+    "geo-q093",
+    "geo-q094"
+  ],
+  "sectionId": "geo-ch7_s9",
+  "questions": [
+    {
+      "id": "geo-q090",
+      "sourceNumber": 90,
+      "courseId": "geometry",
+      "chapterId": "geo-ch7",
+      "sectionId": "geo-ch7_s9",
+      "topic": "Similarity",
+      "standardCode": "G.SRT.B.5",
+      "image": "/questions/geometry/originals/q090.png",
+      "imageAlt": "Original JMAP Geometry question 90: Similarity.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 23,
+        "examRef": "012613geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 124024.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 1,
+      "explanation": "The original JMAP answer key gives choice 2.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q091",
+      "sourceNumber": 91,
+      "courseId": "geometry",
+      "chapterId": "geo-ch7",
+      "sectionId": "geo-ch7_s9",
+      "topic": "Similarity",
+      "standardCode": "G.SRT.B.5",
+      "image": "/questions/geometry/originals/q091.png",
+      "imageAlt": "Original JMAP Geometry question 91: Similarity.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 23,
+        "examRef": "082519geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 124035.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 3,
+      "explanation": "The original JMAP answer key gives choice 4.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q092",
+      "sourceNumber": 92,
+      "courseId": "geometry",
+      "chapterId": "geo-ch7",
+      "sectionId": "geo-ch7_s9",
+      "topic": "Similarity",
+      "standardCode": "G.SRT.B.5",
+      "image": "/questions/geometry/originals/q092.png",
+      "imageAlt": "Original JMAP Geometry question 92: Similarity.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 24,
+        "examRef": "082524geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 124042.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 0,
+      "explanation": "The original JMAP answer key gives choice 1.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q093",
+      "sourceNumber": 93,
+      "courseId": "geometry",
+      "chapterId": "geo-ch7",
+      "sectionId": "geo-ch7_s9",
+      "topic": "Similarity",
+      "standardCode": "G.SRT.B.5",
+      "image": "/questions/geometry/originals/q093.png",
+      "imageAlt": "Original JMAP Geometry question 93: Similarity.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 24,
+        "examRef": "spr2407geo",
+        "points": 4,
+        "originalClip": "Screenshot 2026-11-12 124051.png"
+      },
+      "type": "mc",
+      "origin": "adapted_mc",
+      "prompt": "What is the length of DE?",
+      "choices": [
+        "7",
+        "−6",
+        "10",
+        "15"
+      ],
+      "answerIndex": 2,
+      "explanation": "AB/DE = BC/EF gives 4/(x + 3) = (x − 1)/15. Thus (x + 3)(x − 1) = 60, or (x + 9)(x − 7) = 0. Reject x = −9 because it gives negative lengths. With x = 7, DE = x + 3 = 10."
+    },
+    {
+      "id": "geo-q094",
+      "sourceNumber": 94,
+      "courseId": "geometry",
+      "chapterId": "geo-ch7",
+      "sectionId": "geo-ch7_s9",
+      "topic": "Similarity",
+      "standardCode": "G.SRT.B.5",
+      "image": "/questions/geometry/originals/q094.png",
+      "imageAlt": "Original JMAP Geometry question 94: Similarity.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 24,
+        "examRef": "062531geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 124057.png"
+      },
+      "type": "mc",
+      "origin": "adapted_mc",
+      "prompt": "Which statement proves that △ANT is similar to △ELM?",
+      "choices": [
+        "AN = EL, NT = LM, and TA = ME, so the triangles are congruent by SSS.",
+        "The corresponding sides differ by the same amount, so the triangles are similar.",
+        "The triangles are similar because any two triangles have proportional sides.",
+        "AN/EL = NT/LM = TA/ME = 2/3, so the triangles are similar by SSS similarity."
+      ],
+      "answerIndex": 3,
+      "explanation": "6/9 = 5.6/8.4 = 4/6 = 2/3. All three corresponding side pairs are proportional, so SSS similarity applies."
+    }
+  ],
+  "mathFormat": "unicode"
+}

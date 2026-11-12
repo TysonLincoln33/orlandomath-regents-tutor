@@ -1,3 +1,4 @@
+import { courseFetch } from "@/lib/course/selection";
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 
 export type MasterClassroomMember = {
@@ -35,7 +36,7 @@ async function authedFetch<T>(url: string, init?: RequestInit): Promise<T> {
   if (error) throw new Error(error.message || 'Failed to verify session.');
   if (!session?.access_token) throw new Error('Please sign in again.');
 
-  const response = await fetch(url, {
+  const response = await courseFetch(url, {
     ...init,
     headers: {
       'Content-Type': 'application/json',

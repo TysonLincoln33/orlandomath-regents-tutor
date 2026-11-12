@@ -1,0 +1,77 @@
+{
+  "id": "geo-ch3_s1",
+  "chapterId": "geo-ch3",
+  "courseId": "geometry",
+  "chapterNumber": 3,
+  "sectionNumber": 1,
+  "title": "Special Right Triangles",
+  "standardCode": "G.SRT.C.8",
+  "questionIds": [
+    "geo-q015",
+    "geo-q016"
+  ],
+  "sectionId": "geo-ch3_s1",
+  "questions": [
+    {
+      "id": "geo-q015",
+      "sourceNumber": 15,
+      "courseId": "geometry",
+      "chapterId": "geo-ch3",
+      "sectionId": "geo-ch3_s1",
+      "topic": "Special Right Triangles",
+      "standardCode": "G.SRT.C.8",
+      "image": "/questions/geometry/originals/q015.png",
+      "imageAlt": "Original JMAP Geometry question 15: Special Right Triangles.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 5,
+        "examRef": "spr2402geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123010.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 2,
+      "explanation": "The original JMAP answer key gives choice 3.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q016",
+      "sourceNumber": 16,
+      "courseId": "geometry",
+      "chapterId": "geo-ch3",
+      "sectionId": "geo-ch3_s1",
+      "topic": "Special Right Triangles",
+      "standardCode": "G.SRT.C.8",
+      "image": "/questions/geometry/originals/q016.png",
+      "imageAlt": "Original JMAP Geometry question 16: Special Right Triangles.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 5,
+        "examRef": "082515geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123020.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 2,
+      "explanation": "The original JMAP answer key gives choice 3.",
+      "originalChoiceLabels": true
+    }
+  ],
+  "mathFormat": "unicode"
+}

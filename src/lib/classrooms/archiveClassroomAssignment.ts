@@ -1,3 +1,4 @@
+import { courseFetch } from "@/lib/course/selection";
 // src/lib/classrooms/archiveClassroomAssignment.ts
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { ClassroomAssignment } from "@/lib/classrooms/createClassroomAssignment";
@@ -23,7 +24,7 @@ export async function archiveClassroomAssignment(
     throw new Error("Please log in to archive assignments.");
   }
 
-  const response = await fetch(
+  const response = await courseFetch(
     `/api/teacher/classrooms/${classroomId}/assignments/${assignmentId}`,
     {
       method: "PATCH",

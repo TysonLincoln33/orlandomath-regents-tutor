@@ -1,3 +1,4 @@
+import { reportingRpcName, selectedCourse } from "@/lib/course/selection";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { ClassroomAssignment } from "@/lib/classrooms/createClassroomAssignment";
 
@@ -186,7 +187,7 @@ export async function getTeacherAssignmentRecipients(
   };
 
   const { data, error } = await supabase.rpc(
-    "get_teacher_assignment_recipients",
+    reportingRpcName("get_teacher_assignment_recipients"),
     {
       p_classroom_id: classroomId,
       p_assignment_id: assignmentId,

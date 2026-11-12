@@ -1,0 +1,46 @@
+{
+  "id": "geo-ch2_s2",
+  "chapterId": "geo-ch2",
+  "courseId": "geometry",
+  "chapterNumber": 2,
+  "sectionNumber": 2,
+  "title": "Lines and Angles",
+  "standardCode": "G.CO.C.9",
+  "questionIds": [
+    "geo-q011"
+  ],
+  "sectionId": "geo-ch2_s2",
+  "questions": [
+    {
+      "id": "geo-q011",
+      "sourceNumber": 11,
+      "courseId": "geometry",
+      "chapterId": "geo-ch2",
+      "sectionId": "geo-ch2_s2",
+      "topic": "Lines and Angles",
+      "standardCode": "G.CO.C.9",
+      "image": "/questions/geometry/originals/q011.png",
+      "imageAlt": "Original JMAP Geometry question 11: Lines and Angles.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 5,
+        "examRef": "012615geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 122940.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 1,
+      "explanation": "The original JMAP answer key gives choice 2.",
+      "originalChoiceLabels": true
+    }
+  ],
+  "mathFormat": "unicode"
+}

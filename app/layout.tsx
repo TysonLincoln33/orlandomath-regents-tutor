@@ -7,7 +7,7 @@ import "katex/dist/katex.min.css";
 export const metadata: Metadata = {
   metadataBase: new URL("https://regents-tutor.net"),
   title: "OrlandoMath Regents Tutor",
-  description: "A clean, colorful Regents-aligned Algebra 1 course dashboard with progress tracking.",
+  description: "Regents-aligned Algebra 1 and Geometry practice, guided proofs, and progress tracking.",
   alternates: {
     canonical: "/",
   },

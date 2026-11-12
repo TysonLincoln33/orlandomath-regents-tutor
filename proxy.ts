@@ -1,3 +1,4 @@
+import { safeReturnPath } from './src/lib/auth/returnPath'
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
@@ -49,7 +50,7 @@ export async function proxy(req: NextRequest) {
   }
 
   if (session && (path === '/login' || path === '/signup')) {
-    return NextResponse.redirect(new URL('/dashboard', req.url))
+    return NextResponse.redirect(new URL(safeReturnPath(req.nextUrl.searchParams.get('next')), req.url))
   }
 
   return res

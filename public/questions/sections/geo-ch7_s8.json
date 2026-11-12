@@ -1,0 +1,108 @@
+{
+  "id": "geo-ch7_s8",
+  "chapterId": "geo-ch7",
+  "courseId": "geometry",
+  "chapterNumber": 7,
+  "sectionNumber": 8,
+  "title": "Similarity",
+  "standardCode": "G.SRT.B.4",
+  "questionIds": [
+    "geo-q087",
+    "geo-q088",
+    "geo-q089"
+  ],
+  "sectionId": "geo-ch7_s8",
+  "questions": [
+    {
+      "id": "geo-q087",
+      "sourceNumber": 87,
+      "courseId": "geometry",
+      "chapterId": "geo-ch7",
+      "sectionId": "geo-ch7_s8",
+      "topic": "Similarity",
+      "standardCode": "G.SRT.B.4",
+      "image": "/questions/geometry/originals/q087.png",
+      "imageAlt": "Original JMAP Geometry question 87: Similarity.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 22,
+        "examRef": "062519geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123958.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 2,
+      "explanation": "The original JMAP answer key gives choice 3.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q088",
+      "sourceNumber": 88,
+      "courseId": "geometry",
+      "chapterId": "geo-ch7",
+      "sectionId": "geo-ch7_s8",
+      "topic": "Similarity",
+      "standardCode": "G.SRT.B.4",
+      "image": "/questions/geometry/originals/q088.png",
+      "imageAlt": "Original JMAP Geometry question 88: Similarity.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 23,
+        "examRef": "082523geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 124010.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 1,
+      "explanation": "The original JMAP answer key gives choice 2.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q089",
+      "sourceNumber": 89,
+      "courseId": "geometry",
+      "chapterId": "geo-ch7",
+      "sectionId": "geo-ch7_s8",
+      "topic": "Similarity",
+      "standardCode": "G.SRT.B.4",
+      "image": "/questions/geometry/originals/q089.png",
+      "imageAlt": "Original JMAP Geometry question 89: Similarity.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 23,
+        "examRef": "012623geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 124017.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 2,
+      "explanation": "The original JMAP answer key gives choice 3.",
+      "originalChoiceLabels": true
+    }
+  ],
+  "mathFormat": "unicode"
+}

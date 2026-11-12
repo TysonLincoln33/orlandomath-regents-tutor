@@ -1,0 +1,292 @@
+{
+  "id": "geo-ch6_s5",
+  "chapterId": "geo-ch6",
+  "courseId": "geometry",
+  "chapterNumber": 6,
+  "sectionNumber": 5,
+  "title": "Volume",
+  "standardCode": "G.GMD.A.3",
+  "questionIds": [
+    "geo-q050",
+    "geo-q051",
+    "geo-q052",
+    "geo-q053",
+    "geo-q054",
+    "geo-q055",
+    "geo-q056",
+    "geo-q057",
+    "geo-q058"
+  ],
+  "sectionId": "geo-ch6_s5",
+  "questions": [
+    {
+      "id": "geo-q050",
+      "sourceNumber": 50,
+      "courseId": "geometry",
+      "chapterId": "geo-ch6",
+      "sectionId": "geo-ch6_s5",
+      "topic": "Volume",
+      "standardCode": "G.GMD.A.3",
+      "image": "/questions/geometry/originals/q050.png",
+      "imageAlt": "Original JMAP Geometry question 50: Volume.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 13,
+        "examRef": "082520geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123455.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 1,
+      "explanation": "The original JMAP answer key gives choice 2.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q051",
+      "sourceNumber": 51,
+      "courseId": "geometry",
+      "chapterId": "geo-ch6",
+      "sectionId": "geo-ch6_s5",
+      "topic": "Volume",
+      "standardCode": "G.GMD.A.3",
+      "image": "/questions/geometry/originals/q051.png",
+      "imageAlt": "Original JMAP Geometry question 51: Volume.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 13,
+        "examRef": "082532geo",
+        "points": 4,
+        "originalClip": "Screenshot 2026-11-12 123459.png"
+      },
+      "type": "mc",
+      "origin": "adapted_mc",
+      "prompt": "What is the greatest number of full buckets Joan can add without overflowing the tank?",
+      "choices": [
+        "8 buckets",
+        "9 buckets",
+        "10 buckets",
+        "18 buckets"
+      ],
+      "answerIndex": 1,
+      "explanation": "Tank volume = 75,000 cm³. Each full bucket holds π(10²)(26) = 2600π cm³. The quotient is about 9.182. Only 9 complete buckets fit; a tenth would overflow."
+    },
+    {
+      "id": "geo-q052",
+      "sourceNumber": 52,
+      "courseId": "geometry",
+      "chapterId": "geo-ch6",
+      "sectionId": "geo-ch6_s5",
+      "topic": "Volume",
+      "standardCode": "G.GMD.A.3",
+      "image": "/questions/geometry/originals/q052.png",
+      "imageAlt": "Original JMAP Geometry question 52: Volume.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 14,
+        "examRef": "062509geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123509.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 2,
+      "explanation": "The original JMAP answer key gives choice 3.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q053",
+      "sourceNumber": 53,
+      "courseId": "geometry",
+      "chapterId": "geo-ch6",
+      "sectionId": "geo-ch6_s5",
+      "topic": "Volume",
+      "standardCode": "G.GMD.A.3",
+      "image": "/questions/geometry/originals/q053.png",
+      "imageAlt": "Original JMAP Geometry question 53: Volume.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 14,
+        "examRef": "062523geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123515.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 3,
+      "explanation": "The original JMAP answer key gives choice 4.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q054",
+      "sourceNumber": 54,
+      "courseId": "geometry",
+      "chapterId": "geo-ch6",
+      "sectionId": "geo-ch6_s5",
+      "topic": "Volume",
+      "standardCode": "G.GMD.A.3",
+      "image": "/questions/geometry/originals/q054.png",
+      "imageAlt": "Original JMAP Geometry question 54: Volume.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 14,
+        "examRef": "012608geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123524.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 3,
+      "explanation": "The original JMAP answer key gives choice 4.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q055",
+      "sourceNumber": 55,
+      "courseId": "geometry",
+      "chapterId": "geo-ch6",
+      "sectionId": "geo-ch6_s5",
+      "topic": "Volume",
+      "standardCode": "G.GMD.A.3",
+      "image": "/questions/geometry/originals/q055.png",
+      "imageAlt": "Original JMAP Geometry question 55: Volume.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 14,
+        "examRef": "062532geo",
+        "points": 4,
+        "originalClip": "Screenshot 2026-11-12 123530.png"
+      },
+      "type": "mc",
+      "origin": "adapted_mc",
+      "prompt": "Which statement correctly identifies the container holding the most sand?",
+      "choices": [
+        "Container 1, the square prism, because 120 in³ exceeds both other volumes.",
+        "Container 2, the cylinder, because about 117.8 in³ exceeds both other volumes.",
+        "Container 3, the cone, with a volume of about 125.2 in³.",
+        "All three containers have the same volume, 120 in³."
+      ],
+      "answerIndex": 2,
+      "explanation": "Container 1: 4²(7.5) = 120 in³. Container 2: π(2.5²)(6) ≈ 117.8 in³. Container 3: (1/3)π(3.75²)(8.5) ≈ 125.2 in³. Container 3 has the greatest volume."
+    },
+    {
+      "id": "geo-q056",
+      "sourceNumber": 56,
+      "courseId": "geometry",
+      "chapterId": "geo-ch6",
+      "sectionId": "geo-ch6_s5",
+      "topic": "Volume",
+      "standardCode": "G.GMD.A.3",
+      "image": "/questions/geometry/originals/q056.png",
+      "imageAlt": "Original JMAP Geometry question 56: Volume.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 14,
+        "examRef": "062518geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123535.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 0,
+      "explanation": "The original JMAP answer key gives choice 1.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q057",
+      "sourceNumber": 57,
+      "courseId": "geometry",
+      "chapterId": "geo-ch6",
+      "sectionId": "geo-ch6_s5",
+      "topic": "Volume",
+      "standardCode": "G.GMD.A.3",
+      "image": "/questions/geometry/originals/q057.png",
+      "imageAlt": "Original JMAP Geometry question 57: Volume.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 15,
+        "examRef": "082504geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123542.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 2,
+      "explanation": "The original JMAP answer key gives choice 3.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q058",
+      "sourceNumber": 58,
+      "courseId": "geometry",
+      "chapterId": "geo-ch6",
+      "sectionId": "geo-ch6_s5",
+      "topic": "Volume",
+      "standardCode": "G.GMD.A.3",
+      "image": "/questions/geometry/originals/q058.png",
+      "imageAlt": "Original JMAP Geometry question 58: Volume.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 15,
+        "examRef": "012614geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123546.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 2,
+      "explanation": "The original JMAP answer key gives choice 3.",
+      "originalChoiceLabels": true
+    }
+  ],
+  "mathFormat": "unicode"
+}

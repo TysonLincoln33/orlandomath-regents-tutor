@@ -1,0 +1,108 @@
+{
+  "id": "geo-ch7_s3",
+  "chapterId": "geo-ch7",
+  "courseId": "geometry",
+  "chapterNumber": 7,
+  "sectionNumber": 3,
+  "title": "Mapping a Polygon onto Itself",
+  "standardCode": "G.CO.A.3",
+  "questionIds": [
+    "geo-q071",
+    "geo-q072",
+    "geo-q073"
+  ],
+  "sectionId": "geo-ch7_s3",
+  "questions": [
+    {
+      "id": "geo-q071",
+      "sourceNumber": 71,
+      "courseId": "geometry",
+      "chapterId": "geo-ch7",
+      "sectionId": "geo-ch7_s3",
+      "topic": "Mapping a Polygon onto Itself",
+      "standardCode": "G.CO.A.3",
+      "image": "/questions/geometry/originals/q071.png",
+      "imageAlt": "Original JMAP Geometry question 71: Mapping a Polygon onto Itself.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 18,
+        "examRef": "082522geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123736.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 0,
+      "explanation": "The original JMAP answer key gives choice 1.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q072",
+      "sourceNumber": 72,
+      "courseId": "geometry",
+      "chapterId": "geo-ch7",
+      "sectionId": "geo-ch7_s3",
+      "topic": "Mapping a Polygon onto Itself",
+      "standardCode": "G.CO.A.3",
+      "image": "/questions/geometry/originals/q072.png",
+      "imageAlt": "Original JMAP Geometry question 72: Mapping a Polygon onto Itself.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 18,
+        "examRef": "012602geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123742.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 1,
+      "explanation": "The original JMAP answer key gives choice 2.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q073",
+      "sourceNumber": 73,
+      "courseId": "geometry",
+      "chapterId": "geo-ch7",
+      "sectionId": "geo-ch7_s3",
+      "topic": "Mapping a Polygon onto Itself",
+      "standardCode": "G.CO.A.3",
+      "image": "/questions/geometry/originals/q073.png",
+      "imageAlt": "Original JMAP Geometry question 73: Mapping a Polygon onto Itself.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 18,
+        "examRef": "062505geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123749.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 1,
+      "explanation": "The original JMAP answer key gives choice 2.",
+      "originalChoiceLabels": true
+    }
+  ],
+  "mathFormat": "unicode"
+}

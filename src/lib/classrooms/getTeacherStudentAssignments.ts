@@ -1,3 +1,4 @@
+import { reportingRpcName, selectedCourse } from "@/lib/course/selection";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export type TeacherStudentAssignmentStatus =
@@ -82,7 +83,7 @@ export async function getTeacherStudentAssignments(
     ) => Promise<{ data: unknown; error: { message?: string } | null }>;
   };
 
-  const { data, error } = await supabase.rpc("get_teacher_student_assignments", {
+  const { data, error } = await supabase.rpc(reportingRpcName("get_teacher_student_assignments"), {
     p_classroom_id: classroomId,
     p_student_user_id: studentUserId,
   });

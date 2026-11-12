@@ -1,0 +1,46 @@
+{
+  "id": "geo-ch3_s6",
+  "chapterId": "geo-ch3",
+  "courseId": "geometry",
+  "chapterNumber": 3,
+  "sectionNumber": 6,
+  "title": "Centroid, Orthocenter, Incenter and Circumcenter",
+  "standardCode": "G.SRT.B.4",
+  "questionIds": [
+    "geo-q027"
+  ],
+  "sectionId": "geo-ch3_s6",
+  "questions": [
+    {
+      "id": "geo-q027",
+      "sourceNumber": 27,
+      "courseId": "geometry",
+      "chapterId": "geo-ch3",
+      "sectionId": "geo-ch3_s6",
+      "topic": "Centroid, Orthocenter, Incenter and Circumcenter",
+      "standardCode": "G.SRT.B.4",
+      "image": "/questions/geometry/originals/q027.png",
+      "imageAlt": "Original JMAP Geometry question 27: Centroid, Orthocenter, Incenter and Circumcenter.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 8,
+        "examRef": "012624geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123149.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 1,
+      "explanation": "The original JMAP answer key gives choice 2.",
+      "originalChoiceLabels": true
+    }
+  ],
+  "mathFormat": "unicode"
+}

@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { getCourseForPath } from "@/lib/course/registry";
+import { exportGeometrySnapshot } from "@/lib/sectionProgressLocal";
 
 type Props = {
   open: boolean;
@@ -88,7 +90,7 @@ export default function SaveMyProgressModal({ open, onClose, onOpenChange }: Pro
     setErrorMsg("");
     setResumeUrl("");
 
-    const progressJson = getLocalProgress();
+    const progressJson = getCourseForPath(window.location.pathname).id === "geometry" ? exportGeometrySnapshot() : getLocalProgress();
 
     try {
       const res = await fetch("/api/save-progress", {

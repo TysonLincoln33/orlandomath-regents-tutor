@@ -1,0 +1,107 @@
+{
+  "id": "geo-ch8_s3",
+  "chapterId": "geo-ch8",
+  "courseId": "geometry",
+  "chapterNumber": 8,
+  "sectionNumber": 3,
+  "title": "Using Trigonometry to Find an Angle",
+  "standardCode": "G.SRT.C.8",
+  "questionIds": [
+    "geo-q103",
+    "geo-q104",
+    "geo-q105"
+  ],
+  "sectionId": "geo-ch8_s3",
+  "questions": [
+    {
+      "id": "geo-q103",
+      "sourceNumber": 103,
+      "courseId": "geometry",
+      "chapterId": "geo-ch8",
+      "sectionId": "geo-ch8_s3",
+      "topic": "Using Trigonometry to Find an Angle",
+      "standardCode": "G.SRT.C.8",
+      "image": "/questions/geometry/originals/q103.png",
+      "imageAlt": "Original JMAP Geometry question 103: Using Trigonometry to Find an Angle.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 26,
+        "examRef": "062507geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 124200.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 2,
+      "explanation": "The original JMAP answer key gives choice 3.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q104",
+      "sourceNumber": 104,
+      "courseId": "geometry",
+      "chapterId": "geo-ch8",
+      "sectionId": "geo-ch8_s3",
+      "topic": "Using Trigonometry to Find an Angle",
+      "standardCode": "G.SRT.C.8",
+      "image": "/questions/geometry/originals/q104.png",
+      "imageAlt": "Original JMAP Geometry question 104: Using Trigonometry to Find an Angle.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 26,
+        "examRef": "012610geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 124207.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 2,
+      "explanation": "The original JMAP answer key gives choice 3.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q105",
+      "sourceNumber": 105,
+      "courseId": "geometry",
+      "chapterId": "geo-ch8",
+      "sectionId": "geo-ch8_s3",
+      "topic": "Using Trigonometry to Find an Angle",
+      "standardCode": "G.SRT.C.8",
+      "image": "/questions/geometry/originals/q105.png",
+      "imageAlt": "Original JMAP Geometry question 105: Using Trigonometry to Find an Angle.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 27,
+        "examRef": "082533geo",
+        "points": 4,
+        "originalClip": "Screenshot 2026-11-12 124223.png"
+      },
+      "type": "mc",
+      "origin": "adapted_mc",
+      "prompt": "Which pair gives the longer cable’s ground distance and angle of elevation, rounded as requested?",
+      "choices": [
+        "10 ft and 50°",
+        "13 ft and 43°",
+        "13 ft and 50°",
+        "15 ft and 39°"
+      ],
+      "answerIndex": 1,
+      "explanation": "The shorter cable’s ground distance is 12/tan(50°) ≈ 10.0692 ft. The longer cable’s ground distance is 13.0692 ft, rounding to 13 ft. Using unrounded distance, θ = arctan(12/13.0692) ≈ 42.5578°, rounding to 43°."
+    }
+  ],
+  "mathFormat": "unicode"
+}

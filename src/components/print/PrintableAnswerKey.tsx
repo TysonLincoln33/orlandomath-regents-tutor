@@ -1,5 +1,7 @@
 import { renderBoldText, type PrintableSectionData } from "@/components/print/PrintableSectionContent";
 
+import ProofTable from "@/components/questions/ProofTable";
+
 type Props = {
   chapterTitle?: string;
   sections: PrintableSectionData[];
@@ -24,11 +26,8 @@ export default function PrintableAnswerKey({ chapterTitle, sections }: Props) {
             <ol className="mt-3 space-y-2 text-gray-900">
               {section.questions.map((question, index) => (
                 <li key={question.id} className="print-answer-key-item flex gap-2">
-                  <span className="font-semibold">{index + 1}.</span>
-                  <span>
-                    <span className="font-semibold">{answerLabel(question.answerIndex)}.</span>{" "}
-                    {renderBoldText(question.choices[question.answerIndex] ?? "")}
-                  </span>
+                  <span className="font-semibold">{question.sourceNumber ?? index + 1}.</span>
+                  {question.type === "proof_dropdown" ? <div className="min-w-0 flex-1"><ProofTable question={question} showAnswers /></div> : <span><span className="font-semibold">{question.sourceNumber ? question.answerIndex + 1 : answerLabel(question.answerIndex)}.</span>{" "}{renderBoldText(question.originalChoiceLabels ? "" : question.choices[question.answerIndex] ?? "")}</span>}
                 </li>
               ))}
             </ol>

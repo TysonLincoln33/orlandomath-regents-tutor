@@ -5,8 +5,10 @@ import { useEffect, useState } from "react";
 import CreateClassroomForm from "@/components/classrooms/CreateClassroomForm";
 import { getTeacherClassrooms } from "@/lib/classrooms/getTeacherClassrooms";
 import type { Classroom } from "@/types/classroom";
+import CourseWorkspace from "@/components/course/CourseWorkspace";
+import type { CourseId } from "@/lib/course/registry";
 
-export default function TeacherClassroomsPage() {
+function TeacherClassroomsPage({ courseId }: { courseId: CourseId }) {
   const [classrooms, setClassrooms] = useState<Classroom[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -101,7 +103,7 @@ export default function TeacherClassroomsPage() {
                 </div>
 
                 <Link
-                  href={`/teacher/classrooms/${c.id}`}
+                  href={`/teacher/classrooms/${c.id}?courseId=${courseId}`}
                   className="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-100"
                 >
                   View Classroom
@@ -113,4 +115,8 @@ export default function TeacherClassroomsPage() {
       </div>
     </div>
   );
+}
+
+export default function TeacherClassroomsWorkspace() {
+  return <CourseWorkspace>{courseId => <TeacherClassroomsPage courseId={courseId} />}</CourseWorkspace>;
 }

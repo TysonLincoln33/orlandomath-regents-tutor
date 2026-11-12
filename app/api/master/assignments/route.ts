@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { CHAPTERS, SECTIONS } from '@/lib/course/algebra1';
+import { CHAPTERS, SECTIONS, getCourse } from '@/lib/course/registry';
 import { getMasterAssignmentRouteContext, jsonError, normalizeDate } from './_utils';
 
 const VALID = new Set(SECTIONS.map((s) => s.id));
@@ -18,7 +18,8 @@ export async function GET(req: NextRequest) { try {
   const { adminClient } = await getMasterAssignmentRouteContext(req);
   const { data, error } = await adminClient.from('assignments').select(`${SEL}, classrooms(name, teacher_id, profiles!classrooms_teacher_id_fkey(full_name,email))`).order('created_at', { ascending: false });
   if (error) return NextResponse.json({ error: error.message || 'Failed to load assignments.' }, { status: 500 });
-  const assignments = (data ?? []) as unknown as AssignmentRow[];
+  const allowed = new Set(getCourse(req.nextUrl.searchParams.get("courseId")).sections.map(s => s.id));
+  const assignments = ((data ?? []) as unknown as AssignmentRow[]).filter(a => allowed.has(a.section_id ?? ""));
   const ids = assignments.map((a) => a.id);
   const recipients: RecipientStatusRow[] = ids.length ? (((await adminClient.from('assignment_recipients').select('assignment_id,status').in('assignment_id', ids)).data ?? []) as RecipientStatusRow[]) : [];
   const by = new Map<string, AssignmentRow & { classroom_name: string | null; teacher_name: string | null; teacher_email: string | null; recipient_count: number; completed_count: number; incomplete_count: number; excused_count: number }>();

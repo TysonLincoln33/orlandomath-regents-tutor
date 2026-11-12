@@ -6,23 +6,27 @@ import Link from "next/link";
 import RainbowBar from "@/components/progress/RainbowBar";
 import SectionRow from "@/components/course/SectionRow";
 
-import { CHAPTERS, SECTIONS, type Section } from "@/lib/course/algebra1";
+import { getCourseForChapter } from "@/lib/course/registry";
+import type { Section } from "@/lib/course/algebra1";
 import { useCanUsePrintControls } from "@/lib/auth/usePrintControls";
-import { getAveragePercent } from "@/lib/sectionProgressLocal";
+import { fetchCourseDashboardProgress } from "@/lib/progress/dashboardProgress";
 import { RT_PROGRESS_UPDATED_EVENT } from "@/lib/progress/events";
 
 type Props = { chapterId: string };
 
 export default function ChapterClient({ chapterId }: Props) {
+  const course = getCourseForChapter(chapterId);
+  const CHAPTERS = course.chapters;
+  const SECTIONS = course.sections;
   const chapter = useMemo(
     () => CHAPTERS.find((c) => c.id === chapterId),
-    [chapterId],
+    [chapterId, CHAPTERS],
   );
 
   const sections: Section[] = useMemo(() => {
     if (!chapter) return [];
     return SECTIONS.filter((s) => s.chapterId === chapter.id);
-  }, [chapter]);
+  }, [chapter, SECTIONS]);
 
   const sectionIds = useMemo(
     () => sections.map((section) => section.id),
@@ -30,24 +34,30 @@ export default function ChapterClient({ chapterId }: Props) {
   );
   const [completionPercent, setCompletionPercent] = useState(0);
   const [overallPercent, setOverallPercent] = useState(0);
+  const [sectionPercents, setSectionPercents] = useState<Record<string, number>>({});
   const canPrint = useCanUsePrintControls();
 
   useEffect(() => {
-    const refresh = () => {
-      setCompletionPercent(getAveragePercent(sectionIds));
-      setOverallPercent(
-        getAveragePercent(SECTIONS.map((section) => section.id)),
-      );
+    let active = true;
+    const refresh = async () => {
+      try {
+        const progress = await fetchCourseDashboardProgress(course.id);
+        if (!active) return;
+        setCompletionPercent(progress.chapters.find(c => c.id === chapterId)?.completionPercent ?? 0);
+        setOverallPercent(progress.overallCompletionPercent);
+        setSectionPercents(Object.fromEntries(progress.chapters.flatMap(c => c.sections.map(s => [s.id, s.completionPercent]))));
+      } catch (error) { console.error("Could not load chapter progress", error); }
     };
 
     refresh();
     window.addEventListener("storage", refresh);
     window.addEventListener(RT_PROGRESS_UPDATED_EVENT, refresh);
     return () => {
+      active = false;
       window.removeEventListener("storage", refresh);
       window.removeEventListener(RT_PROGRESS_UPDATED_EVENT, refresh);
     };
-  }, [sectionIds]);
+  }, [chapterId, course.id]);
 
   if (!chapter) {
     return (
@@ -59,7 +69,7 @@ export default function ChapterClient({ chapterId }: Props) {
           This chapter ID does not exist.
         </p>
         <div className="mt-6">
-          <Link href="/dashboard" className="text-blue-600 hover:underline">
+          <Link href={course.dashboardPath} className="text-blue-600 hover:underline">
             Return to dashboard
           </Link>
         </div>
@@ -72,7 +82,7 @@ export default function ChapterClient({ chapterId }: Props) {
       <div className="mx-auto w-full max-w-screen-2xl px-4 py-10">
         <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <Link
-            href="/dashboard"
+            href={course.dashboardPath}
             className="text-sm text-slate-600 hover:underline"
           >
             ← Return to dashboard
@@ -100,7 +110,7 @@ export default function ChapterClient({ chapterId }: Props) {
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div className="min-w-0">
               <div className="text-xs font-semibold tracking-wide text-slate-300">
-                Chapter {chapter.number} • {chapter.percent.toFixed(1)}% of exam
+                Chapter {chapter.number} • {course.id === "geometry" ? `${chapter.questionCount} questions` : `${chapter.percent.toFixed(1)}% of exam`}
               </div>
               <h1 className="mt-2 text-4xl font-bold tracking-tight text-white">
                 {chapter.title}
@@ -134,7 +144,7 @@ export default function ChapterClient({ chapterId }: Props) {
 
         <div className="mt-10 space-y-4">
           {sections.map((section) => (
-            <SectionRow key={section.id} section={section} />
+            <SectionRow key={section.id} section={section} completionPercent={sectionPercents[section.id]} />
           ))}
         </div>
       </div>

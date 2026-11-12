@@ -1,0 +1,46 @@
+{
+  "id": "geo-ch1_s2",
+  "chapterId": "geo-ch1",
+  "courseId": "geometry",
+  "chapterNumber": 1,
+  "sectionNumber": 2,
+  "title": "Cross-Sections of Three-Dimensional Objects",
+  "standardCode": "G.GMD.B.4",
+  "questionIds": [
+    "geo-q003"
+  ],
+  "sectionId": "geo-ch1_s2",
+  "questions": [
+    {
+      "id": "geo-q003",
+      "sourceNumber": 3,
+      "courseId": "geometry",
+      "chapterId": "geo-ch1",
+      "sectionId": "geo-ch1_s2",
+      "topic": "Cross-Sections of Three-Dimensional Objects",
+      "standardCode": "G.GMD.B.4",
+      "image": "/questions/geometry/originals/q003.png",
+      "imageAlt": "Original JMAP Geometry question 3: Cross-Sections of Three-Dimensional Objects.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 3,
+        "examRef": "062514geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 122833.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 3,
+      "explanation": "The original JMAP answer key gives choice 4.",
+      "originalChoiceLabels": true
+    }
+  ],
+  "mathFormat": "unicode"
+}

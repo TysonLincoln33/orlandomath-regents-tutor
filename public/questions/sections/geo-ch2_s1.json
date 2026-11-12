@@ -1,0 +1,107 @@
+{
+  "id": "geo-ch2_s1",
+  "chapterId": "geo-ch2",
+  "courseId": "geometry",
+  "chapterNumber": 2,
+  "sectionNumber": 1,
+  "title": "Directed Line Segments",
+  "standardCode": "G.GPE.B.6",
+  "questionIds": [
+    "geo-q008",
+    "geo-q009",
+    "geo-q010"
+  ],
+  "sectionId": "geo-ch2_s1",
+  "questions": [
+    {
+      "id": "geo-q008",
+      "sourceNumber": 8,
+      "courseId": "geometry",
+      "chapterId": "geo-ch2",
+      "sectionId": "geo-ch2_s1",
+      "topic": "Directed Line Segments",
+      "standardCode": "G.GPE.B.6",
+      "image": "/questions/geometry/originals/q008.png",
+      "imageAlt": "Original JMAP Geometry question 8: Directed Line Segments.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 4,
+        "examRef": "062517geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 122916.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 3,
+      "explanation": "The original JMAP answer key gives choice 4.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q009",
+      "sourceNumber": 9,
+      "courseId": "geometry",
+      "chapterId": "geo-ch2",
+      "sectionId": "geo-ch2_s1",
+      "topic": "Directed Line Segments",
+      "standardCode": "G.GPE.B.6",
+      "image": "/questions/geometry/originals/q009.png",
+      "imageAlt": "Original JMAP Geometry question 9: Directed Line Segments.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 4,
+        "examRef": "012616geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 122924.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 3,
+      "explanation": "The original JMAP answer key gives choice 4.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q010",
+      "sourceNumber": 10,
+      "courseId": "geometry",
+      "chapterId": "geo-ch2",
+      "sectionId": "geo-ch2_s1",
+      "topic": "Directed Line Segments",
+      "standardCode": "G.GPE.B.6",
+      "image": "/questions/geometry/originals/q010.png",
+      "imageAlt": "Original JMAP Geometry question 10: Directed Line Segments.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 4,
+        "examRef": "082527geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 122930.png"
+      },
+      "type": "mc",
+      "origin": "adapted_mc",
+      "prompt": "Which coordinates locate point A so that CA:AS = 3:2?",
+      "choices": [
+        "(3, 4)",
+        "(1, 3)",
+        "(2, 3.5)",
+        "(4, 3)"
+      ],
+      "answerIndex": 0,
+      "explanation": "A = (−3, 1) + (3/5)[(7, 6) − (−3, 1)] = (−3 + 6, 1 + 3) = (3, 4)."
+    }
+  ],
+  "mathFormat": "unicode"
+}

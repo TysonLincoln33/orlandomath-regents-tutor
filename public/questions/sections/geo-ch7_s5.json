@@ -1,0 +1,138 @@
+{
+  "id": "geo-ch7_s5",
+  "chapterId": "geo-ch7",
+  "courseId": "geometry",
+  "chapterNumber": 7,
+  "sectionNumber": 5,
+  "title": "Properties of Transformations",
+  "standardCode": "G.CO.B.6",
+  "questionIds": [
+    "geo-q077",
+    "geo-q078",
+    "geo-q079",
+    "geo-q080"
+  ],
+  "sectionId": "geo-ch7_s5",
+  "questions": [
+    {
+      "id": "geo-q077",
+      "sourceNumber": 77,
+      "courseId": "geometry",
+      "chapterId": "geo-ch7",
+      "sectionId": "geo-ch7_s5",
+      "topic": "Properties of Transformations",
+      "standardCode": "G.CO.B.6",
+      "image": "/questions/geometry/originals/q077.png",
+      "imageAlt": "Original JMAP Geometry question 77: Properties of Transformations.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 20,
+        "examRef": "082502geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123830.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 2,
+      "explanation": "The original JMAP answer key gives choice 3.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q078",
+      "sourceNumber": 78,
+      "courseId": "geometry",
+      "chapterId": "geo-ch7",
+      "sectionId": "geo-ch7_s5",
+      "topic": "Properties of Transformations",
+      "standardCode": "G.CO.B.6",
+      "image": "/questions/geometry/originals/q078.png",
+      "imageAlt": "Original JMAP Geometry question 78: Properties of Transformations.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 20,
+        "examRef": "062521geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123838.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 1,
+      "explanation": "The original JMAP answer key gives choice 2.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q079",
+      "sourceNumber": 79,
+      "courseId": "geometry",
+      "chapterId": "geo-ch7",
+      "sectionId": "geo-ch7_s5",
+      "topic": "Properties of Transformations",
+      "standardCode": "G.CO.B.6",
+      "image": "/questions/geometry/originals/q079.png",
+      "imageAlt": "Original JMAP Geometry question 79: Properties of Transformations.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 20,
+        "examRef": "012618geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123843.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 1,
+      "explanation": "The original JMAP answer key gives choice 2.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q080",
+      "sourceNumber": 80,
+      "courseId": "geometry",
+      "chapterId": "geo-ch7",
+      "sectionId": "geo-ch7_s5",
+      "topic": "Properties of Transformations",
+      "standardCode": "G.CO.B.6",
+      "image": "/questions/geometry/originals/q080.png",
+      "imageAlt": "Original JMAP Geometry question 80: Properties of Transformations.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 20,
+        "examRef": "082525geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123854.png"
+      },
+      "type": "mc",
+      "origin": "adapted_mc",
+      "prompt": "Why must the translated triangle be congruent to the original triangle?",
+      "choices": [
+        "A translation preserves all distances and angle measures.",
+        "A translation doubles every side length.",
+        "A translation preserves angles but changes all lengths by a nonunit scale factor.",
+        "A translation always reflects a figure across an axis."
+      ],
+      "answerIndex": 0,
+      "explanation": "A translation is a rigid motion. It preserves corresponding side lengths and angle measures, so the image and original triangles are congruent."
+    }
+  ],
+  "mathFormat": "unicode"
+}

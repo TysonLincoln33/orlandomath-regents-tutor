@@ -1,0 +1,46 @@
+{
+  "id": "geo-ch9_s1",
+  "chapterId": "geo-ch9",
+  "courseId": "geometry",
+  "chapterNumber": 9,
+  "sectionNumber": 1,
+  "title": "Triangle Proofs",
+  "standardCode": "G.SRT.B.5",
+  "questionIds": [
+    "geo-q110"
+  ],
+  "sectionId": "geo-ch9_s1",
+  "questions": [
+    {
+      "id": "geo-q110",
+      "sourceNumber": 110,
+      "courseId": "geometry",
+      "chapterId": "geo-ch9",
+      "sectionId": "geo-ch9_s1",
+      "topic": "Triangle Proofs",
+      "standardCode": "G.SRT.B.5",
+      "image": "/questions/geometry/originals/q110.png",
+      "imageAlt": "Original JMAP Geometry question 110: Triangle Proofs.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 28,
+        "examRef": "012609geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 124257.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 3,
+      "explanation": "The original JMAP answer key gives choice 4.",
+      "originalChoiceLabels": true
+    }
+  ],
+  "mathFormat": "unicode"
+}

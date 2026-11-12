@@ -1,6 +1,8 @@
 // Updated to match the current OrlandoMath Algebra 1 section structure
 
 export type Chapter = {
+  courseId?: string;
+  questionCount?: number;
   id: string;            // e.g. "ch1"
   number: number;        // 1..12
   title: string;         // human title for cards/pages
@@ -11,6 +13,9 @@ export type Chapter = {
 };
 
 export type Section = {
+  questionIds?: string[];
+  courseId?: string;
+  questionCount?: number;
   id: string;            // e.g. "ch1_s1"
   chapterId: string;     // e.g. "ch1"
   chapterNumber: number; // 1..12

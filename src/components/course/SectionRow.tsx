@@ -11,9 +11,10 @@ import { getSectionPercent } from "@/lib/sectionProgressLocal";
 
 type Props = {
   section: Section;
+  completionPercent?: number;
 };
 
-export default function SectionRow({ section }: Props) {
+export default function SectionRow({ section, completionPercent }: Props) {
   const [status, setStatus] = useState<"not_started" | "in_progress" | "complete">("not_started");
   const [pct, setPct] = useState(0);
 
@@ -31,6 +32,12 @@ export default function SectionRow({ section }: Props) {
       window.removeEventListener(RT_PROGRESS_UPDATED_EVENT, refresh);
     };
   }, [section.id]);
+
+  useEffect(() => {
+    if (completionPercent === undefined) return;
+    setPct(completionPercent);
+    setStatus(completionPercent >= 100 ? "complete" : completionPercent > 0 ? "in_progress" : "not_started");
+  }, [completionPercent]);
 
   const pillClass = (target: typeof status) =>
     target === status
@@ -105,13 +112,13 @@ export default function SectionRow({ section }: Props) {
             Complete
           </div>
 
-          <button
+          {!section.id.startsWith("geo-") && <button
             type="button"
             onClick={onReset}
             className="ml-2 rounded-xl border border-white/15 bg-white/5 px-4 py-2 text-sm text-slate-200 transition hover:border-red-400/40 hover:bg-red-500/10 hover:text-red-100"
           >
             Reset
-          </button>
+          </button>}
         </div>
       </div>
     </div>

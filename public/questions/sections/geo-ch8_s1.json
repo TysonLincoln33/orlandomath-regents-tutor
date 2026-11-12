@@ -1,0 +1,76 @@
+{
+  "id": "geo-ch8_s1",
+  "chapterId": "geo-ch8",
+  "courseId": "geometry",
+  "chapterNumber": 8,
+  "sectionNumber": 1,
+  "title": "Cofunctions",
+  "standardCode": "G.SRT.C.7",
+  "questionIds": [
+    "geo-q095",
+    "geo-q096"
+  ],
+  "sectionId": "geo-ch8_s1",
+  "questions": [
+    {
+      "id": "geo-q095",
+      "sourceNumber": 95,
+      "courseId": "geometry",
+      "chapterId": "geo-ch8",
+      "sectionId": "geo-ch8_s1",
+      "topic": "Cofunctions",
+      "standardCode": "G.SRT.C.7",
+      "image": "/questions/geometry/originals/q095.png",
+      "imageAlt": "Original JMAP Geometry question 95: Cofunctions.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 24,
+        "examRef": "012606geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 124105.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 1,
+      "explanation": "The original JMAP answer key gives choice 2.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q096",
+      "sourceNumber": 96,
+      "courseId": "geometry",
+      "chapterId": "geo-ch8",
+      "sectionId": "geo-ch8_s1",
+      "topic": "Cofunctions",
+      "standardCode": "G.SRT.C.7",
+      "image": "/questions/geometry/originals/q096.png",
+      "imageAlt": "Original JMAP Geometry question 96: Cofunctions.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 24,
+        "examRef": "062529geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 124111.png"
+      },
+      "type": "mc",
+      "origin": "adapted_mc",
+      "prompt": "What is the value of x?",
+      "choices": [
+        "24",
+        "4",
+        "21",
+        "46.5"
+      ],
+      "answerIndex": 0,
+      "explanation": "The two acute angles are complementary: (3x − 7) + (x + 1) = 90. Therefore 4x − 6 = 90, 4x = 96, and x = 24."
+    }
+  ],
+  "mathFormat": "unicode"
+}

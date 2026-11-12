@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import Link from "next/link";
 
-import { CHAPTERS, SECTIONS } from "@/lib/course/algebra1";
+import { CHAPTERS, SECTIONS } from "@/lib/course/registry";
 import ChapterPrintClient from "./ChapterPrintClient";
 import type { PrintableSectionData } from "@/components/print/PrintableSectionContent";
 

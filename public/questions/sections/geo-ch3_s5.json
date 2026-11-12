@@ -1,0 +1,77 @@
+{
+  "id": "geo-ch3_s5",
+  "chapterId": "geo-ch3",
+  "courseId": "geometry",
+  "chapterNumber": 3,
+  "sectionNumber": 5,
+  "title": "Midsegments",
+  "standardCode": "G.CO.C.10",
+  "questionIds": [
+    "geo-q025",
+    "geo-q026"
+  ],
+  "sectionId": "geo-ch3_s5",
+  "questions": [
+    {
+      "id": "geo-q025",
+      "sourceNumber": 25,
+      "courseId": "geometry",
+      "chapterId": "geo-ch3",
+      "sectionId": "geo-ch3_s5",
+      "topic": "Midsegments",
+      "standardCode": "G.CO.C.10",
+      "image": "/questions/geometry/originals/q025.png",
+      "imageAlt": "Original JMAP Geometry question 25: Midsegments.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 7,
+        "examRef": "082514geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123131.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 1,
+      "explanation": "The original JMAP answer key gives choice 2.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q026",
+      "sourceNumber": 26,
+      "courseId": "geometry",
+      "chapterId": "geo-ch3",
+      "sectionId": "geo-ch3_s5",
+      "topic": "Midsegments",
+      "standardCode": "G.CO.C.10",
+      "image": "/questions/geometry/originals/q026.png",
+      "imageAlt": "Original JMAP Geometry question 26: Midsegments.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 8,
+        "examRef": "062508geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123139.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 1,
+      "explanation": "The original JMAP answer key gives choice 2.",
+      "originalChoiceLabels": true
+    }
+  ],
+  "mathFormat": "unicode"
+}

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { loginReturnPath } from "@/lib/auth/returnPath";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabaseBrowserClient } from "../../lib/supabase/client";
@@ -44,7 +45,7 @@ export default function LoginForm() {
         throw signInError;
       }
 
-      router.push("/dashboard");
+      router.push(loginReturnPath());
       router.refresh();
     } catch (err) {
       const message =

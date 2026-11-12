@@ -62,6 +62,7 @@ function checkField(label, file, qIndex, s) {
   return issues;
 }
 
+await import("./test-geometry.mjs");
 let totalIssues = 0;
 
 const files = walkJson(DIR);
@@ -80,6 +81,7 @@ for (const file of files) {
     continue;
   }
 
+  if (data.courseId === "geometry" && data.mathFormat === "unicode") continue;
   const qs = Array.isArray(data?.questions) ? data.questions : [];
   for (let i = 0; i < qs.length; i++) {
     const q = qs[i];

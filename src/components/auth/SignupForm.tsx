@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { loginReturnPath } from "@/lib/auth/returnPath";
 import { useRouter } from "next/navigation";
 import { getSupabaseBrowserClient } from "../../lib/supabase/client";
 
@@ -76,7 +77,7 @@ export default function SignupForm() {
         setAccountType("student");
 
         setTimeout(() => {
-          router.push("/login");
+          router.push("/login?next=" + encodeURIComponent(loginReturnPath()));
         }, 1200);
       } else {
         setSuccess(

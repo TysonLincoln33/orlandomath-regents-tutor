@@ -1,0 +1,106 @@
+{
+  "id": "geo-ch6_s1",
+  "chapterId": "geo-ch6",
+  "courseId": "geometry",
+  "chapterNumber": 6,
+  "sectionNumber": 1,
+  "title": "Polygons in the Coordinate Plane",
+  "standardCode": "G.GPE.B.7",
+  "questionIds": [
+    "geo-q043",
+    "geo-q044",
+    "geo-q045"
+  ],
+  "sectionId": "geo-ch6_s1",
+  "questions": [
+    {
+      "id": "geo-q043",
+      "sourceNumber": 43,
+      "courseId": "geometry",
+      "chapterId": "geo-ch6",
+      "sectionId": "geo-ch6_s1",
+      "topic": "Polygons in the Coordinate Plane",
+      "standardCode": "G.GPE.B.7",
+      "image": "/questions/geometry/originals/q043.png",
+      "imageAlt": "Original JMAP Geometry question 43: Polygons in the Coordinate Plane.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 12,
+        "examRef": "082518geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123356.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 3,
+      "explanation": "The original JMAP answer key gives choice 4.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q044",
+      "sourceNumber": 44,
+      "courseId": "geometry",
+      "chapterId": "geo-ch6",
+      "sectionId": "geo-ch6_s1",
+      "topic": "Polygons in the Coordinate Plane",
+      "standardCode": "G.GPE.B.7",
+      "image": "/questions/geometry/originals/q044.png",
+      "imageAlt": "Original JMAP Geometry question 44: Polygons in the Coordinate Plane.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 12,
+        "examRef": "spr2408geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123403.png"
+      },
+      "type": "mc",
+      "origin": "adapted_mc",
+      "prompt": "What is the perimeter of ABCDEF in simplest radical form?",
+      "choices": [
+        "4 + 12√2 units",
+        "12√2 units",
+        "4 + 6√2 units",
+        "8 + 12√2 units"
+      ],
+      "answerIndex": 0,
+      "explanation": "Four slanted sides each measure √(3² + 3²) = 3√2. The two vertical sides each measure 2. Perimeter = 4(3√2) + 2(2) = 12√2 + 4."
+    },
+    {
+      "id": "geo-q045",
+      "sourceNumber": 45,
+      "courseId": "geometry",
+      "chapterId": "geo-ch6",
+      "sectionId": "geo-ch6_s1",
+      "topic": "Polygons in the Coordinate Plane",
+      "standardCode": "G.GPE.B.7",
+      "image": "/questions/geometry/originals/q045.png",
+      "imageAlt": "Original JMAP Geometry question 45: Polygons in the Coordinate Plane.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 12,
+        "examRef": "062528geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123410.png"
+      },
+      "type": "mc",
+      "origin": "adapted_mc",
+      "prompt": "What is the area of quadrilateral QUAD?",
+      "choices": [
+        "15 square units",
+        "30 square units",
+        "60 square units",
+        "100 square units"
+      ],
+      "answerIndex": 1,
+      "explanation": "The horizontal diagonal measures 10 units and the vertical diagonal measures 6 units. They are perpendicular. Area = (1/2)(10)(6) = 30 square units."
+    }
+  ],
+  "mathFormat": "unicode"
+}

@@ -1,0 +1,450 @@
+{
+  "id": "geo-ch9_s2",
+  "chapterId": "geo-ch9",
+  "courseId": "geometry",
+  "chapterNumber": 9,
+  "sectionNumber": 2,
+  "title": "Quadrilateral Proofs",
+  "standardCode": "G.SRT.B.5",
+  "questionIds": [
+    "geo-q111",
+    "geo-q112",
+    "geo-q113"
+  ],
+  "sectionId": "geo-ch9_s2",
+  "questions": [
+    {
+      "id": "geo-q111",
+      "sourceNumber": 111,
+      "courseId": "geometry",
+      "chapterId": "geo-ch9",
+      "sectionId": "geo-ch9_s2",
+      "topic": "Quadrilateral Proofs",
+      "standardCode": "G.SRT.B.5",
+      "image": "/questions/geometry/originals/q111.png",
+      "imageAlt": "Original JMAP Geometry question 111: Quadrilateral Proofs.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 28,
+        "examRef": "012633geo",
+        "points": 4,
+        "originalClip": "Screenshot 2026-11-12 124303.png"
+      },
+      "type": "proof_dropdown",
+      "origin": "adapted_proof",
+      "prompt": "Complete the proof table by selecting the correct statement or reason in each dropdown.",
+      "proof": {
+        "columns": [
+          "Statement",
+          "Reason"
+        ],
+        "rows": [
+          {
+            "id": "r1",
+            "statement": {
+              "kind": "fixed",
+              "text": "MS ∥ IL and MS ≅ IL; diagonals IS and ML intersect at E."
+            },
+            "reason": {
+              "kind": "fixed",
+              "text": "Given."
+            }
+          },
+          {
+            "id": "r2",
+            "statement": {
+              "kind": "fixed",
+              "text": "SMIL is a parallelogram."
+            },
+            "reason": {
+              "kind": "dropdown",
+              "choices": [
+                "One pair of adjacent sides is congruent.",
+                "Every quadrilateral has bisecting diagonals.",
+                "One pair of opposite sides is both parallel and congruent.",
+                "Two sides intersect at a vertex."
+              ],
+              "answerIndex": 2
+            }
+          },
+          {
+            "id": "r3",
+            "statement": {
+              "kind": "dropdown",
+              "choices": [
+                "ME ≅ IE and EL ≅ ES",
+                "ML ≅ IS",
+                "ME ≅ EL and IE ≅ ES",
+                "MI ≅ IL"
+              ],
+              "answerIndex": 2
+            },
+            "reason": {
+              "kind": "fixed",
+              "text": "Diagonals of a parallelogram bisect each other."
+            }
+          },
+          {
+            "id": "r4",
+            "statement": {
+              "kind": "fixed",
+              "text": "∠MEI ≅ ∠LES."
+            },
+            "reason": {
+              "kind": "dropdown",
+              "choices": [
+                "Vertical angles are congruent.",
+                "All adjacent angles are congruent.",
+                "Corresponding sides are congruent.",
+                "Any two angles in a parallelogram are congruent."
+              ],
+              "answerIndex": 0
+            }
+          },
+          {
+            "id": "r5",
+            "statement": {
+              "kind": "fixed",
+              "text": "△MIE ≅ △LSE."
+            },
+            "reason": {
+              "kind": "dropdown",
+              "choices": [
+                "AAA congruence.",
+                "SAS congruence.",
+                "SSA congruence.",
+                "HL, because both triangles must be right triangles."
+              ],
+              "answerIndex": 1
+            }
+          }
+        ],
+        "masteryRule": "all_dropdowns_correct",
+        "countAsQuestions": 1
+      }
+    },
+    {
+      "id": "geo-q112",
+      "sourceNumber": 112,
+      "courseId": "geometry",
+      "chapterId": "geo-ch9",
+      "sectionId": "geo-ch9_s2",
+      "topic": "Quadrilateral Proofs",
+      "standardCode": "G.SRT.B.5",
+      "image": "/questions/geometry/originals/q112.png",
+      "imageAlt": "Original JMAP Geometry question 112: Quadrilateral Proofs.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 28,
+        "examRef": "062535geo",
+        "points": 6,
+        "originalClip": "Screenshot 2026-11-12 124309.png"
+      },
+      "type": "proof_dropdown",
+      "origin": "adapted_proof",
+      "prompt": "Complete the proof table by selecting the correct statement or reason in each dropdown.",
+      "proof": {
+        "columns": [
+          "Statement",
+          "Reason"
+        ],
+        "rows": [
+          {
+            "id": "r1",
+            "statement": {
+              "kind": "fixed",
+              "text": "CA ≅ RI and CI ≅ RA. H lies on CA; L lies on IR. A, E, I are collinear and H, E, L are collinear."
+            },
+            "reason": {
+              "kind": "fixed",
+              "text": "Given in the diagram."
+            }
+          },
+          {
+            "id": "r2",
+            "statement": {
+              "kind": "fixed",
+              "text": "CARI is a parallelogram."
+            },
+            "reason": {
+              "kind": "dropdown",
+              "choices": [
+                "One pair of adjacent sides is congruent.",
+                "The diagonals are perpendicular.",
+                "All quadrilaterals with intersecting diagonals are parallelograms.",
+                "Both pairs of opposite sides are congruent."
+              ],
+              "answerIndex": 3
+            }
+          },
+          {
+            "id": "r3",
+            "statement": {
+              "kind": "fixed",
+              "text": "HA ∥ LI."
+            },
+            "reason": {
+              "kind": "dropdown",
+              "choices": [
+                "Opposite sides CA and RI of a parallelogram are parallel.",
+                "All adjacent sides of a parallelogram are parallel.",
+                "Congruent segments must lie on parallel lines.",
+                "Vertical angles force HA and LI to be parallel."
+              ],
+              "answerIndex": 0
+            }
+          },
+          {
+            "id": "r4",
+            "statement": {
+              "kind": "fixed",
+              "text": "∠HAE ≅ ∠LIE."
+            },
+            "reason": {
+              "kind": "dropdown",
+              "choices": [
+                "Every pair of corresponding sides is congruent.",
+                "Alternate interior angles formed by parallel lines and a transversal are congruent.",
+                "Adjacent angles are always congruent.",
+                "The angles have a common vertex."
+              ],
+              "answerIndex": 1
+            }
+          },
+          {
+            "id": "r5",
+            "statement": {
+              "kind": "fixed",
+              "text": "∠HEA ≅ ∠LEI."
+            },
+            "reason": {
+              "kind": "dropdown",
+              "choices": [
+                "All angles in a parallelogram are right angles.",
+                "The two angles are a linear pair.",
+                "Vertical angles are congruent.",
+                "The two triangles share side HA."
+              ],
+              "answerIndex": 2
+            }
+          },
+          {
+            "id": "r6",
+            "statement": {
+              "kind": "fixed",
+              "text": "△HAE ∼ △LIE."
+            },
+            "reason": {
+              "kind": "dropdown",
+              "choices": [
+                "SSS congruence.",
+                "SAS congruence.",
+                "HL congruence.",
+                "AA similarity."
+              ],
+              "answerIndex": 3
+            }
+          },
+          {
+            "id": "r7",
+            "statement": {
+              "kind": "dropdown",
+              "choices": [
+                "HA/LI = LE/HE",
+                "HA/HE = LE/LI",
+                "HA/LE = HE/LI",
+                "HA/LI = HE/LE"
+              ],
+              "answerIndex": 3
+            },
+            "reason": {
+              "kind": "fixed",
+              "text": "Corresponding sides of similar triangles are proportional."
+            }
+          },
+          {
+            "id": "r8",
+            "statement": {
+              "kind": "fixed",
+              "text": "HA · LE = LI · HE."
+            },
+            "reason": {
+              "kind": "dropdown",
+              "choices": [
+                "Corresponding angles have equal products.",
+                "Cross products of a proportion are equal.",
+                "The sum of any two sides equals the third side.",
+                "Opposite sides of every quadrilateral are congruent."
+              ],
+              "answerIndex": 1
+            }
+          }
+        ],
+        "masteryRule": "all_dropdowns_correct",
+        "countAsQuestions": 1
+      }
+    },
+    {
+      "id": "geo-q113",
+      "sourceNumber": 113,
+      "courseId": "geometry",
+      "chapterId": "geo-ch9",
+      "sectionId": "geo-ch9_s2",
+      "topic": "Quadrilateral Proofs",
+      "standardCode": "G.SRT.B.5",
+      "image": "/questions/geometry/originals/q113.png",
+      "imageAlt": "Original JMAP Geometry question 113: Quadrilateral Proofs.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 28,
+        "examRef": "082535geo",
+        "points": 6,
+        "originalClip": "Screenshot 2026-11-12 124318.png"
+      },
+      "type": "proof_dropdown",
+      "origin": "adapted_proof",
+      "prompt": "Complete the proof table by selecting the correct statement or reason in each dropdown.",
+      "proof": {
+        "columns": [
+          "Statement",
+          "Reason"
+        ],
+        "rows": [
+          {
+            "id": "r1",
+            "statement": {
+              "kind": "fixed",
+              "text": "AD and BE bisect each other at F. C, D, E are collinear and DE ≅ DC."
+            },
+            "reason": {
+              "kind": "fixed",
+              "text": "Given."
+            }
+          },
+          {
+            "id": "r2",
+            "statement": {
+              "kind": "fixed",
+              "text": "AF ≅ FD and BF ≅ FE."
+            },
+            "reason": {
+              "kind": "dropdown",
+              "choices": [
+                "Definition of segment bisector.",
+                "All intersecting segments are congruent.",
+                "Converse of the Pythagorean theorem.",
+                "Opposite sides of any quadrilateral are congruent."
+              ],
+              "answerIndex": 0
+            }
+          },
+          {
+            "id": "r3",
+            "statement": {
+              "kind": "fixed",
+              "text": "∠AFB ≅ ∠DFE."
+            },
+            "reason": {
+              "kind": "dropdown",
+              "choices": [
+                "Supplementary angles are always congruent.",
+                "Vertical angles are congruent.",
+                "The angles are alternate exterior angles of parallel lines already given.",
+                "Congruent segments create congruent angles automatically."
+              ],
+              "answerIndex": 1
+            }
+          },
+          {
+            "id": "r4",
+            "statement": {
+              "kind": "fixed",
+              "text": "△AFB ≅ △DFE."
+            },
+            "reason": {
+              "kind": "dropdown",
+              "choices": [
+                "AAA congruence.",
+                "SSA congruence.",
+                "SAS congruence.",
+                "HL, because the triangles are given to be right triangles."
+              ],
+              "answerIndex": 2
+            }
+          },
+          {
+            "id": "r5",
+            "statement": {
+              "kind": "dropdown",
+              "choices": [
+                "AB ≅ DF and ∠ABF ≅ ∠DFE",
+                "AF ≅ DE and ∠ABF ≅ ∠EDF",
+                "AB ≅ DE and ∠ABF ≅ ∠DEF",
+                "AB ≅ FE and ∠BAF ≅ ∠DFE"
+              ],
+              "answerIndex": 2
+            },
+            "reason": {
+              "kind": "fixed",
+              "text": "CPCTC."
+            }
+          },
+          {
+            "id": "r6",
+            "statement": {
+              "kind": "fixed",
+              "text": "AB ≅ DC."
+            },
+            "reason": {
+              "kind": "dropdown",
+              "choices": [
+                "Transitive property using AB ≅ DE and DE ≅ DC.",
+                "Every pair of opposite sides is congruent by definition of quadrilateral.",
+                "Parallel sides must be congruent.",
+                "The two segments share a midpoint."
+              ],
+              "answerIndex": 0
+            }
+          },
+          {
+            "id": "r7",
+            "statement": {
+              "kind": "fixed",
+              "text": "AB ∥ DC."
+            },
+            "reason": {
+              "kind": "dropdown",
+              "choices": [
+                "Congruent segments must always be parallel.",
+                "Converse of the alternate interior angles theorem; E, D, C are collinear.",
+                "Two intersecting diagonals must be perpendicular.",
+                "All sides of congruent triangles are parallel."
+              ],
+              "answerIndex": 1
+            }
+          },
+          {
+            "id": "r8",
+            "statement": {
+              "kind": "fixed",
+              "text": "ABCD is a parallelogram."
+            },
+            "reason": {
+              "kind": "dropdown",
+              "choices": [
+                "Every quadrilateral with a pair of congruent sides is a parallelogram.",
+                "One pair of adjacent angles is congruent.",
+                "One pair of opposite sides, AB and DC, is both parallel and congruent.",
+                "The quadrilateral has a diagonal."
+              ],
+              "answerIndex": 2
+            }
+          }
+        ],
+        "masteryRule": "all_dropdowns_correct",
+        "countAsQuestions": 1
+      }
+    }
+  ],
+  "mathFormat": "unicode"
+}
