@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
+import { getCourseForPath, getCourse } from '@/lib/course/registry';
 import SaveProgressModal from '@/components/SaveProgressModal';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import {
@@ -24,14 +25,19 @@ type NavProfile = {
 export default function TopNav() {
   const pathname = usePathname() || '';
   const router = useRouter();
+  const [managementCourse, setManagementCourse] = useState('algebra1');
+  useEffect(() => { setManagementCourse(new URLSearchParams(window.location.search).get('courseId') ?? 'algebra1'); }, [pathname]);
+  const course = /^\/(admin|master|teacher|my-classes)/.test(pathname) ? getCourse(managementCourse) : getCourseForPath(pathname);
+  const loginHref = '/login?next=' + encodeURIComponent(pathname || '/');
+  const signupHref = '/signup?next=' + encodeURIComponent(pathname || '/');
 
   const [saveOpen, setSaveOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [profile, setProfile] = useState<NavProfile | null>(null);
 
-  const showBack = pathname !== '/dashboard' && pathname !== '/';
-  const showSave = pathname !== '/resume' && !pathname.startsWith('/resume/');
+  const showBack = pathname !== '/dashboard' && pathname !== '/geometry' && pathname !== '/';
+  const showSave = !(course.id === "geometry" && isAuthenticated) && pathname !== '/resume' && !pathname.startsWith('/resume/');
   const isTeacher = isTeacherLikeRole(profile?.role);
   const isMaster = isMasterRole(profile?.role);
   const isAdmin = isAdminRole(profile?.role);
@@ -135,12 +141,12 @@ export default function TopNav() {
           <div className="om-topbar-inner">
 
             <div className="flex items-center gap-3 min-w-0">
-              <Link href="/dashboard" className="om-brand">
+              <Link href="/" className="om-brand">
                 OrlandoMath <span className="om-brand-sub">Regents Tutor</span>
               </Link>
 
               <span className="hidden sm:inline-block om-pill">
-                Algebra 1
+                {pathname === "/" ? "Courses" : course.title}
               </span>
             </div>
 
@@ -156,13 +162,14 @@ export default function TopNav() {
                   </span>
                 )}
 
-                <Link href="/dashboard" className="om-navlink">
+                <Link href="/" className="om-navlink">Switch Course</Link>
+                <Link href={course.dashboardPath} className="om-navlink">
                   Dashboard
                 </Link>
 
                 {isAuthenticated && !isTeacher && !isAdmin && (
                   <>
-                    <Link href="/my-classes" className="om-navlink">
+                    <Link href={"/my-classes?courseId=" + course.id} className="om-navlink">
                       My Classes
                     </Link>
 
@@ -173,30 +180,30 @@ export default function TopNav() {
                 )}
 
                 {isAuthenticated && isTeacher && (
-                  <Link href="/teacher/classrooms" className="om-navlink">
+                  <Link href={"/teacher/classrooms?courseId=" + course.id} className="om-navlink">
                     My Classrooms
                   </Link>
                 )}
 
                 {isAuthenticated && isMaster && (
-                  <Link href="/master" className="om-navlink">
+                  <Link href={"/master?courseId=" + course.id} className="om-navlink">
                     Master Dashboard
                   </Link>
                 )}
 
                 {isAuthenticated && canAccessAdmin && (
-                  <Link href="/admin" className="om-navlink">
+                  <Link href={"/admin?courseId=" + course.id} className="om-navlink">
                     Administrator
                   </Link>
                 )}
 
                 {!isAuthenticated ? (
                   <>
-                    <Link href="/signup" className="om-navlink">
+                    <Link href={signupHref} className="om-navlink">
                       Signup
                     </Link>
 
-                    <Link href="/login" className="om-navlink">
+                    <Link href={loginHref} className="om-navlink">
                       Login
                     </Link>
 
@@ -263,8 +270,9 @@ export default function TopNav() {
                 </div>
               )}
 
+              <Link href="/" onClick={closeMenu} className="rounded-xl border border-slate-200 bg-white px-4 py-3 font-semibold text-slate-900">Switch Course</Link>
               <Link
-                href="/dashboard"
+                href={course.dashboardPath}
                 onClick={closeMenu}
                 className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-900 hover:bg-slate-50"
               >
@@ -274,7 +282,7 @@ export default function TopNav() {
               {isAuthenticated && !isTeacher && !isAdmin && (
                 <>
                   <Link
-                    href="/my-classes"
+                    href={"/my-classes?courseId=" + course.id}
                     onClick={closeMenu}
                     className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-900 hover:bg-slate-50"
                   >
@@ -293,7 +301,7 @@ export default function TopNav() {
 
               {isAuthenticated && isTeacher && (
                 <Link
-                  href="/teacher/classrooms"
+                  href={"/teacher/classrooms?courseId=" + course.id}
                   onClick={closeMenu}
                   className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-900 hover:bg-slate-50"
                 >
@@ -303,7 +311,7 @@ export default function TopNav() {
 
               {isAuthenticated && isMaster && (
                 <Link
-                  href="/master"
+                  href={"/master?courseId=" + course.id}
                   onClick={closeMenu}
                   className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-900 hover:bg-slate-50"
                 >
@@ -313,7 +321,7 @@ export default function TopNav() {
 
               {isAuthenticated && canAccessAdmin && (
                 <Link
-                  href="/admin"
+                  href={"/admin?courseId=" + course.id}
                   onClick={closeMenu}
                   className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-900 hover:bg-slate-50"
                 >
@@ -324,7 +332,7 @@ export default function TopNav() {
               {!isAuthenticated ? (
                 <>
                   <Link
-                    href="/signup"
+                    href={signupHref}
                     onClick={closeMenu}
                     className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-900 hover:bg-slate-50"
                   >
@@ -332,7 +340,7 @@ export default function TopNav() {
                   </Link>
 
                   <Link
-                    href="/login"
+                    href={loginHref}
                     onClick={closeMenu}
                     className="rounded-xl border border-slate-200 bg-white px-4 py-3 text-base font-semibold text-slate-900 hover:bg-slate-50"
                   >

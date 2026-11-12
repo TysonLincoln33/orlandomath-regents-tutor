@@ -1,4 +1,5 @@
-import { SECTIONS } from "@/lib/course/algebra1";
+import { reportingRpcName, selectedCourse } from "@/lib/course/selection";
+import { SECTIONS } from "@/lib/course/registry";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { ClassroomRosterMember } from "@/lib/classrooms/getClassroomRoster";
 
@@ -108,7 +109,7 @@ function buildEmptyStudentProgress(
       totalCorrect: 0,
       mostRecentActivity: null,
     },
-    sections: SECTIONS.map((section) => ({
+    sections: selectedCourse().sections.map((section) => ({
       sectionId: section.id,
       chapterId: section.chapterId,
       title: section.title,
@@ -143,7 +144,7 @@ function buildTeacherClassroomStudentProgress(
     }
   }
 
-  const sections: TeacherStudentSectionProgress[] = SECTIONS.map((section) => {
+  const sections: TeacherStudentSectionProgress[] = selectedCourse().sections.map((section) => {
     const row = rowBySection.get(section.id);
     const totalAttempts = toNumber(row?.attempt_count);
     const totalCorrect = toNumber(row?.correct_count);
@@ -210,7 +211,7 @@ export async function getTeacherClassroomStudentProgress(
     ) => Promise<{ data: unknown; error: { message?: string } | null }>;
   };
 
-  const { data, error } = await supabase.rpc("get_teacher_classroom_student_progress", {
+  const { data, error } = await supabase.rpc(reportingRpcName("get_teacher_classroom_student_progress"), {
     p_classroom_id: classroomId,
     p_student_user_id: studentUserId,
   });

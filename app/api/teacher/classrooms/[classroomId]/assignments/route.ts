@@ -1,6 +1,6 @@
 // app/api/teacher/classrooms/[classroomId]/assignments/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { SECTIONS } from "@/lib/course/algebra1";
+import { SECTIONS, getCourse } from "@/lib/course/registry";
 import {
   getTeacherAssignmentRouteContext,
   jsonError,
@@ -106,7 +106,8 @@ export async function GET(req: NextRequest, context: RouteContext) {
       );
     }
 
-    const assignments = (assignmentData ?? []) as AssignmentRow[];
+    const allowed = new Set(getCourse(req.nextUrl.searchParams.get("courseId")).sections.map(s => s.id));
+    const assignments = ((assignmentData ?? []) as AssignmentRow[]).filter(a => allowed.has(a.section_id ?? ""));
     const assignmentIds = assignments.map((assignment) => assignment.id);
 
     if (assignmentIds.length === 0) {
@@ -184,7 +185,7 @@ export async function POST(req: NextRequest, context: RouteContext) {
       sectionIds.some((sectionId) => !VALID_SECTION_IDS.has(sectionId))
     ) {
       return NextResponse.json(
-        { error: "Please select one or more valid Algebra 1 sections." },
+        { error: "Please select one or more valid course sections." },
         { status: 400 },
       );
     }

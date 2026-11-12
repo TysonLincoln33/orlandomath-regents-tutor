@@ -3,17 +3,19 @@
 import * as React from "react";
 import RainbowBar from "@/components/progress/RainbowBar";
 import ChapterCard from "@/components/course/ChapterCard";
-import { getChapters } from "@/lib/course/algebra1";
+import Link from "next/link";
+import { getCourse, type CourseId } from "@/lib/course/registry";
 import {
   buildEmptyCourseDashboardProgress,
   fetchCourseDashboardProgress,
 } from "@/lib/progress/dashboardProgress";
 import { RT_PROGRESS_UPDATED_EVENT } from "@/lib/progress/events";
 
-export default function DashboardClient() {
-  const chapters = React.useMemo(() => getChapters(), []);
+export default function DashboardClient({ courseId = "algebra1" }: { courseId?: CourseId }) {
+  const course = getCourse(courseId);
+  const chapters = course.chapters;
   const [summary, setSummary] = React.useState(() =>
-    buildEmptyCourseDashboardProgress("algebra1")
+    buildEmptyCourseDashboardProgress(courseId)
   );
   const [loading, setLoading] = React.useState(true);
   const [resumeNotice, setResumeNotice] = React.useState<{
@@ -26,14 +28,14 @@ export default function DashboardClient() {
 
     const refresh = async () => {
       try {
-        const next = await fetchCourseDashboardProgress("algebra1");
+        const next = await fetchCourseDashboardProgress(courseId);
         if (!cancelled) {
           setSummary(next);
         }
       } catch (error) {
         console.error("[DashboardPage] failed to load dashboard progress:", error);
         if (!cancelled) {
-          setSummary(buildEmptyCourseDashboardProgress("algebra1"));
+          setSummary(buildEmptyCourseDashboardProgress(courseId));
         }
       } finally {
         if (!cancelled) {
@@ -76,18 +78,22 @@ export default function DashboardClient() {
       window.removeEventListener("focus", handleFocus);
       window.removeEventListener(RT_PROGRESS_UPDATED_EVENT, handleProgressUpdated);
     };
-  }, []);
+  }, [courseId]);
 
   const pctLabel = `${Math.round(summary.overallCompletionPercent)}%`;
 
   return (
     <div className="min-h-screen bg-transparent">
       <div className="mx-auto max-w-screen-2xl px-4 py-8 md:px-6 md:py-10">
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3 text-white">
+          <span className="font-semibold">{course.title} Regents</span>
+          <Link href="/" className="rounded-full border border-white/25 bg-white/10 px-4 py-2 text-sm font-semibold hover:bg-white/20">Switch course</Link>
+        </div>
         <div className="dashboard-hero-wrap">
           <div className="dashboard-banner-shell">
             <img
-              src="/dashboard/algebra1-course-dashboard-banner.png"
-              alt="Algebra 1 Course Dashboard"
+              src={course.banner}
+              alt={`${course.title} Course Dashboard`}
               className="dashboard-banner-image"
             />
           </div>

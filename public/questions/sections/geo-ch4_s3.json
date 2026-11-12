@@ -1,0 +1,108 @@
+{
+  "id": "geo-ch4_s3",
+  "chapterId": "geo-ch4",
+  "courseId": "geometry",
+  "chapterNumber": 4,
+  "sectionNumber": 3,
+  "title": "Special Quadrilaterals",
+  "standardCode": "G.CO.C.11",
+  "questionIds": [
+    "geo-q030",
+    "geo-q031",
+    "geo-q032"
+  ],
+  "sectionId": "geo-ch4_s3",
+  "questions": [
+    {
+      "id": "geo-q030",
+      "sourceNumber": 30,
+      "courseId": "geometry",
+      "chapterId": "geo-ch4",
+      "sectionId": "geo-ch4_s3",
+      "topic": "Special Quadrilaterals",
+      "standardCode": "G.CO.C.11",
+      "image": "/questions/geometry/originals/q030.png",
+      "imageAlt": "Original JMAP Geometry question 30: Special Quadrilaterals.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 8,
+        "examRef": "062516geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123209.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 3,
+      "explanation": "The original JMAP answer key gives choice 4.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q031",
+      "sourceNumber": 31,
+      "courseId": "geometry",
+      "chapterId": "geo-ch4",
+      "sectionId": "geo-ch4_s3",
+      "topic": "Special Quadrilaterals",
+      "standardCode": "G.CO.C.11",
+      "image": "/questions/geometry/originals/q031.png",
+      "imageAlt": "Original JMAP Geometry question 31: Special Quadrilaterals.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 8,
+        "examRef": "082505geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123214.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 3,
+      "explanation": "The original JMAP answer key gives choice 4.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q032",
+      "sourceNumber": 32,
+      "courseId": "geometry",
+      "chapterId": "geo-ch4",
+      "sectionId": "geo-ch4_s3",
+      "topic": "Special Quadrilaterals",
+      "standardCode": "G.CO.C.11",
+      "image": "/questions/geometry/originals/q032.png",
+      "imageAlt": "Original JMAP Geometry question 32: Special Quadrilaterals.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 9,
+        "examRef": "012622geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123221.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 2,
+      "explanation": "The original JMAP answer key gives choice 3.",
+      "originalChoiceLabels": true
+    }
+  ],
+  "mathFormat": "unicode"
+}

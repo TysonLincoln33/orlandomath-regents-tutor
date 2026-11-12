@@ -1,3 +1,4 @@
+import { courseFetch } from "@/lib/course/selection";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export type AdminQuickAssignStudent = {
@@ -100,7 +101,7 @@ export async function getAdminQuickAssignData(
   studentUserId: string,
 ): Promise<AdminQuickAssignData> {
   const accessToken = await getAccessToken();
-  const response = await fetch(`/api/admin/quick-assign/students/${studentUserId}`, {
+  const response = await courseFetch(`/api/admin/quick-assign/students/${studentUserId}`, {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
 
@@ -115,7 +116,7 @@ export async function createAdminQuickAssign(params: {
   chapterIds: string[];
 }): Promise<AdminQuickAssignCreateResult> {
   const accessToken = await getAccessToken();
-  const response = await fetch(`/api/admin/quick-assign/students/${params.studentUserId}`, {
+  const response = await courseFetch(`/api/admin/quick-assign/students/${params.studentUserId}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -136,7 +137,7 @@ export async function archiveAdminQuickAssignChapter(params: {
   chapterId: string;
 }): Promise<AdminQuickAssignArchiveResult> {
   const accessToken = await getAccessToken();
-  const response = await fetch(
+  const response = await courseFetch(
     `/api/admin/quick-assign/students/${params.studentUserId}/chapters/${params.chapterId}/archive`,
     {
       method: "PATCH",
@@ -156,7 +157,7 @@ export async function unassignAdminQuickAssignChapter(params: {
   chapterId: string;
 }): Promise<AdminQuickAssignUnassignResult> {
   const accessToken = await getAccessToken();
-  const response = await fetch(
+  const response = await courseFetch(
     `/api/admin/quick-assign/students/${params.studentUserId}/chapters/${params.chapterId}/unassign`,
     {
       method: "PATCH",

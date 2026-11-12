@@ -9,6 +9,7 @@ const noStoreHeaders = [
 const htmlAppShellRoutes = [
   '/',
   '/dashboard',
+  '/geometry',
   '/chapter/:chapterId',
   '/section/:sectionId',
   '/login',

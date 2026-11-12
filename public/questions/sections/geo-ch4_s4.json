@@ -1,0 +1,472 @@
+{
+  "id": "geo-ch4_s4",
+  "chapterId": "geo-ch4",
+  "courseId": "geometry",
+  "chapterNumber": 4,
+  "sectionNumber": 4,
+  "title": "Quadrilaterals in the Coordinate Plane",
+  "standardCode": "G.GPE.B.4",
+  "questionIds": [
+    "geo-q033",
+    "geo-q034",
+    "geo-q035"
+  ],
+  "sectionId": "geo-ch4_s4",
+  "questions": [
+    {
+      "id": "geo-q033",
+      "sourceNumber": 33,
+      "courseId": "geometry",
+      "chapterId": "geo-ch4",
+      "sectionId": "geo-ch4_s4",
+      "topic": "Quadrilaterals in the Coordinate Plane",
+      "standardCode": "G.GPE.B.4",
+      "image": "/questions/geometry/originals/q033.png",
+      "imageAlt": "Original JMAP Geometry question 33: Quadrilaterals in the Coordinate Plane.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 9,
+        "examRef": "082534geo",
+        "points": 4,
+        "originalClip": "Screenshot 2026-11-12 123229.png"
+      },
+      "type": "proof_dropdown",
+      "origin": "adapted_proof",
+      "prompt": "Complete the proof table by selecting the correct statement or reason in each dropdown.",
+      "proof": {
+        "columns": [
+          "Statement",
+          "Reason"
+        ],
+        "rows": [
+          {
+            "id": "r1",
+            "statement": {
+              "kind": "fixed",
+              "text": "R(−1, 3), E(2, 7), A(10, 1), D(7, −3)."
+            },
+            "reason": {
+              "kind": "fixed",
+              "text": "Given."
+            }
+          },
+          {
+            "id": "r2",
+            "statement": {
+              "kind": "dropdown",
+              "choices": [
+                "m(RE) = m(AD) = 3/4",
+                "m(RE) = m(AD) = −4/3",
+                "m(RE) = m(AD) = −3/4",
+                "m(RE) = m(AD) = 4/3"
+              ],
+              "answerIndex": 3
+            },
+            "reason": {
+              "kind": "fixed",
+              "text": "Slope formula."
+            }
+          },
+          {
+            "id": "r3",
+            "statement": {
+              "kind": "dropdown",
+              "choices": [
+                "m(EA) = m(DR) = −3/4",
+                "m(EA) = m(DR) = 4/3",
+                "m(EA) = m(DR) = 3/4",
+                "m(EA) = m(DR) = −4/3"
+              ],
+              "answerIndex": 0
+            },
+            "reason": {
+              "kind": "fixed",
+              "text": "Slope formula."
+            }
+          },
+          {
+            "id": "r4",
+            "statement": {
+              "kind": "fixed",
+              "text": "RE ∥ AD and EA ∥ DR."
+            },
+            "reason": {
+              "kind": "dropdown",
+              "choices": [
+                "Negative reciprocal slopes imply parallel lines.",
+                "Congruent diagonals imply parallel lines.",
+                "Distinct lines with equal slopes are parallel.",
+                "The midpoint formula proves parallel lines."
+              ],
+              "answerIndex": 2
+            }
+          },
+          {
+            "id": "r5",
+            "statement": {
+              "kind": "fixed",
+              "text": "READ is a parallelogram."
+            },
+            "reason": {
+              "kind": "dropdown",
+              "choices": [
+                "Only one pair of adjacent sides is congruent.",
+                "The diagonals are perpendicular.",
+                "All four vertices lie on an axis.",
+                "Both pairs of opposite sides are parallel."
+              ],
+              "answerIndex": 3
+            }
+          },
+          {
+            "id": "r6",
+            "statement": {
+              "kind": "fixed",
+              "text": "RE ⟂ EA, so ∠REA is a right angle."
+            },
+            "reason": {
+              "kind": "dropdown",
+              "choices": [
+                "Their slopes are negative reciprocals.",
+                "Their slopes are equal.",
+                "Their lengths are equal.",
+                "They share an endpoint."
+              ],
+              "answerIndex": 0
+            }
+          },
+          {
+            "id": "r7",
+            "statement": {
+              "kind": "fixed",
+              "text": "READ is a rectangle."
+            },
+            "reason": {
+              "kind": "dropdown",
+              "choices": [
+                "Any parallelogram is a rectangle.",
+                "A parallelogram with one right angle is a rectangle.",
+                "A quadrilateral with perpendicular diagonals is a rectangle.",
+                "A quadrilateral with one pair of congruent sides is a rectangle."
+              ],
+              "answerIndex": 1
+            }
+          }
+        ],
+        "masteryRule": "all_dropdowns_correct",
+        "countAsQuestions": 1
+      }
+    },
+    {
+      "id": "geo-q034",
+      "sourceNumber": 34,
+      "courseId": "geometry",
+      "chapterId": "geo-ch4",
+      "sectionId": "geo-ch4_s4",
+      "topic": "Quadrilaterals in the Coordinate Plane",
+      "standardCode": "G.GPE.B.4",
+      "image": "/questions/geometry/originals/q034.png",
+      "imageAlt": "Original JMAP Geometry question 34: Quadrilaterals in the Coordinate Plane.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 9,
+        "examRef": "062533geo",
+        "points": 4,
+        "originalClip": "Screenshot 2026-11-12 123235.png"
+      },
+      "type": "proof_dropdown",
+      "origin": "adapted_proof",
+      "prompt": "Complete the proof table by selecting the correct statement or reason in each dropdown.",
+      "proof": {
+        "columns": [
+          "Statement",
+          "Reason"
+        ],
+        "rows": [
+          {
+            "id": "r1",
+            "statement": {
+              "kind": "fixed",
+              "text": "M(−1, −3), I(−3, 3), K(5, 4), E(7, −2)."
+            },
+            "reason": {
+              "kind": "fixed",
+              "text": "Given."
+            }
+          },
+          {
+            "id": "r2",
+            "statement": {
+              "kind": "dropdown",
+              "choices": [
+                "m(MI) = m(KE) = −3",
+                "m(MI) = m(KE) = 3",
+                "m(MI) = m(KE) = −1/3",
+                "m(MI) = m(KE) = 1/3"
+              ],
+              "answerIndex": 0
+            },
+            "reason": {
+              "kind": "fixed",
+              "text": "Slope formula."
+            }
+          },
+          {
+            "id": "r3",
+            "statement": {
+              "kind": "dropdown",
+              "choices": [
+                "m(IK) = m(EM) = 8",
+                "m(IK) = m(EM) = 1/8",
+                "m(IK) = m(EM) = −1/8",
+                "m(IK) = m(EM) = −8"
+              ],
+              "answerIndex": 1
+            },
+            "reason": {
+              "kind": "fixed",
+              "text": "Slope formula."
+            }
+          },
+          {
+            "id": "r4",
+            "statement": {
+              "kind": "fixed",
+              "text": "MI ∥ KE and IK ∥ EM."
+            },
+            "reason": {
+              "kind": "dropdown",
+              "choices": [
+                "Opposite reciprocal slopes imply parallel lines.",
+                "Equal slopes imply congruent segments.",
+                "Parallel sides must have equal x-intercepts.",
+                "Distinct lines with equal slopes are parallel."
+              ],
+              "answerIndex": 3
+            }
+          },
+          {
+            "id": "r5",
+            "statement": {
+              "kind": "fixed",
+              "text": "MIKE is a parallelogram."
+            },
+            "reason": {
+              "kind": "dropdown",
+              "choices": [
+                "Both pairs of opposite sides are parallel.",
+                "Both pairs of adjacent sides are perpendicular.",
+                "One diagonal bisects an angle.",
+                "Any quadrilateral with a pair of parallel sides is a parallelogram."
+              ],
+              "answerIndex": 0
+            }
+          },
+          {
+            "id": "r6",
+            "statement": {
+              "kind": "dropdown",
+              "choices": [
+                "MI = √40 and IK = √65",
+                "MI = √65 and IK = √65",
+                "MI = √40 and IK = √40",
+                "MI = 40 and IK = 65"
+              ],
+              "answerIndex": 0
+            },
+            "reason": {
+              "kind": "fixed",
+              "text": "Distance formula."
+            }
+          },
+          {
+            "id": "r7",
+            "statement": {
+              "kind": "fixed",
+              "text": "MIKE is not a rhombus."
+            },
+            "reason": {
+              "kind": "dropdown",
+              "choices": [
+                "Opposite sides have equal slopes.",
+                "The quadrilateral has four vertices.",
+                "Adjacent sides MI and IK have unequal lengths.",
+                "Adjacent sides lie on intersecting lines."
+              ],
+              "answerIndex": 2
+            }
+          }
+        ],
+        "masteryRule": "all_dropdowns_correct",
+        "countAsQuestions": 1
+      }
+    },
+    {
+      "id": "geo-q035",
+      "sourceNumber": 35,
+      "courseId": "geometry",
+      "chapterId": "geo-ch4",
+      "sectionId": "geo-ch4_s4",
+      "topic": "Quadrilaterals in the Coordinate Plane",
+      "standardCode": "G.GPE.B.4",
+      "image": "/questions/geometry/originals/q035.png",
+      "imageAlt": "Original JMAP Geometry question 35: Quadrilaterals in the Coordinate Plane.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 10,
+        "examRef": "012635geo",
+        "points": 6,
+        "originalClip": "Screenshot 2026-11-12 123255.png"
+      },
+      "type": "proof_dropdown",
+      "origin": "adapted_proof",
+      "prompt": "Complete the proof table by selecting the correct statement or reason in each dropdown.",
+      "proof": {
+        "columns": [
+          "Statement",
+          "Reason"
+        ],
+        "rows": [
+          {
+            "id": "r1",
+            "statement": {
+              "kind": "fixed",
+              "text": "A(−3, 1), B(−3, −7), C(6, 5), D(0, 5), E(−3, −3), F(3, 5)."
+            },
+            "reason": {
+              "kind": "fixed",
+              "text": "Given."
+            }
+          },
+          {
+            "id": "r2",
+            "statement": {
+              "kind": "dropdown",
+              "choices": [
+                "m(AD) = m(BC) = 3/4",
+                "m(AD) = m(BC) = 4/3",
+                "m(AD) = 4/3 and m(BC) = −4/3",
+                "m(AD) = m(BC) = −3/4"
+              ],
+              "answerIndex": 1
+            },
+            "reason": {
+              "kind": "fixed",
+              "text": "Slope formula."
+            }
+          },
+          {
+            "id": "r3",
+            "statement": {
+              "kind": "fixed",
+              "text": "AD ∥ BC."
+            },
+            "reason": {
+              "kind": "dropdown",
+              "choices": [
+                "Equal lengths imply parallel lines.",
+                "The slopes are negative reciprocals.",
+                "The diagonals bisect each other.",
+                "Distinct lines with equal slopes are parallel."
+              ],
+              "answerIndex": 3
+            }
+          },
+          {
+            "id": "r4",
+            "statement": {
+              "kind": "fixed",
+              "text": "AB is vertical and CD is horizontal; AB is not parallel to CD."
+            },
+            "reason": {
+              "kind": "fixed",
+              "text": "A vertical line and a horizontal line are perpendicular."
+            }
+          },
+          {
+            "id": "r5",
+            "statement": {
+              "kind": "fixed",
+              "text": "ABCD is a trapezoid."
+            },
+            "reason": {
+              "kind": "dropdown",
+              "choices": [
+                "Both pairs of opposite sides are parallel.",
+                "It has exactly one pair of parallel opposite sides.",
+                "All four sides have the same length.",
+                "Its diagonals are congruent."
+              ],
+              "answerIndex": 1
+            }
+          },
+          {
+            "id": "r6",
+            "statement": {
+              "kind": "dropdown",
+              "choices": [
+                "m(EF) = 3/4, so EF ∥ AD and EF ∥ BC.",
+                "m(EF) = 4/3, so EF ∥ AD and EF ∥ BC.",
+                "m(EF) = −3/4, so EF ∥ AD and EF ∥ BC.",
+                "m(EF) = 0, so EF ∥ AD and EF ∥ BC."
+              ],
+              "answerIndex": 1
+            },
+            "reason": {
+              "kind": "fixed",
+              "text": "Slope formula and equal slopes of parallel lines."
+            }
+          },
+          {
+            "id": "r7",
+            "statement": {
+              "kind": "dropdown",
+              "choices": [
+                "AD = 5, BC = 10, EF = 15",
+                "AD = 25, BC = 225, EF = 100",
+                "AD = 5, BC = 15, EF = 10",
+                "AD = 4, BC = 12, EF = 8"
+              ],
+              "answerIndex": 2
+            },
+            "reason": {
+              "kind": "fixed",
+              "text": "Distance formula."
+            }
+          },
+          {
+            "id": "r8",
+            "statement": {
+              "kind": "fixed",
+              "text": "(1/2)(AD + BC) = (1/2)(5 + 15) = 10."
+            },
+            "reason": {
+              "kind": "fixed",
+              "text": "Substitute the lengths and simplify."
+            }
+          },
+          {
+            "id": "r9",
+            "statement": {
+              "kind": "fixed",
+              "text": "EF = (1/2)(AD + BC)."
+            },
+            "reason": {
+              "kind": "dropdown",
+              "choices": [
+                "EF = AD + BC.",
+                "Both expressions equal 10.",
+                "All sides of a trapezoid are congruent.",
+                "The sum of the slopes equals the length of EF."
+              ],
+              "answerIndex": 1
+            }
+          }
+        ],
+        "masteryRule": "all_dropdowns_correct",
+        "countAsQuestions": 1
+      }
+    }
+  ],
+  "mathFormat": "unicode"
+}

@@ -1,3 +1,4 @@
+import { courseFetch } from "@/lib/course/selection";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export type AdminUserDirectoryScope = {
@@ -57,7 +58,7 @@ export async function getAdminUserDirectory(): Promise<AdminUserDirectory> {
     throw error;
   }
 
-  const response = await fetch("/api/admin/users", {
+  const response = await courseFetch("/api/admin/users", {
     headers: { Authorization: `Bearer ${session.access_token}` },
   });
 
@@ -111,7 +112,7 @@ export async function updateAdminUserActivation(
     throw error;
   }
 
-  const response = await fetch(`/api/admin/users/${profileId}/activation`, {
+  const response = await courseFetch(`/api/admin/users/${profileId}/activation`, {
     method: "PATCH",
     headers: {
       Authorization: `Bearer ${session.access_token}`,

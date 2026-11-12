@@ -1,0 +1,107 @@
+{
+  "id": "geo-ch7_s4",
+  "chapterId": "geo-ch7",
+  "courseId": "geometry",
+  "chapterNumber": 7,
+  "sectionNumber": 4,
+  "title": "Compositions of Transformations",
+  "standardCode": "G.CO.A.5",
+  "questionIds": [
+    "geo-q074",
+    "geo-q075",
+    "geo-q076"
+  ],
+  "sectionId": "geo-ch7_s4",
+  "questions": [
+    {
+      "id": "geo-q074",
+      "sourceNumber": 74,
+      "courseId": "geometry",
+      "chapterId": "geo-ch7",
+      "sectionId": "geo-ch7_s4",
+      "topic": "Compositions of Transformations",
+      "standardCode": "G.CO.A.5",
+      "image": "/questions/geometry/originals/q074.png",
+      "imageAlt": "Original JMAP Geometry question 74: Compositions of Transformations.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 18,
+        "examRef": "012611geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123758.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 0,
+      "explanation": "The original JMAP answer key gives choice 1.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q075",
+      "sourceNumber": 75,
+      "courseId": "geometry",
+      "chapterId": "geo-ch7",
+      "sectionId": "geo-ch7_s4",
+      "topic": "Compositions of Transformations",
+      "standardCode": "G.CO.A.5",
+      "image": "/questions/geometry/originals/q075.png",
+      "imageAlt": "Original JMAP Geometry question 75: Compositions of Transformations.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 19,
+        "examRef": "062503geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123807.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 0,
+      "explanation": "The original JMAP answer key gives choice 1.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q076",
+      "sourceNumber": 76,
+      "courseId": "geometry",
+      "chapterId": "geo-ch7",
+      "sectionId": "geo-ch7_s4",
+      "topic": "Compositions of Transformations",
+      "standardCode": "G.CO.A.5",
+      "image": "/questions/geometry/originals/q076.png",
+      "imageAlt": "Original JMAP Geometry question 76: Compositions of Transformations.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 19,
+        "examRef": "012625geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123816.png"
+      },
+      "type": "mc",
+      "origin": "adapted_mc",
+      "prompt": "Which set lists the image vertices in the same order as the original vertices?",
+      "choices": [
+        "(5, 1), (3, −1), (1, 3)",
+        "(1, −1), (3, 1), (5, −3)",
+        "(5, −1), (3, 1), (1, −3)",
+        "(5, −3), (3, −5), (1, −1)"
+      ],
+      "answerIndex": 3,
+      "explanation": "Reflection over the x-axis: (x, y) → (x, −y). Then translate: (x, −y) → (x + 3, −y − 2). The images are (5, −3), (3, −5), and (1, −1)."
+    }
+  ],
+  "mathFormat": "unicode"
+}

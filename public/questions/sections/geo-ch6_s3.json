@@ -1,0 +1,76 @@
+{
+  "id": "geo-ch6_s3",
+  "chapterId": "geo-ch6",
+  "courseId": "geometry",
+  "chapterNumber": 6,
+  "sectionNumber": 3,
+  "title": "Arc Length",
+  "standardCode": "G.C.B.5",
+  "questionIds": [
+    "geo-q047",
+    "geo-q048"
+  ],
+  "sectionId": "geo-ch6_s3",
+  "questions": [
+    {
+      "id": "geo-q047",
+      "sourceNumber": 47,
+      "courseId": "geometry",
+      "chapterId": "geo-ch6",
+      "sectionId": "geo-ch6_s3",
+      "topic": "Arc Length",
+      "standardCode": "G.C.B.5",
+      "image": "/questions/geometry/originals/q047.png",
+      "imageAlt": "Original JMAP Geometry question 47: Arc Length.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 13,
+        "examRef": "012607geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123426.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 1,
+      "explanation": "The original JMAP answer key gives choice 2.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q048",
+      "sourceNumber": 48,
+      "courseId": "geometry",
+      "chapterId": "geo-ch6",
+      "sectionId": "geo-ch6_s3",
+      "topic": "Arc Length",
+      "standardCode": "G.C.B.5",
+      "image": "/questions/geometry/originals/q048.png",
+      "imageAlt": "Original JMAP Geometry question 48: Arc Length.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 13,
+        "examRef": "062530geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123436.png"
+      },
+      "type": "mc",
+      "origin": "adapted_mc",
+      "prompt": "What is the length of minor arc MB, in terms of π?",
+      "choices": [
+        "2π",
+        "8π",
+        "40π",
+        "4π"
+      ],
+      "answerIndex": 3,
+      "explanation": "Arc length = (36/360)(2π·20) = 4π."
+    }
+  ],
+  "mathFormat": "unicode"
+}

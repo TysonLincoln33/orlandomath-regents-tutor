@@ -1,0 +1,107 @@
+{
+  "id": "geo-ch5_s1",
+  "chapterId": "geo-ch5",
+  "courseId": "geometry",
+  "chapterNumber": 5,
+  "sectionNumber": 1,
+  "title": "Chords, Secants and Tangents",
+  "standardCode": "G.C.A.2",
+  "questionIds": [
+    "geo-q036",
+    "geo-q037",
+    "geo-q038"
+  ],
+  "sectionId": "geo-ch5_s1",
+  "questions": [
+    {
+      "id": "geo-q036",
+      "sourceNumber": 36,
+      "courseId": "geometry",
+      "chapterId": "geo-ch5",
+      "sectionId": "geo-ch5_s1",
+      "topic": "Chords, Secants and Tangents",
+      "standardCode": "G.C.A.2",
+      "image": "/questions/geometry/originals/q036.png",
+      "imageAlt": "Original JMAP Geometry question 36: Chords, Secants and Tangents.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 10,
+        "examRef": "062510geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123308.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 2,
+      "explanation": "The original JMAP answer key gives choice 3.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q037",
+      "sourceNumber": 37,
+      "courseId": "geometry",
+      "chapterId": "geo-ch5",
+      "sectionId": "geo-ch5_s1",
+      "topic": "Chords, Secants and Tangents",
+      "standardCode": "G.C.A.2",
+      "image": "/questions/geometry/originals/q037.png",
+      "imageAlt": "Original JMAP Geometry question 37: Chords, Secants and Tangents.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 10,
+        "examRef": "082510geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123314.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 2,
+      "explanation": "The original JMAP answer key gives choice 3.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q038",
+      "sourceNumber": 38,
+      "courseId": "geometry",
+      "chapterId": "geo-ch5",
+      "sectionId": "geo-ch5_s1",
+      "topic": "Chords, Secants and Tangents",
+      "standardCode": "G.C.A.2",
+      "image": "/questions/geometry/originals/q038.png",
+      "imageAlt": "Original JMAP Geometry question 38: Chords, Secants and Tangents.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 11,
+        "examRef": "012631geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123322.png"
+      },
+      "type": "mc",
+      "origin": "adapted_mc",
+      "prompt": "Which explanation establishes that AC must be a diameter?",
+      "choices": [
+        "Every side of an inscribed right triangle is a diameter.",
+        "Any chord joining two points on a circle must pass through the center.",
+        "The intercepted arc measures 90°, so AC is a diameter.",
+        "The 90° inscribed angle intercepts a 180° arc, so AC is the chord joining the endpoints of a semicircle."
+      ],
+      "answerIndex": 3,
+      "explanation": "An inscribed angle measures half its intercepted arc. The arc from A to C opposite B measures 2(90°) = 180°. Its endpoints are opposite ends of a diameter."
+    }
+  ],
+  "mathFormat": "unicode"
+}

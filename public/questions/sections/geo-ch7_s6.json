@@ -1,0 +1,170 @@
+{
+  "id": "geo-ch7_s6",
+  "chapterId": "geo-ch7",
+  "courseId": "geometry",
+  "chapterNumber": 7,
+  "sectionNumber": 6,
+  "title": "Identifying Transformations",
+  "standardCode": "G.CO.A.2",
+  "questionIds": [
+    "geo-q081",
+    "geo-q082",
+    "geo-q083",
+    "geo-q084",
+    "geo-q085"
+  ],
+  "sectionId": "geo-ch7_s6",
+  "questions": [
+    {
+      "id": "geo-q081",
+      "sourceNumber": 81,
+      "courseId": "geometry",
+      "chapterId": "geo-ch7",
+      "sectionId": "geo-ch7_s6",
+      "topic": "Identifying Transformations",
+      "standardCode": "G.CO.A.2",
+      "image": "/questions/geometry/originals/q081.png",
+      "imageAlt": "Original JMAP Geometry question 81: Identifying Transformations.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 20,
+        "examRef": "062512geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123905.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 3,
+      "explanation": "The original JMAP answer key gives choice 4.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q082",
+      "sourceNumber": 82,
+      "courseId": "geometry",
+      "chapterId": "geo-ch7",
+      "sectionId": "geo-ch7_s6",
+      "topic": "Identifying Transformations",
+      "standardCode": "G.CO.A.2",
+      "image": "/questions/geometry/originals/q082.png",
+      "imageAlt": "Original JMAP Geometry question 82: Identifying Transformations.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 21,
+        "examRef": "062522geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123917.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 1,
+      "explanation": "The original JMAP answer key gives choice 2.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q083",
+      "sourceNumber": 83,
+      "courseId": "geometry",
+      "chapterId": "geo-ch7",
+      "sectionId": "geo-ch7_s6",
+      "topic": "Identifying Transformations",
+      "standardCode": "G.CO.A.2",
+      "image": "/questions/geometry/originals/q083.png",
+      "imageAlt": "Original JMAP Geometry question 83: Identifying Transformations.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 21,
+        "examRef": "082509geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123924.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 2,
+      "explanation": "The original JMAP answer key gives choice 3.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q084",
+      "sourceNumber": 84,
+      "courseId": "geometry",
+      "chapterId": "geo-ch7",
+      "sectionId": "geo-ch7_s6",
+      "topic": "Identifying Transformations",
+      "standardCode": "G.CO.A.2",
+      "image": "/questions/geometry/originals/q084.png",
+      "imageAlt": "Original JMAP Geometry question 84: Identifying Transformations.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 21,
+        "examRef": "012601geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123932.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 3,
+      "explanation": "The original JMAP answer key gives choice 4.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q085",
+      "sourceNumber": 85,
+      "courseId": "geometry",
+      "chapterId": "geo-ch7",
+      "sectionId": "geo-ch7_s6",
+      "topic": "Identifying Transformations",
+      "standardCode": "G.CO.A.2",
+      "image": "/questions/geometry/originals/q085.png",
+      "imageAlt": "Original JMAP Geometry question 85: Identifying Transformations.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 22,
+        "examRef": "spr2401geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123943.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 1,
+      "explanation": "The original JMAP answer key gives choice 2.",
+      "originalChoiceLabels": true
+    }
+  ],
+  "mathFormat": "unicode"
+}

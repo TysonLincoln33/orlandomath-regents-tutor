@@ -1,0 +1,45 @@
+{
+  "id": "geo-ch6_s4",
+  "chapterId": "geo-ch6",
+  "courseId": "geometry",
+  "chapterNumber": 6,
+  "sectionNumber": 4,
+  "title": "Sectors",
+  "standardCode": "G.C.B.5",
+  "questionIds": [
+    "geo-q049"
+  ],
+  "sectionId": "geo-ch6_s4",
+  "questions": [
+    {
+      "id": "geo-q049",
+      "sourceNumber": 49,
+      "courseId": "geometry",
+      "chapterId": "geo-ch6",
+      "sectionId": "geo-ch6_s4",
+      "topic": "Sectors",
+      "standardCode": "G.C.B.5",
+      "image": "/questions/geometry/originals/q049.png",
+      "imageAlt": "Original JMAP Geometry question 49: Sectors.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 13,
+        "examRef": "082530geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123444.png"
+      },
+      "type": "mc",
+      "origin": "adapted_mc",
+      "prompt": "What is the degree measure of central angle KLM?",
+      "choices": [
+        "108°",
+        "30°",
+        "54°",
+        "216°"
+      ],
+      "answerIndex": 0,
+      "explanation": "7.5π = (θ/360)π(5²). Thus θ = (7.5/25)(360) = 108°."
+    }
+  ],
+  "mathFormat": "unicode"
+}

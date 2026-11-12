@@ -1,0 +1,139 @@
+{
+  "id": "geo-ch5_s2",
+  "chapterId": "geo-ch5",
+  "courseId": "geometry",
+  "chapterNumber": 5,
+  "sectionNumber": 2,
+  "title": "Equations of Circles",
+  "standardCode": "G.GPE.A.1",
+  "questionIds": [
+    "geo-q039",
+    "geo-q040",
+    "geo-q041",
+    "geo-q042"
+  ],
+  "sectionId": "geo-ch5_s2",
+  "questions": [
+    {
+      "id": "geo-q039",
+      "sourceNumber": 39,
+      "courseId": "geometry",
+      "chapterId": "geo-ch5",
+      "sectionId": "geo-ch5_s2",
+      "topic": "Equations of Circles",
+      "standardCode": "G.GPE.A.1",
+      "image": "/questions/geometry/originals/q039.png",
+      "imageAlt": "Original JMAP Geometry question 39: Equations of Circles.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 11,
+        "examRef": "spr2404geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123330.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 3,
+      "explanation": "The original JMAP answer key gives choice 4.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q040",
+      "sourceNumber": 40,
+      "courseId": "geometry",
+      "chapterId": "geo-ch5",
+      "sectionId": "geo-ch5_s2",
+      "topic": "Equations of Circles",
+      "standardCode": "G.GPE.A.1",
+      "image": "/questions/geometry/originals/q040.png",
+      "imageAlt": "Original JMAP Geometry question 40: Equations of Circles.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 11,
+        "examRef": "082508geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123337.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 0,
+      "explanation": "The original JMAP answer key gives choice 1.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q041",
+      "sourceNumber": 41,
+      "courseId": "geometry",
+      "chapterId": "geo-ch5",
+      "sectionId": "geo-ch5_s2",
+      "topic": "Equations of Circles",
+      "standardCode": "G.GPE.A.1",
+      "image": "/questions/geometry/originals/q041.png",
+      "imageAlt": "Original JMAP Geometry question 41: Equations of Circles.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 11,
+        "examRef": "062506geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123344.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 3,
+      "explanation": "The original JMAP answer key gives choice 4.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q042",
+      "sourceNumber": 42,
+      "courseId": "geometry",
+      "chapterId": "geo-ch5",
+      "sectionId": "geo-ch5_s2",
+      "topic": "Equations of Circles",
+      "standardCode": "G.GPE.A.1",
+      "image": "/questions/geometry/originals/q042.png",
+      "imageAlt": "Original JMAP Geometry question 42: Equations of Circles.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 11,
+        "examRef": "012619geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123349.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 2,
+      "explanation": "The original JMAP answer key gives choice 3.",
+      "originalChoiceLabels": true
+    }
+  ],
+  "mathFormat": "unicode"
+}

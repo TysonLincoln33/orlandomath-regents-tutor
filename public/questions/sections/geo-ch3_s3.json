@@ -1,0 +1,137 @@
+{
+  "id": "geo-ch3_s3",
+  "chapterId": "geo-ch3",
+  "courseId": "geometry",
+  "chapterNumber": 3,
+  "sectionNumber": 3,
+  "title": "Interior and Exterior Angles of Triangles",
+  "standardCode": "G.CO.C.10",
+  "questionIds": [
+    "geo-q020",
+    "geo-q021",
+    "geo-q022",
+    "geo-q023"
+  ],
+  "sectionId": "geo-ch3_s3",
+  "questions": [
+    {
+      "id": "geo-q020",
+      "sourceNumber": 20,
+      "courseId": "geometry",
+      "chapterId": "geo-ch3",
+      "sectionId": "geo-ch3_s3",
+      "topic": "Interior and Exterior Angles of Triangles",
+      "standardCode": "G.CO.C.10",
+      "image": "/questions/geometry/originals/q020.png",
+      "imageAlt": "Original JMAP Geometry question 20: Interior and Exterior Angles of Triangles.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 6,
+        "examRef": "012604geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123051.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 2,
+      "explanation": "The original JMAP answer key gives choice 3.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q021",
+      "sourceNumber": 21,
+      "courseId": "geometry",
+      "chapterId": "geo-ch3",
+      "sectionId": "geo-ch3_s3",
+      "topic": "Interior and Exterior Angles of Triangles",
+      "standardCode": "G.CO.C.10",
+      "image": "/questions/geometry/originals/q021.png",
+      "imageAlt": "Original JMAP Geometry question 21: Interior and Exterior Angles of Triangles.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 7,
+        "examRef": "082511geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123104.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 3,
+      "explanation": "The original JMAP answer key gives choice 4.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q022",
+      "sourceNumber": 22,
+      "courseId": "geometry",
+      "chapterId": "geo-ch3",
+      "sectionId": "geo-ch3_s3",
+      "topic": "Interior and Exterior Angles of Triangles",
+      "standardCode": "G.CO.C.10",
+      "image": "/questions/geometry/originals/q022.png",
+      "imageAlt": "Original JMAP Geometry question 22: Interior and Exterior Angles of Triangles.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 7,
+        "examRef": "082529geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123111.png"
+      },
+      "type": "mc",
+      "origin": "adapted_mc",
+      "prompt": "What is the measure of exterior angle KMN?",
+      "choices": [
+        "15°",
+        "30°",
+        "150°",
+        "165°"
+      ],
+      "answerIndex": 1,
+      "explanation": "The base angles at K and L are both 15°. The vertex angle KML is 180° − 15° − 15° = 150°. Its adjacent exterior angle is 180° − 150° = 30°."
+    },
+    {
+      "id": "geo-q023",
+      "sourceNumber": 23,
+      "courseId": "geometry",
+      "chapterId": "geo-ch3",
+      "sectionId": "geo-ch3_s3",
+      "topic": "Interior and Exterior Angles of Triangles",
+      "standardCode": "G.CO.C.10",
+      "image": "/questions/geometry/originals/q023.png",
+      "imageAlt": "Original JMAP Geometry question 23: Interior and Exterior Angles of Triangles.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 7,
+        "examRef": "062526geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123117.png"
+      },
+      "type": "mc",
+      "origin": "adapted_mc",
+      "prompt": "What is m∠ACB?",
+      "choices": [
+        "17°",
+        "79°",
+        "101°",
+        "29°"
+      ],
+      "answerIndex": 2,
+      "explanation": "3x − 22 + 4x − 18 = 6x − 23. Thus x = 17. The exterior angle is 6(17) − 23 = 79°, so m∠ACB = 180° − 79° = 101°."
+    }
+  ],
+  "mathFormat": "unicode"
+}

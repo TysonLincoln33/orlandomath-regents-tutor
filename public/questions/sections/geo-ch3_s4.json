@@ -1,0 +1,46 @@
+{
+  "id": "geo-ch3_s4",
+  "chapterId": "geo-ch3",
+  "courseId": "geometry",
+  "chapterNumber": 3,
+  "sectionNumber": 4,
+  "title": "Triangle Inequality Theorem",
+  "standardCode": "G.CO.C.10",
+  "questionIds": [
+    "geo-q024"
+  ],
+  "sectionId": "geo-ch3_s4",
+  "questions": [
+    {
+      "id": "geo-q024",
+      "sourceNumber": 24,
+      "courseId": "geometry",
+      "chapterId": "geo-ch3",
+      "sectionId": "geo-ch3_s4",
+      "topic": "Triangle Inequality Theorem",
+      "standardCode": "G.CO.C.10",
+      "image": "/questions/geometry/originals/q024.png",
+      "imageAlt": "Original JMAP Geometry question 24: Triangle Inequality Theorem.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 7,
+        "examRef": "062504geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123124.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 1,
+      "explanation": "The original JMAP answer key gives choice 2.",
+      "originalChoiceLabels": true
+    }
+  ],
+  "mathFormat": "unicode"
+}

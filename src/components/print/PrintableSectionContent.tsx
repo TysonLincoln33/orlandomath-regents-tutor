@@ -1,15 +1,6 @@
-export type PrintableQuestion = {
-  id: string;
-  type: string;
-  prompt: string;
-  image?: string;
-  table?: { headers: string[]; rows: string[][] };
-  choiceImages?: string[];
-  choices: string[];
-  answerIndex: number;
-  explanation?: string;
-  hint?: string;
-};
+import ProofTable from "@/components/questions/ProofTable";
+import type { Question, QuestionAnswer } from "@/lib/questionBank";
+export type PrintableQuestion = Question;
 
 export type PrintableSectionData = {
   sectionId: string;
@@ -33,17 +24,18 @@ type Props = {
   data: PrintableSectionData;
   showSectionTitle?: boolean;
   sectionHeaderPrintOnly?: boolean;
-  answers?: Record<string, number | null>;
+  answers?: Record<string, QuestionAnswer | null>;
+  feedback?: Record<string, string>;
   mastered?: Record<string, boolean>;
   incorrect?: Record<string, boolean>;
-  onSelect?: (questionId: string, choiceIndex: number) => void;
+  onSelect?: (questionId: string, choiceIndex: QuestionAnswer) => void;
   onCheck?: (question: PrintableQuestion) => void;
   showHint?: Record<string, boolean>;
   interactive?: boolean;
 };
 
 function formatSectionHeader(sectionId: string) {
-  const match = sectionId.match(/^ch(\d+)_s(\d+)$/i);
+  const match = sectionId.match(/^(?:geo-)?ch(\d+)_s(\d+)$/i);
 
   if (!match) {
     return { chapterLabel: undefined, sectionLabel: sectionId };
@@ -60,6 +52,7 @@ export default function PrintableSectionContent({
   showSectionTitle = false,
   sectionHeaderPrintOnly = false,
   answers = {},
+  feedback = {},
   mastered = {},
   incorrect = {},
   onSelect,
@@ -98,23 +91,23 @@ export default function PrintableSectionContent({
           const isIncorrect = incorrect[question.id];
           return (
             <div key={question.id} className="section-print-question bg-white rounded-xl shadow p-6">
-              <p className="text-xs font-semibold text-gray-500 mb-3">Question {idx + 1}</p>
+              <p className="text-xs font-semibold text-gray-500 mb-3">Question {question.sourceNumber ?? idx + 1}</p>
               <div className="section-print-question-prompt text-lg mb-4 leading-8 text-gray-900">{renderBoldText(question.prompt)}</div>
-              {question.image ? <img src={question.image} alt="Question visual" className="my-4 max-w-full rounded-lg border" /> : null}
+              {question.image ? <img src={question.image} alt={question.imageAlt ?? "Question visual"} className="my-4 max-w-full rounded-lg border" /> : null}
               {question.table ? (
                 <div className="my-4 overflow-x-auto"><table className="border-collapse border border-gray-300 text-sm"><thead><tr>{question.table.headers.map((header, i) => <th key={i} className="border border-gray-300 px-3 py-2 bg-gray-100 text-left text-gray-900">{renderBoldText(header)}</th>)}</tr></thead><tbody>{question.table.rows.map((row, i) => <tr key={i}>{row.map((cell, j) => <td key={j} className="border border-gray-300 px-3 py-2 text-gray-900">{renderBoldText(cell)}</td>)}</tr>)}</tbody></table></div>
               ) : null}
-              <div className="section-print-answer-list space-y-3 mt-4">
+              {question.type === "proof_dropdown" ? <ProofTable question={question} answer={selected && typeof selected === "object" ? selected : {}} onChange={answer => onSelect?.(question.id, answer)} interactive={interactive} checked={isIncorrect || isMastered} disabled={isMastered} /> : <div className="section-print-answer-list space-y-3 mt-4">
                 {question.choices.map((choice, choiceIndex) => {
                   const isSelected = selected === choiceIndex;
                   let buttonClass = "section-print-answer-choice w-full text-left border rounded-lg px-4 py-3 transition text-gray-900";
                   if (isMastered && isSelected) buttonClass += " bg-green-100 border-green-400";
                   else if (isIncorrect && isSelected) buttonClass += " bg-red-100 border-red-400";
                   else buttonClass += isSelected ? " bg-blue-50 border-blue-400" : " bg-white border-gray-300";
-                  return <button key={choiceIndex} type="button" onClick={() => interactive && onSelect?.(question.id, choiceIndex)} disabled={!interactive} className={buttonClass}>{question.choiceImages?.[choiceIndex] ? <div className="flex items-start gap-3"><span className="font-semibold mt-1 shrink-0">{String.fromCharCode(65 + choiceIndex)}.</span><img src={question.choiceImages[choiceIndex]} alt={`Choice ${choiceIndex + 1}`} className="max-w-full rounded" /></div> : <><span className="font-semibold mr-2">{String.fromCharCode(65 + choiceIndex)}.</span>{renderBoldText(choice)}</>}</button>;
+                  return <button key={choiceIndex} type="button" onClick={() => interactive && onSelect?.(question.id, choiceIndex)} disabled={!interactive || isMastered} className={buttonClass}>{question.choiceImages?.[choiceIndex] ? <div className="flex items-start gap-3"><span className="font-semibold mt-1 shrink-0">{question.sourceNumber ? choiceIndex + 1 : String.fromCharCode(65 + choiceIndex)}.</span><img src={question.choiceImages[choiceIndex]} alt={`Choice ${choiceIndex + 1}`} className="max-w-full rounded" /></div> : <><span className="font-semibold mr-2">{question.sourceNumber ? choiceIndex + 1 : String.fromCharCode(65 + choiceIndex)}.</span>{renderBoldText(question.originalChoiceLabels ? "" : choice)}</>}</button>;
                 })}
-              </div>
-              {interactive ? <><button type="button" onClick={() => onCheck?.(question)} className="no-print mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg">Check answer</button>{isIncorrect ? <div className="no-print mt-4 p-3 bg-red-50 border border-red-300 rounded-lg text-sm text-red-800 font-medium">Incorrect. Try again.</div> : null}{showHint[question.id] ? <div className="section-print-hint no-print mt-4 p-3 bg-amber-50 border border-amber-300 rounded-lg text-sm text-amber-900"><strong className="font-semibold">Hint:</strong> {question.hint ?? "Eliminate choices that don't match conditions."}</div> : null}{isMastered && question.explanation ? <div className="section-print-explanation no-print mt-4 p-3 bg-gray-50 border rounded-lg text-sm text-gray-800 leading-7">{renderBoldText(question.explanation)}</div> : null}</> : null}
+              </div>}
+              {interactive ? <><button type="button" onClick={() => onCheck?.(question)} className="no-print mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg">Check answer</button>{feedback[question.id] ? <p role="status" className="no-print mt-3 text-sm font-semibold text-slate-800">{feedback[question.id]}</p> : null}{isMastered ? <p className="no-print mt-3 font-semibold text-green-800">Correct — question complete.</p> : null}{isIncorrect ? <div className="no-print mt-4 p-3 bg-red-50 border border-red-300 rounded-lg text-sm text-red-800 font-medium">Incorrect. Try again.</div> : null}{showHint[question.id] ? <div className="section-print-hint no-print mt-4 p-3 bg-amber-50 border border-amber-300 rounded-lg text-sm text-amber-900"><strong className="font-semibold">Hint:</strong> {question.hint ?? "Eliminate choices that don't match conditions."}</div> : null}{isMastered && question.explanation ? <div className="section-print-explanation no-print mt-4 p-3 bg-gray-50 border rounded-lg text-sm text-gray-800 leading-7">{renderBoldText(question.explanation)}</div> : null}</> : null}
             </div>
           );
         })}

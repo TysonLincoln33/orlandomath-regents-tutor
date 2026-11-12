@@ -1013,3 +1013,13 @@ html.om-hide-header .om-header {
     margin-top: 2rem;
   }
 }
+
+/* Geometry proofs preserve the complete selected text on narrow screens. */
+.proof-print-blank { display: none; }
+.proof-table td { overflow-wrap: anywhere; }
+.proof-table select { max-width: 100%; }
+@media print {
+  .proof-print-blank { display: block; min-height: 3.5rem; border-bottom: 1px solid #94a3b8; }
+  .proof-table tr { break-inside: avoid; }
+  .proof-table-wrap { overflow: visible; }
+}

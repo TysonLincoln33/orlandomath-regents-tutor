@@ -62,7 +62,8 @@ export async function POST(req: Request) {
       const resumeUrlAbs = baseUrl
         ? `${baseUrl}/resume/${resume_token}`
         : `/resume/${resume_token}`;
-      const dashboardUrlAbs = baseUrl ? `${baseUrl}/dashboard` : `/dashboard`;
+      const dashboardPath = body.progressJson?.courseId === "geometry" ? "/geometry" : "/dashboard";
+      const dashboardUrlAbs = `${baseUrl}${dashboardPath}`;
 
       // Fire-and-forget; do not block API response on email
       sendSaveProgressEmail({

@@ -1,0 +1,197 @@
+{
+  "id": "geo-ch6_s6",
+  "chapterId": "geo-ch6",
+  "courseId": "geometry",
+  "chapterNumber": 6,
+  "sectionNumber": 6,
+  "title": "Density",
+  "standardCode": "G.MG.A.2",
+  "questionIds": [
+    "geo-q059",
+    "geo-q060",
+    "geo-q061",
+    "geo-q062",
+    "geo-q063",
+    "geo-q064"
+  ],
+  "sectionId": "geo-ch6_s6",
+  "questions": [
+    {
+      "id": "geo-q059",
+      "sourceNumber": 59,
+      "courseId": "geometry",
+      "chapterId": "geo-ch6",
+      "sectionId": "geo-ch6_s6",
+      "topic": "Density",
+      "standardCode": "G.MG.A.2",
+      "image": "/questions/geometry/originals/q059.png",
+      "imageAlt": "Original JMAP Geometry question 59: Density.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 15,
+        "examRef": "012620geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123553.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 0,
+      "explanation": "The original JMAP answer key gives choice 1.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q060",
+      "sourceNumber": 60,
+      "courseId": "geometry",
+      "chapterId": "geo-ch6",
+      "sectionId": "geo-ch6_s6",
+      "topic": "Density",
+      "standardCode": "G.MG.A.2",
+      "image": "/questions/geometry/originals/q060.png",
+      "imageAlt": "Original JMAP Geometry question 60: Density.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 15,
+        "examRef": "062525geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123605.png"
+      },
+      "type": "mc",
+      "origin": "adapted_mc",
+      "prompt": "Which comparison correctly identifies the village with greater population density?",
+      "choices": [
+        "Depew: about 3735.9 people/mi², compared with Lancaster at about 2954.7 people/mi².",
+        "Depew, because its total population is greater.",
+        "The densities are equal because both places are villages.",
+        "Lancaster: about 3735.9 people/mi², compared with Depew at about 2954.7 people/mi²."
+      ],
+      "answerIndex": 3,
+      "explanation": "Depew: 15,069 ÷ 5.1 ≈ 2954.7 people/mi². Lancaster: 10,087 ÷ 2.7 ≈ 3735.9 people/mi². Lancaster has the greater density."
+    },
+    {
+      "id": "geo-q061",
+      "sourceNumber": 61,
+      "courseId": "geometry",
+      "chapterId": "geo-ch6",
+      "sectionId": "geo-ch6_s6",
+      "topic": "Density",
+      "standardCode": "G.MG.A.2",
+      "image": "/questions/geometry/originals/q061.png",
+      "imageAlt": "Original JMAP Geometry question 61: Density.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 16,
+        "examRef": "082526geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123613.png"
+      },
+      "type": "mc",
+      "origin": "adapted_mc",
+      "prompt": "Which metal has the density of the given cube?",
+      "choices": [
+        "Iron",
+        "Zinc",
+        "Tin",
+        "Copper"
+      ],
+      "answerIndex": 0,
+      "explanation": "Volume = 5³ = 125 cm³. Density = 982.5 ÷ 125 = 7.86 g/cm³, which matches iron."
+    },
+    {
+      "id": "geo-q062",
+      "sourceNumber": 62,
+      "courseId": "geometry",
+      "chapterId": "geo-ch6",
+      "sectionId": "geo-ch6_s6",
+      "topic": "Density",
+      "standardCode": "G.MG.A.2",
+      "image": "/questions/geometry/originals/q062.png",
+      "imageAlt": "Original JMAP Geometry question 62: Density.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 16,
+        "examRef": "012626geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123618.png"
+      },
+      "type": "mc",
+      "origin": "adapted_mc",
+      "prompt": "What is the weight of the full bucket of topsoil, to the nearest pound?",
+      "choices": [
+        "14 lb",
+        "27 lb",
+        "54 lb",
+        "109 lb"
+      ],
+      "answerIndex": 1,
+      "explanation": "Radius = 10/2 = 5 in. Weight = π(5²)(15)(0.0231) ≈ 27.214 lb, which rounds to 27 lb."
+    },
+    {
+      "id": "geo-q063",
+      "sourceNumber": 63,
+      "courseId": "geometry",
+      "chapterId": "geo-ch6",
+      "sectionId": "geo-ch6_s6",
+      "topic": "Density",
+      "standardCode": "G.MG.A.2",
+      "image": "/questions/geometry/originals/q063.png",
+      "imageAlt": "Original JMAP Geometry question 63: Density.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 16,
+        "examRef": "082513geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123628.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 0,
+      "explanation": "The original JMAP answer key gives choice 1.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q064",
+      "sourceNumber": 64,
+      "courseId": "geometry",
+      "chapterId": "geo-ch6",
+      "sectionId": "geo-ch6_s6",
+      "topic": "Density",
+      "standardCode": "G.MG.A.2",
+      "image": "/questions/geometry/originals/q064.png",
+      "imageAlt": "Original JMAP Geometry question 64: Density.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 16,
+        "examRef": "012634geo",
+        "points": 4,
+        "originalClip": "Screenshot 2026-11-12 123637.png"
+      },
+      "type": "mc",
+      "origin": "adapted_mc",
+      "prompt": "What is the mass of the glass trophy?",
+      "choices": [
+        "456 g",
+        "600 g",
+        "1140 g",
+        "2340 g"
+      ],
+      "answerIndex": 2,
+      "explanation": "Prism volume = 12·6·3 = 216 cm³. Pyramid volume = (1/3)(12·6)(10) = 240 cm³. Total volume = 456 cm³. Mass = 456(2.5) = 1140 g."
+    }
+  ],
+  "mathFormat": "unicode"
+}

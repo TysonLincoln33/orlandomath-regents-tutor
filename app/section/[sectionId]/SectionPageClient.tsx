@@ -4,6 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import renderMathInElement from "katex/contrib/auto-render";
 import "katex/dist/katex.min.css";
 
+import Link from "next/link";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { getCourseForSection } from "@/lib/course/registry";
+import { gradeQuestion, serializeAnswer, type QuestionAnswer } from "@/lib/questionBank";
 import RainbowBar from "@/components/progress/RainbowBar";
 import PrintableAnswerKey from "@/components/print/PrintableAnswerKey";
 import PrintableSectionContent, {
@@ -14,6 +18,7 @@ import { recordQuestionAttempt } from "@/lib/progress/attemptTracking";
 import { emitProgressUpdated } from "@/lib/progress/events";
 import {
   ensureSectionProgress,
+  setProgressOwner,
   getSectionPercent,
   recordAttempt as recordLocalAttempt,
 } from "@/lib/sectionProgressLocal";
@@ -31,7 +36,7 @@ type WorkedExample = {
 type SectionData = {
   sectionId: string;
   title: string;
-  lesson: {
+  lesson?: {
     title: string;
     intro: string[];
   };
@@ -40,7 +45,10 @@ type SectionData = {
 };
 
 export default function SectionPageClient({ data }: { data: SectionData }) {
-  const [answers, setAnswers] = useState<Record<string, number | null>>({});
+  const [answers, setAnswers] = useState<Record<string, QuestionAnswer | null>>({});
+  const [feedback, setFeedback] = useState<Record<string, string>>({});
+  const pending = useRef(new Set<string>());
+  const [ready, setReady] = useState(false);
   const [mastered, setMastered] = useState<Record<string, boolean>>({});
   const [incorrect, setIncorrect] = useState<Record<string, boolean>>({});
   const [showHint, setShowHint] = useState<Record<string, boolean>>({});
@@ -55,6 +63,7 @@ export default function SectionPageClient({ data }: { data: SectionData }) {
 
   const totalQuestions = data.questions.length;
   const sectionId = data.sectionId;
+  const course = getCourseForSection(sectionId);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -75,15 +84,55 @@ export default function SectionPageClient({ data }: { data: SectionData }) {
   }, [data, mastered, incorrect, showHint]);
 
   useEffect(() => {
-    ensureSectionProgress(sectionId, totalQuestions);
-    setProgressPercent(getSectionPercent(sectionId, totalQuestions));
-  }, [sectionId, totalQuestions]);
+    let active = true;
+    const supabase = getSupabaseBrowserClient();
+    async function restore() {
+      setReady(false);
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      if (!active) return;
+      if (authError && authError.name !== "AuthSessionMissingError") {
+        setFeedback({ restore: "Could not load account progress. Please refresh when your connection returns." });
+        return;
+      }
+      setProgressOwner(user?.id ?? null);
+      const saved = ensureSectionProgress(sectionId, totalQuestions);
+      const savedMastery = Object.fromEntries(Object.entries(saved.byQuestionId).map(([id, value]) => [id, value.correct]));
+      const savedAnswers = Object.fromEntries(Object.entries(saved.byQuestionId).map(([id, value]) => [id, value.lastAnswer ?? value.lastAnswerIndex ?? null]));
+      if (user && course.id === "geometry") {
+        const { data: attempts, error } = await supabase.from("question_attempts")
+          .select("question_id, selected_answer, correct, attempted_at")
+          .eq("user_id", user.id).eq("course_id", course.id).eq("section_id", sectionId)
+          .eq("correct", true).order("attempted_at", { ascending: false }).limit(1000);
+        if (!active) return;
+        if (error) setFeedback({ restore: "Showing saved device progress. Account progress could not be loaded." });
+        for (const attempt of (attempts ?? []) as Array<{question_id:string; selected_answer:string | null}>) {
+          const q = data.questions.find(q => q.id === attempt.question_id);
+          if (!q || savedMastery[q.id]) continue;
+          try {
+            const answer = JSON.parse(attempt.selected_answer ?? "null") as QuestionAnswer;
+            if (!gradeQuestion(q, answer).correct) continue;
+            savedMastery[q.id] = true; savedAnswers[q.id] = answer;
+            recordLocalAttempt({sectionId, questionId:q.id, isCorrect:true, answer, totalQuestions});
+          } catch { /* A legacy answer must not award unverified mastery. */ }
+        }
+      }
+      if (!active) return;
+      setMastered(savedMastery); setAnswers(savedAnswers);
+      setProgressPercent(getSectionPercent(sectionId, totalQuestions)); setReady(true);
+    }
+    void restore();
+    const { data: listener } = supabase.auth.onAuthStateChange(event => {
+      if (event === "SIGNED_OUT" || event === "SIGNED_IN") window.setTimeout(() => { if(active) void restore(); }, 0);
+    });
+    return () => { active = false; listener.subscription.unsubscribe(); };
+  }, [sectionId, totalQuestions, data.questions, course.id]);
 
   const refreshProgress = () => {
     setProgressPercent(getSectionPercent(sectionId, totalQuestions));
   };
 
-  const handleSelect = (questionId: string, choiceIndex: number) => {
+  const handleSelect = (questionId: string, choiceIndex: QuestionAnswer) => {
+    setFeedback(prev => ({ ...prev, [questionId]: "" }));
     setAnswers((prev) => ({
       ...prev,
       [questionId]: choiceIndex,
@@ -108,9 +157,16 @@ export default function SectionPageClient({ data }: { data: SectionData }) {
   const handleCheck = async (question: Question) => {
     const selected = answers[question.id];
 
-    if (selected === undefined || selected === null) return;
-
-    const isCorrect = selected === question.answerIndex;
+    if (!ready || pending.current.has(question.id)) return;
+    if (mastered[question.id] && !feedback[question.id]?.includes("sync failed")) return;
+    const result = gradeQuestion(question, selected);
+    if (!result.complete || selected === undefined || selected === null) {
+      setFeedback(prev => ({...prev, [question.id]: question.type === "proof_dropdown" ? "Complete every dropdown before checking the proof." : "Select an answer before checking."}));
+      return;
+    }
+    pending.current.add(question.id);
+    setFeedback(prev => ({...prev, [question.id]: question.type === "proof_dropdown" ? `${result.correctCells} of ${result.total} selections correct.` : ""}));
+    const isCorrect = result.correct;
     const wasMastered = mastered[question.id];
 
     if (isCorrect) {
@@ -143,12 +199,13 @@ export default function SectionPageClient({ data }: { data: SectionData }) {
     try {
       const chapterId = sectionId.split("_")[0] ?? "unknown";
 
-      if (isCorrect && !wasMastered) {
+      if (!wasMastered) {
         recordLocalAttempt({
           sectionId,
           questionId: question.id,
-          isCorrect: true,
-          answerIndex: selected,
+          isCorrect,
+          answerIndex: typeof selected === "number" ? selected : undefined,
+          answer: selected,
           totalQuestions,
         });
 
@@ -156,11 +213,11 @@ export default function SectionPageClient({ data }: { data: SectionData }) {
       }
 
       await recordQuestionAttempt({
-        courseId: "algebra1",
+        courseId: course.id,
         chapterId,
         sectionId,
         questionId: question.id,
-        selectedAnswer: String(selected),
+        selectedAnswer: serializeAnswer(selected),
         correct: isCorrect,
         sectionTotalQuestions: totalQuestions,
       });
@@ -168,7 +225,8 @@ export default function SectionPageClient({ data }: { data: SectionData }) {
       emitProgressUpdated();
     } catch (err) {
       console.error("Attempt/progress autosave error:", err);
-    }
+      setFeedback(prev => ({...prev, [question.id]: "Saved on this device. Account sync failed; please check your connection and try again."}));
+    } finally { pending.current.delete(question.id); }
   };
 
   return (
@@ -178,6 +236,7 @@ export default function SectionPageClient({ data }: { data: SectionData }) {
       data-print-layout={printLayout}
       data-print-mode={printMode}
     >
+      <div className="no-print flex flex-wrap items-center justify-between gap-3 text-white"><Link href={`/chapter/${sectionId.split("_")[0]}`} className="font-semibold hover:underline">← {course.title} chapter</Link><Link href={course.dashboardPath} className="hover:underline">{course.title} dashboard</Link></div>
       {canPrint ? (
         <div className="section-print-toolbar no-print rounded-xl border border-slate-200 bg-white p-4 shadow">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -238,12 +297,15 @@ export default function SectionPageClient({ data }: { data: SectionData }) {
         </div>
       ) : null}
 
-      <div className="worksheet-print-area">
+      {feedback.restore && <p role="status" className="no-print rounded-xl bg-amber-50 p-4 text-amber-900">{feedback.restore}</p>}
+      {!ready && <p role="status" className="no-print text-white">Loading saved progress…</p>}
+      <div className="worksheet-print-area" aria-busy={!ready}>
         <PrintableSectionContent
           data={data}
           showSectionTitle
           sectionHeaderPrintOnly
           answers={answers}
+          feedback={feedback}
           mastered={mastered}
           incorrect={incorrect}
           onSelect={handleSelect}
@@ -253,7 +315,7 @@ export default function SectionPageClient({ data }: { data: SectionData }) {
         />
       </div>
 
-      <PrintableAnswerKey sections={[data]} />
+      {canPrint && <PrintableAnswerKey sections={[data]} />}
 
       {/* FLOATING RAINBOW PROGRESS BAR */}
       <div className="section-print-progress-meter no-print fixed bottom-6 right-6 z-[9998] w-[min(960px,calc(100vw-40px))] rounded-2xl border-2 border-slate-300 bg-white px-4 py-3 shadow-[0_18px_50px_rgba(15,23,42,0.24)]">

@@ -11,7 +11,6 @@ type AttemptPayload = {
 };
 
 export async function recordQuestionAttempt(payload: AttemptPayload) {
-  console.log("[recordQuestionAttempt] payload:", payload);
 
   const supabase: any = getSupabaseBrowserClient();
 
@@ -24,13 +23,12 @@ export async function recordQuestionAttempt(payload: AttemptPayload) {
     userError = result?.error ?? null;
   } catch (err) {
     console.warn("[recordQuestionAttempt] auth lookup threw:", err);
-    return;
+    throw err;
   }
 
-  console.log("[recordQuestionAttempt] user:", user);
-  console.log("[recordQuestionAttempt] userError:", userError);
 
-  if (userError || !user) {
+  if (userError && userError.name !== "AuthSessionMissingError") throw userError;
+  if (!user) {
     console.warn("[recordQuestionAttempt] No logged-in user found. Skipping RPC.");
     return;
   }
@@ -48,7 +46,6 @@ export async function recordQuestionAttempt(payload: AttemptPayload) {
     }
   );
 
-  console.log("[recordQuestionAttempt] rpc error:", error);
 
   if (error) {
     console.error("Autosave attempt/progress RPC failed", error);

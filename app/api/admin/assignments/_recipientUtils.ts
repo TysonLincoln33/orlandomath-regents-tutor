@@ -1,3 +1,4 @@
+import { getCourseForSection } from "@/lib/course/registry";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import {
@@ -295,7 +296,7 @@ async function countStudentProgress(
     .from("student_progress")
     .select("user_id", { count: "exact", head: true })
     .eq("app_id", "regents-algebra")
-    .eq("course_id", "algebra1")
+    .eq("course_id", getCourseForSection(sectionId ?? "").id)
     .eq("user_id", userId);
 
   query = applySectionFilter(query, sectionId);
@@ -320,7 +321,7 @@ async function countStudentAttempts(
     .from("question_attempts")
     .select("user_id", { count: "exact", head: true })
     .eq("app_id", "regents-algebra")
-    .eq("course_id", "algebra1")
+    .eq("course_id", getCourseForSection(sectionId ?? "").id)
     .eq("user_id", userId);
 
   query = applySectionFilter(query, sectionId);

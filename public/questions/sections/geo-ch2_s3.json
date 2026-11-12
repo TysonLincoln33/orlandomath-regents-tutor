@@ -1,0 +1,108 @@
+{
+  "id": "geo-ch2_s3",
+  "chapterId": "geo-ch2",
+  "courseId": "geometry",
+  "chapterNumber": 2,
+  "sectionNumber": 3,
+  "title": "Parallel and Perpendicular Lines",
+  "standardCode": "G.GPE.B.5",
+  "questionIds": [
+    "geo-q012",
+    "geo-q013",
+    "geo-q014"
+  ],
+  "sectionId": "geo-ch2_s3",
+  "questions": [
+    {
+      "id": "geo-q012",
+      "sourceNumber": 12,
+      "courseId": "geometry",
+      "chapterId": "geo-ch2",
+      "sectionId": "geo-ch2_s3",
+      "topic": "Parallel and Perpendicular Lines",
+      "standardCode": "G.GPE.B.5",
+      "image": "/questions/geometry/originals/q012.png",
+      "imageAlt": "Original JMAP Geometry question 12: Parallel and Perpendicular Lines.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 5,
+        "examRef": "062513geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 122948.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 0,
+      "explanation": "The original JMAP answer key gives choice 1.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q013",
+      "sourceNumber": 13,
+      "courseId": "geometry",
+      "chapterId": "geo-ch2",
+      "sectionId": "geo-ch2_s3",
+      "topic": "Parallel and Perpendicular Lines",
+      "standardCode": "G.GPE.B.5",
+      "image": "/questions/geometry/originals/q013.png",
+      "imageAlt": "Original JMAP Geometry question 13: Parallel and Perpendicular Lines.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 5,
+        "examRef": "082512geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 122954.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 2,
+      "explanation": "The original JMAP answer key gives choice 3.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q014",
+      "sourceNumber": 14,
+      "courseId": "geometry",
+      "chapterId": "geo-ch2",
+      "sectionId": "geo-ch2_s3",
+      "topic": "Parallel and Perpendicular Lines",
+      "standardCode": "G.GPE.B.5",
+      "image": "/questions/geometry/originals/q014.png",
+      "imageAlt": "Original JMAP Geometry question 14: Parallel and Perpendicular Lines.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 5,
+        "examRef": "012612geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123001.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 3,
+      "explanation": "The original JMAP answer key gives choice 4.",
+      "originalChoiceLabels": true
+    }
+  ],
+  "mathFormat": "unicode"
+}

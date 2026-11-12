@@ -1,3 +1,4 @@
+import { courseFetch } from "@/lib/course/selection";
 // src/lib/classrooms/searchStudentsForClassroom.ts
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
@@ -38,7 +39,7 @@ export async function searchStudentsForClassroom(
     throw new Error("Please log in to manage this classroom.");
   }
 
-  const response = await fetch(
+  const response = await courseFetch(
     `/api/teacher/classrooms/${encodeURIComponent(
       classroomId,
     )}/student-search?search=${encodeURIComponent(searchTerm)}`,

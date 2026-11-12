@@ -38,10 +38,10 @@ export default function ChapterCard({
 
           <div className="shrink-0 rounded-2xl border border-white/15 bg-[rgba(15,18,50,0.72)] px-4 py-3 text-center shadow-[0_0_18px_rgba(108,72,255,0.22)]">
             <div className="text-[11px] font-semibold tracking-[0.16em] uppercase text-slate-300">
-              of exam
+              {chapter.courseId === "geometry" ? "questions" : "of exam"}
             </div>
             <div className="mt-1 text-xl font-bold text-white">
-              {chapter.percent.toFixed(1)}%
+              {chapter.courseId === "geometry" ? chapter.questionCount : `${chapter.percent.toFixed(1)}%`}
             </div>
           </div>
         </div>

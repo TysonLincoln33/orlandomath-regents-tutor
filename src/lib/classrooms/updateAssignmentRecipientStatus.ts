@@ -1,3 +1,4 @@
+import { courseFetch } from "@/lib/course/selection";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import type {
   TeacherAssignmentRecipientRow,
@@ -31,7 +32,7 @@ export async function updateAssignmentRecipientStatus(
     throw new Error("Please log in to update assignment recipients.");
   }
 
-  const response = await fetch(
+  const response = await courseFetch(
     `/api/teacher/classrooms/${input.classroomId}/assignments/${input.assignmentId}/recipients/${input.userId}`,
     {
       method: "PATCH",

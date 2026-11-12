@@ -1,4 +1,5 @@
-import { SECTIONS } from "@/lib/course/algebra1";
+import { reportingRpcName, selectedCourse } from "@/lib/course/selection";
+import { SECTIONS } from "@/lib/course/registry";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export type TeacherClassroomProgressRow = {
@@ -100,7 +101,7 @@ function buildTeacherClassroomProgress(
     rowsByStudent.set(row.user_id, [...(rowsByStudent.get(row.user_id) ?? []), row]);
   }
 
-  const sections: TeacherClassroomSectionProgress[] = SECTIONS.map((section) => {
+  const sections: TeacherClassroomSectionProgress[] = selectedCourse().sections.map((section) => {
     const sectionRows = rowsBySection.get(section.id) ?? [];
     const startedRows = sectionRows.filter(
       (row) =>
@@ -140,7 +141,7 @@ function buildTeacherClassroomProgress(
       }
     }
 
-    return average(SECTIONS.map((section) => completionBySection.get(section.id) ?? 0));
+    return average(selectedCourse().sections.map((section) => completionBySection.get(section.id) ?? 0));
   });
 
   const totalAttempts = rows.reduce((sum, row) => sum + toNumber(row.attempt_count), 0);
@@ -174,10 +175,10 @@ export async function getTeacherClassroomProgress(
   };
 
   const [{ data, error }, recentAttemptsResponse] = await Promise.all([
-    supabase.rpc("get_teacher_classroom_progress", {
+    supabase.rpc(reportingRpcName("get_teacher_classroom_progress"), {
     p_classroom_id: classroomId,
   }),
-    supabase.rpc("get_teacher_classroom_recent_attempts", {
+    supabase.rpc(reportingRpcName("get_teacher_classroom_recent_attempts"), {
       p_classroom_id: classroomId,
     }),
   ]);

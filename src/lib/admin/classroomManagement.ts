@@ -1,3 +1,4 @@
+import { courseFetch } from "@/lib/course/selection";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export type AdminClassroomManagementScope = {
@@ -97,7 +98,7 @@ export async function getAdminClassroomManagement(params?: {
   if (params?.classroomId) query.set("classroomId", params.classroomId);
   if (params?.search) query.set("q", params.search);
 
-  const response = await fetch(
+  const response = await courseFetch(
     `/api/admin/classroom-management${query.toString() ? `?${query}` : ""}`,
     {
       headers: { Authorization: `Bearer ${session.access_token}` },
@@ -173,7 +174,7 @@ export async function addAdminClassroomMember(
   userId: string,
 ): Promise<AdminClassroomMemberMutationResult<AdminClassroomMemberAddStatus>> {
   const accessToken = await getAdminClassroomManagementAccessToken();
-  const response = await fetch(
+  const response = await courseFetch(
     `/api/admin/classroom-management/${encodeURIComponent(classroomId)}/members`,
     {
       method: "POST",
@@ -196,7 +197,7 @@ export async function removeAdminClassroomMember(
   userId: string,
 ): Promise<AdminClassroomMemberMutationResult<AdminClassroomMemberRemoveStatus>> {
   const accessToken = await getAdminClassroomManagementAccessToken();
-  const response = await fetch(
+  const response = await courseFetch(
     `/api/admin/classroom-management/${encodeURIComponent(classroomId)}/members/${encodeURIComponent(userId)}`,
     {
       method: "DELETE",

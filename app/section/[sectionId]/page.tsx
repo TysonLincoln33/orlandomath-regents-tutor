@@ -1,30 +1,9 @@
 import fs from "fs";
 import path from "path";
+import { notFound } from "next/navigation";
+import { SECTIONS } from "@/lib/course/registry";
+import type { SectionQuestionSet } from "@/lib/questionBank";
 import SectionPageClient from "./SectionPageClient";
-
-type Question = {
-  id: string;
-  type: string;
-  prompt: string;
-  image?: string;
-  table?: {
-    headers: string[];
-    rows: string[][];
-  };
-  choices: string[];
-  answerIndex: number;
-  explanation?: string;
-};
-
-type SectionData = {
-  sectionId: string;
-  title: string;
-  lesson: {
-    title: string;
-    intro: string[];
-  };
-  questions: Question[];
-};
 
 export default async function SectionPage({
   params,
@@ -32,6 +11,8 @@ export default async function SectionPage({
   params: Promise<{ sectionId: string }>;
 }) {
   const { sectionId } = await params;
+
+  if (!SECTIONS.some(section => section.id === sectionId)) notFound();
 
   const filePath = path.join(
     process.cwd(),
@@ -51,7 +32,7 @@ export default async function SectionPage({
   }
 
   const fileContents = fs.readFileSync(filePath, "utf8");
-  const data: SectionData = JSON.parse(fileContents);
+  const data: SectionQuestionSet = JSON.parse(fileContents);
 
-  return <SectionPageClient data={data} />;
+  return <SectionPageClient key={sectionId} data={data} />;
 }

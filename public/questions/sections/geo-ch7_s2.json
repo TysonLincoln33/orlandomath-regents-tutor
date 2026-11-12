@@ -1,0 +1,108 @@
+{
+  "id": "geo-ch7_s2",
+  "chapterId": "geo-ch7",
+  "courseId": "geometry",
+  "chapterNumber": 7,
+  "sectionNumber": 2,
+  "title": "Dilations",
+  "standardCode": "G.SRT.A.2",
+  "questionIds": [
+    "geo-q068",
+    "geo-q069",
+    "geo-q070"
+  ],
+  "sectionId": "geo-ch7_s2",
+  "questions": [
+    {
+      "id": "geo-q068",
+      "sourceNumber": 68,
+      "courseId": "geometry",
+      "chapterId": "geo-ch7",
+      "sectionId": "geo-ch7_s2",
+      "topic": "Dilations",
+      "standardCode": "G.SRT.A.2",
+      "image": "/questions/geometry/originals/q068.png",
+      "imageAlt": "Original JMAP Geometry question 68: Dilations.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 17,
+        "examRef": "082517geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123705.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 1,
+      "explanation": "The original JMAP answer key gives choice 2.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q069",
+      "sourceNumber": 69,
+      "courseId": "geometry",
+      "chapterId": "geo-ch7",
+      "sectionId": "geo-ch7_s2",
+      "topic": "Dilations",
+      "standardCode": "G.SRT.A.2",
+      "image": "/questions/geometry/originals/q069.png",
+      "imageAlt": "Original JMAP Geometry question 69: Dilations.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 17,
+        "examRef": "012605geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123716.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 0,
+      "explanation": "The original JMAP answer key gives choice 1.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q070",
+      "sourceNumber": 70,
+      "courseId": "geometry",
+      "chapterId": "geo-ch7",
+      "sectionId": "geo-ch7_s2",
+      "topic": "Dilations",
+      "standardCode": "G.SRT.A.2",
+      "image": "/questions/geometry/originals/q070.png",
+      "imageAlt": "Original JMAP Geometry question 70: Dilations.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 17,
+        "examRef": "062501geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123724.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 2,
+      "explanation": "The original JMAP answer key gives choice 3.",
+      "originalChoiceLabels": true
+    }
+  ],
+  "mathFormat": "unicode"
+}

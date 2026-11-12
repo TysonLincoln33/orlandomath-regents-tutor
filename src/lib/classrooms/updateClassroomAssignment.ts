@@ -1,3 +1,4 @@
+import { courseFetch } from "@/lib/course/selection";
 // src/lib/classrooms/updateClassroomAssignment.ts
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { ClassroomAssignment } from "@/lib/classrooms/createClassroomAssignment";
@@ -37,7 +38,7 @@ export async function updateClassroomAssignment(
     throw new Error("Please log in to update assignments.");
   }
 
-  const response = await fetch(
+  const response = await courseFetch(
     `/api/teacher/classrooms/${input.classroomId}/assignments/${input.assignmentId}`,
     {
       method: "PATCH",

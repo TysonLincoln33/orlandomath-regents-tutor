@@ -1,3 +1,4 @@
+import { courseFetch } from "@/lib/course/selection";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export type AdminApprovalRequest = {
@@ -52,7 +53,7 @@ async function parseError(response: Response, fallback: string) {
 
 export async function getAdminApprovalRequests(): Promise<AdminApprovalRequestsResponse> {
   const accessToken = await getAccessToken();
-  const response = await fetch("/api/admin/approval-requests", {
+  const response = await courseFetch("/api/admin/approval-requests", {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
 
@@ -68,7 +69,7 @@ export async function updateAdminApprovalRequest(
   action: AdminApprovalAction,
 ): Promise<AdminApprovalActionResponse> {
   const accessToken = await getAccessToken();
-  const response = await fetch("/api/admin/approval-requests", {
+  const response = await courseFetch("/api/admin/approval-requests", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${accessToken}`,

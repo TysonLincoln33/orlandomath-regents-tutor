@@ -1,8 +1,10 @@
 'use client';
 
+import CourseWorkspace from "@/components/course/CourseWorkspace";
+import { selectedCourse } from "@/lib/course/selection";
 import Link from 'next/link';
 import { Fragment, useEffect, useMemo, useState } from 'react';
-import { CHAPTERS, SECTIONS } from '@/lib/course/algebra1';
+import { CHAPTERS, SECTIONS } from '@/lib/course/registry';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import {
   getMasterAlgebra1Assignments,
@@ -36,7 +38,7 @@ const getShortSectionLabel = (sectionId: string | null) => { if (!sectionId) ret
 const formatDateTimeRange = (start: string, end: string) => start === end ? formatDateTime(start) : `${formatDateTime(start)} – ${formatDateTime(end)}`;
 const getErrorMessage = (e: unknown, fallback: string) => e instanceof Error ? e.message : fallback;
 
-export default function MasterPage() {
+function MasterPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [users, setUsers] = useState<MasterOverviewUserRow[]>([]);
@@ -228,9 +230,9 @@ export default function MasterPage() {
   );
 
   const panelAttempts = selectedUserId ? selectedAttempts : recentAttempts;
-  const mSectionIdsFromSelectedChapters = useMemo(() => SECTIONS.filter((section) => mSelectedChapterIds.includes(section.chapterId)).map((section) => section.id), [mSelectedChapterIds]);
+  const mSectionIdsFromSelectedChapters = useMemo(() => selectedCourse().sections.filter((section) => mSelectedChapterIds.includes(section.chapterId)).map((section) => section.id), [mSelectedChapterIds]);
   const mResolvedSectionIds = useMemo(() => [...new Set([...mSelectedSectionIds, ...mSectionIdsFromSelectedChapters])], [mSelectedSectionIds, mSectionIdsFromSelectedChapters]);
-  const mSelectedChapterLabels = useMemo(() => CHAPTERS.filter((chapter) => mSelectedChapterIds.includes(chapter.id)).map((chapter) => `Chapter ${chapter.number}: ${chapter.title}`), [mSelectedChapterIds]);
+  const mSelectedChapterLabels = useMemo(() => selectedCourse().chapters.filter((chapter) => mSelectedChapterIds.includes(chapter.id)).map((chapter) => `Chapter ${chapter.number}: ${chapter.title}`), [mSelectedChapterIds]);
   const mSelectedSectionLabels = useMemo(() => mSelectedSectionIds.map((sectionId) => getSectionLabel(sectionId)), [mSelectedSectionIds]);
 
   const toggleMSelectedChapter = (chapterId: string) => {
@@ -261,14 +263,14 @@ export default function MasterPage() {
   if (error) return <main className="min-h-screen bg-slate-950 p-8 text-white"><div className="mx-auto max-w-3xl rounded-3xl border border-white/10 bg-white/10 p-8"><h1 className="text-3xl font-black">Master Dashboard</h1><p className="mt-3 text-white/80">{error}</p><div className="mt-5"><Link href="/dashboard" className="rounded-lg bg-indigo-500 px-4 py-2">Go to Dashboard</Link></div></div></main>;
 
   return <main className="min-h-screen bg-slate-950 p-6 text-white"><div className="mx-auto max-w-7xl">
-    <h1 className="mb-4 text-3xl font-black">Master Dashboard (Algebra 1)</h1>
-    <p className="mb-6 text-sm text-white/70">Global Regents Algebra 1 overview + interactive classroom management.</p>
+    <h1 className="mb-4 text-3xl font-black">Master Dashboard ({selectedCourse().title})</h1>
+    <p className="mb-6 text-sm text-white/70">Global Regents {selectedCourse().title} overview + interactive classroom management.</p>
 
     {/* existing overview + assignments mostly unchanged */}
     <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
           <aside className="rounded-2xl border border-white/10 bg-white/5 p-4">
             <h2 className="mb-3 text-xl font-bold">All Users</h2>
-            {users.length === 0 ? <p className="text-white/70">No Algebra 1 users found yet.</p> : <ul className="space-y-3">{users.map((u) => <li key={u.user_id} className="rounded-xl border border-white/10 p-3"><p className="font-semibold">{displayName(u)}</p><p className="text-xs text-white/70">{u.email ?? 'No email'}</p><p className="text-xs text-white/60">Last activity: {formatDateTime(u.last_activity_at, 'No activity yet')}</p><button onClick={() => void onSelectUser(u.user_id)} className="mt-2 rounded-md bg-indigo-500 px-3 py-1 text-sm">View Progress</button></li>)}</ul>}
+            {users.length === 0 ? <p className="text-white/70">No {selectedCourse().title} users found yet.</p> : <ul className="space-y-3">{users.map((u) => <li key={u.user_id} className="rounded-xl border border-white/10 p-3"><p className="font-semibold">{displayName(u)}</p><p className="text-xs text-white/70">{u.email ?? 'No email'}</p><p className="text-xs text-white/60">Last activity: {formatDateTime(u.last_activity_at, 'No activity yet')}</p><button onClick={() => void onSelectUser(u.user_id)} className="mt-2 rounded-md bg-indigo-500 px-3 py-1 text-sm">View Progress</button></li>)}</ul>}
           </aside>
 
           <section className="rounded-2xl border border-white/10 bg-white/5 p-4">
@@ -288,7 +290,7 @@ export default function MasterPage() {
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-2xl font-black text-indigo-200">Assignments · Master Assignment Oversight</h2>
-              <p className="text-sm text-white/70">Read-only assignment oversight for Regents Algebra 1 across all classrooms.</p>
+              <p className="text-sm text-white/70">Read-only assignment oversight for Regents {selectedCourse().title} across all classrooms.</p>
             </div>
           </div>
 
@@ -341,8 +343,8 @@ export default function MasterPage() {
           <button type="button" className="rounded bg-cyan-600 px-3 py-1 text-sm" onClick={() => setMSelectorOpen((open) => !open)} aria-expanded={mSelectorOpen}>Choose chapters/sections</button>
         </div>
         {mSelectorOpen ? <div className="mt-3 max-h-96 space-y-2 overflow-y-auto rounded border border-white/10 bg-black/20 p-3">
-          {CHAPTERS.map((chapter) => {
-            const chapterSections = SECTIONS.filter((section) => section.chapterId === chapter.id);
+          {selectedCourse().chapters.map((chapter) => {
+            const chapterSections = selectedCourse().sections.filter((section) => section.chapterId === chapter.id);
             const chapterChecked = mSelectedChapterIds.includes(chapter.id);
             const chapterExpanded = mExpandedChapterIds.includes(chapter.id);
             return <div key={chapter.id} className="rounded border border-white/10 p-2">
@@ -417,3 +419,5 @@ export default function MasterPage() {
     </section>
   </div></main>;
 }
+
+export default function CoursePage() { return <CourseWorkspace>{() => <MasterPage />}</CourseWorkspace>; }

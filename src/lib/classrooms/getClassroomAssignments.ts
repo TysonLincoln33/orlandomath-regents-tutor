@@ -1,3 +1,4 @@
+import { courseFetch } from "@/lib/course/selection";
 // src/lib/classrooms/getClassroomAssignments.ts
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { ClassroomAssignment } from "@/lib/classrooms/createClassroomAssignment";
@@ -22,7 +23,7 @@ export async function getClassroomAssignments(
     return [];
   }
 
-  const response = await fetch(
+  const response = await courseFetch(
     `/api/teacher/classrooms/${classroomId}/assignments`,
     {
       headers: {

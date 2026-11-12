@@ -1,4 +1,6 @@
-import { CHAPTERS, SECTIONS, type Chapter, type Section } from "@/lib/course/algebra1";
+import { getCourse } from "@/lib/course/registry";
+import type { Chapter, Section } from "@/lib/course/algebra1";
+import { getSectionProgress, setProgressOwner } from "@/lib/sectionProgressLocal";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export type StudentProgressRow = {
@@ -94,6 +96,7 @@ function compareIsoDesc(a: string | null, b: string | null): number {
 export function buildEmptyCourseDashboardProgress(
   courseId: string = "algebra1"
 ): CourseDashboardProgress {
+  const { chapters: CHAPTERS, sections: SECTIONS } = getCourse(courseId);
 
   const emptySections: SectionDashboardProgress[] = SECTIONS.map((section) => ({
     ...section,
@@ -140,10 +143,11 @@ export function buildCourseDashboardProgress(
   rows: StudentProgressRow[],
   courseId: string = "algebra1"
 ): CourseDashboardProgress {
+  const { chapters: CHAPTERS, sections: SECTIONS } = getCourse(courseId);
 
   const rowBySectionId = new Map<string, StudentProgressRow>();
 
-  for (const row of rows) {
+  for (const row of rows.filter((row) => row.course_id === courseId)) {
     rowBySectionId.set(row.section_id, row);
   }
 
@@ -291,13 +295,18 @@ export async function fetchCourseDashboardProgress(
     error: userError,
   } = await supabase.auth.getUser();
 
-  if (userError) {
+  if (userError && userError.name !== "AuthSessionMissingError") {
     console.error("[fetchCourseDashboardProgress] user lookup failed:", userError);
     throw userError;
   }
 
+  setProgressOwner(user?.id ?? null);
   if (!user) {
-    return buildEmptyCourseDashboardProgress(courseId);
+    const rows = getCourse(courseId).sections.map((section) => {
+      const local = getSectionProgress(section.id);
+      return { user_id: "guest", course_id: courseId, chapter_id: section.chapterId, section_id: section.id, questions_attempted: local?.answered ?? 0, questions_correct: local?.correct ?? 0, accuracy_percent: local?.answered ? (local.correct / local.answered) * 100 : 0, completion_percent: local?.total ? (local.correct / local.total) * 100 : 0, last_active_at: local?.updatedAt ?? null };
+    });
+    return buildCourseDashboardProgress(rows, courseId);
   }
 
   const { data, error } = await supabase

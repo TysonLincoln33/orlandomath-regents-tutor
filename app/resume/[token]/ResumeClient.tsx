@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { restoreGeometryGuestSnapshot } from "@/lib/sectionProgressLocal";
 import { trackEvent } from "@/lib/analytics";
 import { useRouter } from "next/navigation";
 
@@ -48,7 +49,9 @@ export default function ResumeClient({ token }: { token: string }) {
           updatedAt: Date.now(),
         };
 
-        window.localStorage.setItem("rt_progress_v1", JSON.stringify(payload));
+        const isGeometry = data.progress_json?.courseId === "geometry";
+        if (isGeometry) restoreGeometryGuestSnapshot(data.progress_json);
+        else window.localStorage.setItem("rt_progress_v1", JSON.stringify(payload));
 
         if (cancelled) return;
 
@@ -58,7 +61,7 @@ export default function ResumeClient({ token }: { token: string }) {
         setResumeNotice("Welcome back — your progress has been restored.", "success");
 
         // Guardrail: never keep users on /resume/* after success
-        router.replace("/dashboard");
+        router.replace(isGeometry ? "/geometry" : "/dashboard");
       } catch (err: any) {
         if (cancelled) return;
 

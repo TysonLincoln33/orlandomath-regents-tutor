@@ -1,3 +1,4 @@
+import { courseFetch } from "@/lib/course/selection";
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 
 export type AssignmentGroupable = {
@@ -152,7 +153,7 @@ async function authedFetch<T>(url: string, init?: RequestInit): Promise<T> {
   const { data: { session }, error } = await supabase.auth.getSession();
   if (error) throw new Error(error.message || 'Failed to verify session.');
   if (!session?.access_token) throw new Error('Please sign in again.');
-  const res = await fetch(url, { ...init, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}`, ...(init?.headers || {}) } });
+  const res = await courseFetch(url, { ...init, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}`, ...(init?.headers || {}) } });
   const payload: unknown = await res.json().catch(() => null);
   if (!res.ok) throw new Error((payload as { error?: string } | null)?.error || 'Request failed.');
   return payload as T;

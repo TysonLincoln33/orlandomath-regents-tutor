@@ -1,4 +1,5 @@
-import { SECTIONS } from '@/lib/course/algebra1';
+import { reportingRpcName, selectedCourse } from "@/lib/course/selection";
+import { SECTIONS } from '@/lib/course/registry';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 
 export type MasterOverviewUserRow = {
@@ -63,7 +64,7 @@ const decorateAttempt = (row: MasterRecentAttemptRow): MasterRecentAttempt => ({
 
 export async function getMasterAlgebra1Overview(): Promise<MasterOverviewData> {
   const supabase = getSupabaseBrowserClient() as unknown as { rpc: (fn: string, args?: Record<string, unknown>) => Promise<{ data: unknown; error: { message?: string } | null }> };
-  const [overview, attempts] = await Promise.all([supabase.rpc('get_master_algebra1_overview'), supabase.rpc('get_master_algebra1_recent_attempts')]);
+  const [overview, attempts] = await Promise.all([supabase.rpc(reportingRpcName("get_master_algebra1_overview")), supabase.rpc(reportingRpcName("get_master_algebra1_recent_attempts"))]);
   if (overview.error) throw new Error(overview.error.message || 'Failed to load overview.');
   if (attempts.error) throw new Error(attempts.error.message || 'Failed to load recent attempts.');
 
@@ -74,7 +75,7 @@ export async function getMasterAlgebra1Overview(): Promise<MasterOverviewData> {
 
 export async function getMasterAlgebra1UserProgress(userId: string): Promise<MasterUserProgressData> {
   const supabase = getSupabaseBrowserClient() as unknown as { rpc: (fn: string, args?: Record<string, unknown>) => Promise<{ data: unknown; error: { message?: string } | null }> };
-  const { data, error } = await supabase.rpc('get_master_algebra1_user_progress', { p_user_id: userId });
+  const { data, error } = await supabase.rpc(reportingRpcName("get_master_algebra1_user_progress"), { p_user_id: userId });
   if (error) throw new Error(error.message || 'Failed to load selected user progress.');
   const payload = ((data as { user?: MasterOverviewUserRow[]; recent_attempts?: MasterRecentAttemptRow[] } | null) ?? {});
   return { user: payload.user?.[0] ?? null, recentAttempts: (payload.recent_attempts ?? []).map(decorateAttempt) };
@@ -82,7 +83,7 @@ export async function getMasterAlgebra1UserProgress(userId: string): Promise<Mas
 
 export async function getMasterAlgebra1Assignments(): Promise<MasterAlgebra1AssignmentRow[]> {
   const supabase = getSupabaseBrowserClient() as unknown as { rpc: (fn: string, args?: Record<string, unknown>) => Promise<{ data: unknown; error: { message?: string } | null }> };
-  const { data, error } = await supabase.rpc('get_master_algebra1_assignments');
+  const { data, error } = await supabase.rpc(reportingRpcName("get_master_algebra1_assignments"));
   if (error) throw new Error(error.message || 'Failed to load master assignments.');
   return ((data as MasterAlgebra1AssignmentRow[] | null) ?? []).map((row) => ({
     ...row,

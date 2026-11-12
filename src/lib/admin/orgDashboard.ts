@@ -1,3 +1,4 @@
+import { courseFetch } from "@/lib/course/selection";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export type AdminDashboardScope = {
@@ -208,7 +209,7 @@ export async function getAdminOrgDashboard(): Promise<AdminOrgDashboard> {
     throw error;
   }
 
-  const response = await fetch("/api/admin/org-dashboard", {
+  const response = await courseFetch("/api/admin/org-dashboard", {
     headers: {
       Authorization: `Bearer ${session.access_token}`,
     },
@@ -297,7 +298,7 @@ export async function updateAdminAssignmentRecipient(
     throw error;
   }
 
-  const response = await fetch(
+  const response = await courseFetch(
     `/api/admin/assignments/${assignmentId}/recipients/${userId}`,
     {
       method: "PATCH",
@@ -353,7 +354,7 @@ export async function updateAdminAssignmentRecipientsBulk(
     throw error;
   }
 
-  const response = await fetch(`/api/admin/assignments/recipients/${userId}`, {
+  const response = await courseFetch(`/api/admin/assignments/recipients/${userId}`, {
     method: "PATCH",
     headers: {
       "Content-Type": "application/json",
@@ -439,7 +440,7 @@ export async function addAdminAssignmentRecipient(
   options?: { addToClassroomIfNeeded?: boolean },
 ): Promise<AdminAssignmentRecipientCreateResult> {
   const accessToken = await getAdminAssignmentMutationAccessToken();
-  const response = await fetch(`/api/admin/assignments/${assignmentId}/recipients`, {
+  const response = await courseFetch(`/api/admin/assignments/${assignmentId}/recipients`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -462,7 +463,7 @@ export async function removeAdminAssignmentRecipient(
   userId: string,
 ): Promise<AdminAssignmentRecipientRemoveResult> {
   const accessToken = await getAdminAssignmentMutationAccessToken();
-  const response = await fetch(
+  const response = await courseFetch(
     `/api/admin/assignments/${assignmentId}/recipients/${userId}`,
     {
       method: "DELETE",
@@ -482,7 +483,7 @@ export async function addAdminAssignmentRecipientsBulk(
   options?: { addToClassroomIfNeeded?: boolean },
 ): Promise<AdminAssignmentRecipientBulkCreateResult> {
   const accessToken = await getAdminAssignmentMutationAccessToken();
-  const response = await fetch(`/api/admin/assignments/recipients/${userId}`, {
+  const response = await courseFetch(`/api/admin/assignments/recipients/${userId}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -505,7 +506,7 @@ export async function removeAdminAssignmentRecipientsBulk(
   userId: string,
 ): Promise<AdminAssignmentRecipientRemoveResult> {
   const accessToken = await getAdminAssignmentMutationAccessToken();
-  const response = await fetch(`/api/admin/assignments/recipients/${userId}`, {
+  const response = await courseFetch(`/api/admin/assignments/recipients/${userId}`, {
     method: "DELETE",
     headers: {
       "Content-Type": "application/json",
@@ -545,7 +546,7 @@ export async function createAdminOwnClassroomChapterAssignments(params: {
   studentUserIds: string[];
 }): Promise<AdminOwnClassroomAssignmentCreateResult> {
   const accessToken = await getAdminAssignmentMutationAccessToken();
-  const response = await fetch("/api/admin/own-classroom/assignments", {
+  const response = await courseFetch("/api/admin/own-classroom/assignments", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -587,7 +588,7 @@ export type AdminOwnClassroomCreateResult = {
 
 export async function getAdminOwnClassroom(): Promise<AdminOwnClassroomState> {
   const accessToken = await getAdminAssignmentMutationAccessToken();
-  const response = await fetch("/api/admin/own-classroom", {
+  const response = await courseFetch("/api/admin/own-classroom", {
     headers: { Authorization: `Bearer ${accessToken}` },
   });
 
@@ -599,7 +600,7 @@ export async function getAdminOwnClassroom(): Promise<AdminOwnClassroomState> {
 
 export async function createAdminOwnClassroom(): Promise<AdminOwnClassroomCreateResult> {
   const accessToken = await getAdminAssignmentMutationAccessToken();
-  const response = await fetch("/api/admin/own-classroom", {
+  const response = await courseFetch("/api/admin/own-classroom", {
     method: "POST",
     headers: { Authorization: `Bearer ${accessToken}` },
   });

@@ -1,5 +1,7 @@
 "use client";
 
+import CourseWorkspace from "@/components/course/CourseWorkspace";
+import { selectedCourse } from "@/lib/course/selection";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -59,7 +61,7 @@ import {
   type AdminUserDirectory,
   updateAdminUserActivation,
 } from "@/lib/admin/userDirectory";
-import { CHAPTERS, SECTIONS } from "@/lib/course/algebra1";
+import { CHAPTERS, SECTIONS } from "@/lib/course/registry";
 
 type DashboardState =
   | { status: "loading" }
@@ -1348,7 +1350,7 @@ function AdminAssignmentCreation({
     [dashboard.assignmentCandidateStudents],
   );
   const selectedSections = useMemo(
-    () => SECTIONS.filter((section) => selectedChapterIds.includes(section.chapterId)),
+    () => selectedCourse().sections.filter((section) => selectedChapterIds.includes(section.chapterId)),
     [selectedChapterIds],
   );
   const selectedStudents = useMemo(
@@ -1563,7 +1565,7 @@ function AdminAssignmentCreation({
         <div>
           <p className="text-sm font-bold text-slate-950">Chapters</p>
           <div className="mt-2 grid max-h-72 gap-2 overflow-auto rounded-xl border border-slate-200 bg-white p-3">
-            {CHAPTERS.map((chapter) => (
+            {selectedCourse().chapters.map((chapter) => (
               <label key={chapter.id} className="flex items-start gap-3 rounded-lg p-2 hover:bg-slate-50">
                 <input
                   type="checkbox"
@@ -1573,7 +1575,7 @@ function AdminAssignmentCreation({
                 />
                 <span>
                   <span className="block font-semibold text-slate-950">Chapter {chapter.number}: {chapter.title}</span>
-                  <span className="text-xs text-slate-600">{SECTIONS.filter((section) => section.chapterId === chapter.id).length} sections</span>
+                  <span className="text-xs text-slate-600">{selectedCourse().sections.filter((section) => section.chapterId === chapter.id).length} sections</span>
                 </span>
               </label>
             ))}
@@ -1612,7 +1614,7 @@ function AdminAssignmentCreation({
           <SummaryStat label="Recipient rows" value={totalRecipientRows} />
         </div>
         <div className="mt-3 grid gap-3 text-sm lg:grid-cols-2">
-          <p><span className="font-semibold">Chapters:</span> {selectedChapterIds.length ? CHAPTERS.filter((chapter) => selectedChapterIds.includes(chapter.id)).map((chapter) => `Chapter ${chapter.number}`).join(", ") : "None selected"}</p>
+          <p><span className="font-semibold">Chapters:</span> {selectedChapterIds.length ? selectedCourse().chapters.filter((chapter) => selectedChapterIds.includes(chapter.id)).map((chapter) => `Chapter ${chapter.number}`).join(", ") : "None selected"}</p>
           <p><span className="font-semibold">Students:</span> {selectedStudents.length ? selectedStudents.map(displayName).join(", ") : "None selected"}</p>
         </div>
       </div>
@@ -2680,7 +2682,7 @@ function QuickAssignPanel({
   } | null>(null);
 
   const selectedSections = useMemo(
-    () => SECTIONS.filter((section) => selectedChapterIds.includes(section.chapterId)),
+    () => selectedCourse().sections.filter((section) => selectedChapterIds.includes(section.chapterId)),
     [selectedChapterIds],
   );
 
@@ -2911,7 +2913,7 @@ ${chapterLabel} for ${displayName({ fullName: student.fullName, email: student.e
           </p>
         </div>
         <div className="mt-3 grid max-h-72 gap-2 overflow-auto rounded-xl border border-slate-200 p-3">
-          {CHAPTERS.map((chapter) => (
+          {selectedCourse().chapters.map((chapter) => (
             <label key={chapter.id} className="flex items-start gap-3 rounded-lg p-2 hover:bg-slate-50">
               <input
                 type="checkbox"
@@ -2924,7 +2926,7 @@ ${chapterLabel} for ${displayName({ fullName: student.fullName, email: student.e
                   Chapter {chapter.number}: {chapter.title}
                 </span>
                 <span className="text-xs text-slate-600">
-                  {SECTIONS.filter((section) => section.chapterId === chapter.id).length} sections
+                  {selectedCourse().sections.filter((section) => section.chapterId === chapter.id).length} sections
                 </span>
               </span>
             </label>
@@ -3154,7 +3156,7 @@ ${chapterLabel} for ${displayName({ fullName: student.fullName, email: student.e
   );
 }
 
-export default function AdminDashboardPage() {
+function AdminDashboardPage() {
   const router = useRouter();
   const [dashboardState, setDashboardState] = useState<DashboardState>({
     status: "loading",
@@ -3764,3 +3766,5 @@ export default function AdminDashboardPage() {
     </main>
   );
 }
+
+export default function CoursePage() { return <CourseWorkspace>{() => <AdminDashboardPage />}</CourseWorkspace>; }

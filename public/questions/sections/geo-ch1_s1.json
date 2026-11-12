@@ -1,0 +1,77 @@
+{
+  "id": "geo-ch1_s1",
+  "chapterId": "geo-ch1",
+  "courseId": "geometry",
+  "chapterNumber": 1,
+  "sectionNumber": 1,
+  "title": "Rotations of Two-Dimensional Objects",
+  "standardCode": "G.GMD.B.4",
+  "questionIds": [
+    "geo-q001",
+    "geo-q002"
+  ],
+  "sectionId": "geo-ch1_s1",
+  "questions": [
+    {
+      "id": "geo-q001",
+      "sourceNumber": 1,
+      "courseId": "geometry",
+      "chapterId": "geo-ch1",
+      "sectionId": "geo-ch1_s1",
+      "topic": "Rotations of Two-Dimensional Objects",
+      "standardCode": "G.GMD.B.4",
+      "image": "/questions/geometry/originals/q001.png",
+      "imageAlt": "Original JMAP Geometry question 1: Rotations of Two-Dimensional Objects.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 3,
+        "examRef": "082501geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 122813.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 0,
+      "explanation": "The original JMAP answer key gives choice 1.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q002",
+      "sourceNumber": 2,
+      "courseId": "geometry",
+      "chapterId": "geo-ch1",
+      "sectionId": "geo-ch1_s1",
+      "topic": "Rotations of Two-Dimensional Objects",
+      "standardCode": "G.GMD.B.4",
+      "image": "/questions/geometry/originals/q002.png",
+      "imageAlt": "Original JMAP Geometry question 2: Rotations of Two-Dimensional Objects.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 3,
+        "examRef": "012603geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 122820.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 0,
+      "explanation": "The original JMAP answer key gives choice 1.",
+      "originalChoiceLabels": true
+    }
+  ],
+  "mathFormat": "unicode"
+}

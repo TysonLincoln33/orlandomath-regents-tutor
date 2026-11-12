@@ -1,10 +1,12 @@
 // app/teacher/classrooms/[classroomId]/page.tsx
 "use client";
 
+import CourseWorkspace from "@/components/course/CourseWorkspace";
+import { selectedCourse } from "@/lib/course/selection";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import { SECTIONS } from "@/lib/course/algebra1";
+import { SECTIONS } from "@/lib/course/registry";
 import { isTeacherLikeRole } from "@/lib/auth/roles";
 import { getTeacherClassroomById } from "@/lib/classrooms/getTeacherClassroomById";
 import {
@@ -127,7 +129,7 @@ function getSectionLabel(sectionId: string | null) {
   return `Chapter ${section.chapterNumber}, Section ${section.sectionNumber}: ${section.title}`;
 }
 
-export default function ClassroomDetailPage({ params }: PageProps) {
+function ClassroomDetailPage({ params }: PageProps) {
   const [classroomId, setClassroomId] = useState<string>("");
   const [classroom, setClassroom] = useState<Classroom | null>(null);
   const [roster, setRoster] = useState<ClassroomRosterMember[]>([]);
@@ -1045,7 +1047,7 @@ export default function ClassroomDetailPage({ params }: PageProps) {
         </div>
 
         <Link
-          href="/teacher/classrooms"
+          href={`/teacher/classrooms?courseId=${selectedCourse().id}`}
           className="inline-flex items-center justify-center rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/15"
         >
           Back to My Classrooms
@@ -1491,7 +1493,7 @@ export default function ClassroomDetailPage({ params }: PageProps) {
                       Sections
                     </p>
                     <div className="grid max-h-56 gap-2 overflow-y-auto rounded-lg border border-gray-200 bg-white p-3 sm:grid-cols-2">
-                      {SECTIONS.map((section) => (
+                      {selectedCourse().sections.map((section) => (
                         <label
                           key={section.id}
                           className="flex cursor-pointer items-start gap-2 rounded-md border border-gray-100 p-2 text-sm text-gray-800 hover:bg-blue-50"
@@ -2806,3 +2808,5 @@ function ProgressStatCard({
     </div>
   );
 }
+
+export default function CoursePage(props: PageProps) { return <CourseWorkspace>{() => <ClassroomDetailPage {...props} />}</CourseWorkspace>; }

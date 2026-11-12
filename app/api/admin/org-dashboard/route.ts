@@ -4,7 +4,7 @@ import path from "path";
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { canAccessAdminRoute, getEmailDomain, isMasterRole } from "@/lib/auth/roles";
-import { CHAPTERS, SECTIONS } from "@/lib/course/algebra1";
+import { CHAPTERS, SECTIONS, getCourse } from "@/lib/course/registry";
 import type { AdminOrgDashboard } from "@/lib/admin/orgDashboard";
 
 type ProfileRow = {
@@ -177,7 +177,8 @@ function getQuestionKey(sectionId: string, questionId: string) {
   return `${sectionId}:${questionId}`;
 }
 
-function loadCourseQuestionKeys() {
+function loadCourseQuestionKeys(courseId: string) {
+  const SECTIONS = getCourse(courseId).sections;
   const questionKeys = new Set<string>();
 
   for (const section of SECTIONS) {
@@ -265,6 +266,7 @@ async function selectIn<T>(
 async function selectAttemptHistory(
   adminClient: SupabaseClient,
   studentIds: string[],
+  courseId: string,
 ): Promise<{ data: AttemptRow[]; error: { message?: string } | null }> {
   if (studentIds.length === 0) {
     return { data: [], error: null };
@@ -279,7 +281,7 @@ async function selectAttemptHistory(
       .from("question_attempts")
       .select("user_id,chapter_id,section_id,question_id,correct,attempted_at")
       .eq("app_id", "regents-algebra")
-      .eq("course_id", "algebra1")
+      .eq("course_id", courseId)
       .in("user_id", studentIds)
       .order("attempted_at", { ascending: false })
       .range(from, to);
@@ -306,6 +308,7 @@ async function selectAttemptHistory(
 async function selectCompletionAttempts(
   adminClient: SupabaseClient,
   studentIds: string[],
+  courseId: string,
 ): Promise<{ data: AttemptRow[]; error: { message?: string } | null }> {
   if (studentIds.length === 0) {
     return { data: [], error: null };
@@ -319,7 +322,7 @@ async function selectCompletionAttempts(
       .from("question_attempts")
       .select("user_id,chapter_id,section_id,question_id,correct,attempted_at")
       .eq("app_id", "regents-algebra")
-      .eq("course_id", "algebra1")
+      .eq("course_id", courseId)
       .in("user_id", studentIds)
       .order("attempted_at", { ascending: false })
       .range(from, to);
@@ -445,6 +448,7 @@ async function getRouteContext(req: NextRequest) {
 }
 
 function buildDashboard({
+  courseId,
   isMaster,
   domain,
   teachers,
@@ -457,6 +461,7 @@ function buildDashboard({
   attemptRows,
   completionAttemptRows,
 }: {
+  courseId: string;
   isMaster: boolean;
   domain: string | null;
   teachers: ProfileRow[];
@@ -589,7 +594,7 @@ function buildDashboard({
     ]);
   }
 
-  const courseQuestionKeys = loadCourseQuestionKeys();
+  const courseQuestionKeys = loadCourseQuestionKeys(courseId);
   const totalCourseQuestionCount = courseQuestionKeys.size;
   const courseCompletionForStudent = (studentId: string) =>
     calculateQuestionCompletionPercent(
@@ -1035,6 +1040,9 @@ function buildDashboard({
 export async function GET(req: NextRequest) {
   try {
     const { adminClient, profile, isMaster, domain } = await getRouteContext(req);
+    const course = getCourse(req.nextUrl.searchParams.get("courseId"));
+    const courseId = course.id;
+    const sectionIds = new Set(course.sections.map(s => s.id));
 
     const teachersQuery = adminClient
       .from("profiles")
@@ -1143,12 +1151,12 @@ export async function GET(req: NextRequest) {
             .from("student_progress")
             .select("user_id,section_id,completion_percent,accuracy_percent,last_active_at")
             .eq("app_id", "regents-algebra")
-            .eq("course_id", "algebra1"),
+            .eq("course_id", courseId),
           "user_id",
           studentIds,
         ),
-        selectAttemptHistory(adminClient, studentIds),
-        selectCompletionAttempts(adminClient, studentIds),
+        selectAttemptHistory(adminClient, studentIds, courseId),
+        selectCompletionAttempts(adminClient, studentIds, courseId),
       ]);
 
     for (const response of [
@@ -1164,7 +1172,7 @@ export async function GET(req: NextRequest) {
     }
 
     const regentsAssignments = assignmentsResponse.data.filter((assignment) =>
-      /^ch[0-9]+_s[0-9]+$/.test(assignment.section_id ?? ""),
+      sectionIds.has(assignment.section_id ?? ""),
     );
     const assignmentIds = regentsAssignments.map((assignment) => assignment.id);
     const { data: recipients, error: recipientsError } =
@@ -1181,6 +1189,7 @@ export async function GET(req: NextRequest) {
     }
 
     const payload = buildDashboard({
+      courseId,
       isMaster,
       domain,
       teachers: visibleTeachers,

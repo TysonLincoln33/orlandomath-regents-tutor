@@ -1,0 +1,46 @@
+{
+  "id": "geo-ch4_s2",
+  "chapterId": "geo-ch4",
+  "courseId": "geometry",
+  "chapterNumber": 4,
+  "sectionNumber": 2,
+  "title": "Trapezoids",
+  "standardCode": "G.CO.C.11",
+  "questionIds": [
+    "geo-q029"
+  ],
+  "sectionId": "geo-ch4_s2",
+  "questions": [
+    {
+      "id": "geo-q029",
+      "sourceNumber": 29,
+      "courseId": "geometry",
+      "chapterId": "geo-ch4",
+      "sectionId": "geo-ch4_s2",
+      "topic": "Trapezoids",
+      "standardCode": "G.CO.C.11",
+      "image": "/questions/geometry/originals/q029.png",
+      "imageAlt": "Original JMAP Geometry question 29: Trapezoids.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 8,
+        "examRef": "062520geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123203.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 0,
+      "explanation": "The original JMAP answer key gives choice 1.",
+      "originalChoiceLabels": true
+    }
+  ],
+  "mathFormat": "unicode"
+}

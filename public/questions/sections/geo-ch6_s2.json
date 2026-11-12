@@ -1,0 +1,45 @@
+{
+  "id": "geo-ch6_s2",
+  "chapterId": "geo-ch6",
+  "courseId": "geometry",
+  "chapterNumber": 6,
+  "sectionNumber": 2,
+  "title": "Compositions of Polygons and Circles",
+  "standardCode": "G.MG.A.3",
+  "questionIds": [
+    "geo-q046"
+  ],
+  "sectionId": "geo-ch6_s2",
+  "questions": [
+    {
+      "id": "geo-q046",
+      "sourceNumber": 46,
+      "courseId": "geometry",
+      "chapterId": "geo-ch6",
+      "sectionId": "geo-ch6_s2",
+      "topic": "Compositions of Polygons and Circles",
+      "standardCode": "G.MG.A.3",
+      "image": "/questions/geometry/originals/q046.png",
+      "imageAlt": "Original JMAP Geometry question 46: Compositions of Polygons and Circles.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 12,
+        "examRef": "012629geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123416.png"
+      },
+      "type": "mc",
+      "origin": "adapted_mc",
+      "prompt": "How many square feet of deck surround the pool, to the nearest square foot?",
+      "choices": [
+        "201 ft²",
+        "452 ft²",
+        "804 ft²",
+        "1257 ft²"
+      ],
+      "answerIndex": 2,
+      "explanation": "The pool radius is 12 ft. The outer radius is 12 + 8 = 20 ft. Deck area = π(20² − 12²) = 256π ≈ 804 ft²."
+    }
+  ],
+  "mathFormat": "unicode"
+}

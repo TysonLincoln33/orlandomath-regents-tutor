@@ -1,0 +1,138 @@
+{
+  "id": "geo-ch8_s4",
+  "chapterId": "geo-ch8",
+  "courseId": "geometry",
+  "chapterNumber": 8,
+  "sectionNumber": 4,
+  "title": "Using Trigonometry to Find Area",
+  "standardCode": "G.SRT.D.9",
+  "questionIds": [
+    "geo-q106",
+    "geo-q107",
+    "geo-q108",
+    "geo-q109"
+  ],
+  "sectionId": "geo-ch8_s4",
+  "questions": [
+    {
+      "id": "geo-q106",
+      "sourceNumber": 106,
+      "courseId": "geometry",
+      "chapterId": "geo-ch8",
+      "sectionId": "geo-ch8_s4",
+      "topic": "Using Trigonometry to Find Area",
+      "standardCode": "G.SRT.D.9",
+      "image": "/questions/geometry/originals/q106.png",
+      "imageAlt": "Original JMAP Geometry question 106: Using Trigonometry to Find Area.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 27,
+        "examRef": "082516geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 124231.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 2,
+      "explanation": "The original JMAP answer key gives choice 3.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q107",
+      "sourceNumber": 107,
+      "courseId": "geometry",
+      "chapterId": "geo-ch8",
+      "sectionId": "geo-ch8_s4",
+      "topic": "Using Trigonometry to Find Area",
+      "standardCode": "G.SRT.D.9",
+      "image": "/questions/geometry/originals/q107.png",
+      "imageAlt": "Original JMAP Geometry question 107: Using Trigonometry to Find Area.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 27,
+        "examRef": "spr2403geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 124239.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 1,
+      "explanation": "The original JMAP answer key gives choice 2.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q108",
+      "sourceNumber": 108,
+      "courseId": "geometry",
+      "chapterId": "geo-ch8",
+      "sectionId": "geo-ch8_s4",
+      "topic": "Using Trigonometry to Find Area",
+      "standardCode": "G.SRT.D.9",
+      "image": "/questions/geometry/originals/q108.png",
+      "imageAlt": "Original JMAP Geometry question 108: Using Trigonometry to Find Area.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 27,
+        "examRef": "062511geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 124244.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 0,
+      "explanation": "The original JMAP answer key gives choice 1.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q109",
+      "sourceNumber": 109,
+      "courseId": "geometry",
+      "chapterId": "geo-ch8",
+      "sectionId": "geo-ch8_s4",
+      "topic": "Using Trigonometry to Find Area",
+      "standardCode": "G.SRT.D.9",
+      "image": "/questions/geometry/originals/q109.png",
+      "imageAlt": "Original JMAP Geometry question 109: Using Trigonometry to Find Area.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 28,
+        "examRef": "012628geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 124251.png"
+      },
+      "type": "mc",
+      "origin": "adapted_mc",
+      "prompt": "What is the area of △LET, to the nearest tenth?",
+      "choices": [
+        "15.8 square units",
+        "34.9 square units",
+        "31.6 square units",
+        "63.2 square units"
+      ],
+      "answerIndex": 2,
+      "explanation": "Area = (1/2)(7.5)(9.3)sin(115°) ≈ 31.6075, or 31.6 square units."
+    }
+  ],
+  "mathFormat": "unicode"
+}

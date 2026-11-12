@@ -2,7 +2,8 @@ import * as React from "react";
 import Link from "next/link";
 import SignupForm from "../../src/components/auth/SignupForm";
 
-export default function SignupPage() {
+export default async function SignupPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
+  const { next } = await searchParams;
   return (
     <main className="mx-auto flex min-h-[80vh] max-w-6xl items-center justify-center px-4 py-12">
       <div className="w-full max-w-lg rounded-2xl border border-gray-200 bg-white p-8 text-slate-900 shadow-sm">
@@ -17,7 +18,7 @@ export default function SignupPage() {
         <p className="mt-6 text-sm text-slate-700">
           Already have an account?{" "}
           <Link
-            href="/login"
+            href={"/login?next=" + encodeURIComponent(next ?? "/")}
             className="font-medium text-blue-600 hover:underline"
           >
             Log in

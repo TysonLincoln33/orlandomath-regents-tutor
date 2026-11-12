@@ -1,3 +1,4 @@
+import { reportingRpcName, selectedCourse } from "@/lib/course/selection";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 export type StudentAssignmentStatus = "assigned" | "completed" | "excused" | "archived" | "unassigned";
@@ -70,7 +71,7 @@ export async function getStudentActiveAssignments(): Promise<StudentClassAssignm
     ) => Promise<{ data: unknown; error: { message?: string } | null }>;
   };
 
-  const { data, error } = await supabase.rpc("get_student_active_assignments");
+  const { data, error } = await supabase.rpc(reportingRpcName("get_student_active_assignments"));
 
   if (error) {
     throw new Error(error.message || "Failed to load your classes.");

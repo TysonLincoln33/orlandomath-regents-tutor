@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { CHAPTERS, SECTIONS } from "@/lib/course/algebra1";
+import { CHAPTERS, SECTIONS } from "@/lib/course/registry";
 import {
   AdminClassroomManagementApiError,
   getRouteContext,

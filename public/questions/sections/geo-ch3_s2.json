@@ -1,0 +1,108 @@
+{
+  "id": "geo-ch3_s2",
+  "chapterId": "geo-ch3",
+  "courseId": "geometry",
+  "chapterNumber": 3,
+  "sectionNumber": 2,
+  "title": "Side Splitter Theorem",
+  "standardCode": "G.SRT.B.4",
+  "questionIds": [
+    "geo-q017",
+    "geo-q018",
+    "geo-q019"
+  ],
+  "sectionId": "geo-ch3_s2",
+  "questions": [
+    {
+      "id": "geo-q017",
+      "sourceNumber": 17,
+      "courseId": "geometry",
+      "chapterId": "geo-ch3",
+      "sectionId": "geo-ch3_s2",
+      "topic": "Side Splitter Theorem",
+      "standardCode": "G.SRT.B.4",
+      "image": "/questions/geometry/originals/q017.png",
+      "imageAlt": "Original JMAP Geometry question 17: Side Splitter Theorem.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 6,
+        "examRef": "062515geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123029.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 1,
+      "explanation": "The original JMAP answer key gives choice 2.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q018",
+      "sourceNumber": 18,
+      "courseId": "geometry",
+      "chapterId": "geo-ch3",
+      "sectionId": "geo-ch3_s2",
+      "topic": "Side Splitter Theorem",
+      "standardCode": "G.SRT.B.4",
+      "image": "/questions/geometry/originals/q018.png",
+      "imageAlt": "Original JMAP Geometry question 18: Side Splitter Theorem.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 6,
+        "examRef": "082507geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123037.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 1,
+      "explanation": "The original JMAP answer key gives choice 2.",
+      "originalChoiceLabels": true
+    },
+    {
+      "id": "geo-q019",
+      "sourceNumber": 19,
+      "courseId": "geometry",
+      "chapterId": "geo-ch3",
+      "sectionId": "geo-ch3_s2",
+      "topic": "Side Splitter Theorem",
+      "standardCode": "G.SRT.B.4",
+      "image": "/questions/geometry/originals/q019.png",
+      "imageAlt": "Original JMAP Geometry question 19: Side Splitter Theorem.",
+      "source": {
+        "pdf": "source/JMAP_Geometry_By_Topic.pdf",
+        "pdfPage": 6,
+        "examRef": "012617geo",
+        "points": 2,
+        "originalClip": "Screenshot 2026-11-12 123044.png"
+      },
+      "type": "mc",
+      "origin": "original_mc",
+      "prompt": "Select the correct answer choice shown in the original question.",
+      "choices": [
+        "Choice 1",
+        "Choice 2",
+        "Choice 3",
+        "Choice 4"
+      ],
+      "answerIndex": 3,
+      "explanation": "The original JMAP answer key gives choice 4.",
+      "originalChoiceLabels": true
+    }
+  ],
+  "mathFormat": "unicode"
+}

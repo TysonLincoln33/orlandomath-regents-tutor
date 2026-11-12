@@ -1,3 +1,4 @@
+import { courseFetch } from "@/lib/course/selection";
 // src/lib/classrooms/createClassroomAssignment.ts
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
@@ -85,7 +86,7 @@ export async function createClassroomAssignment(
     throw new Error("Please log in to create assignments.");
   }
 
-  const response = await fetch(
+  const response = await courseFetch(
     `/api/teacher/classrooms/${input.classroomId}/assignments`,
     {
       method: "POST",

@@ -1,8 +1,10 @@
 "use client";
 
+import CourseWorkspace from "@/components/course/CourseWorkspace";
+import { selectedCourse } from "@/lib/course/selection";
 import * as React from "react";
 import Link from "next/link";
-import { SECTIONS } from "@/lib/course/algebra1";
+import { SECTIONS } from "@/lib/course/registry";
 import {
   getStudentActiveAssignments,
   type StudentActiveAssignment,
@@ -287,7 +289,7 @@ function StudentClassCard({
   );
 }
 
-export default function MyClassesPage() {
+function MyClassesPage() {
   const [classesLoading, setClassesLoading] = React.useState(true);
   const [classesError, setClassesError] = React.useState<string | null>(null);
   const [studentClasses, setStudentClasses] = React.useState<
@@ -404,3 +406,5 @@ export default function MyClassesPage() {
     </div>
   );
 }
+
+export default function CoursePage() { return <CourseWorkspace>{() => <MyClassesPage />}</CourseWorkspace>; }
